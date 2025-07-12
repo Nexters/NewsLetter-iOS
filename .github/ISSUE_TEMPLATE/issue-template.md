@@ -1,6 +1,6 @@
 ---
 name: issue template
-about: 이슈 새성
+about: 이슈 생성
 title: ''
 labels: ''
 assignees: ''
