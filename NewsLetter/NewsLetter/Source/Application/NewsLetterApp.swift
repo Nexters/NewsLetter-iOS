@@ -7,11 +7,15 @@
 
 import SwiftUI
 
+import ComposableArchitecture
+
 @main
 struct NewsLetterApp: App {
+    let store = Store(initialState: AppReducer.State()) { AppReducer() }
+
     var body: some Scene {
         WindowGroup {
-//            ContentView()
+            AppView(store: store)
         }
     }
 }
