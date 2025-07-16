@@ -13,7 +13,16 @@ struct DetailView: View {
     @Bindable var store: StoreOf<DetailReducer>
 
     var body: some View {
-        Text("오늘의 뉴스 기사 제목: \n\(store.title)")
+        VStack {
+            Text("오늘의 뉴스 기사 제목: \n\(store.title)")
+            
+            Text("[API 응답]")
+            Text("setup: \(store.setup)")
+            Text("delivery: \(store.delivery)")
+        }
+        .onAppear {
+            store.send(.onAppear)
+        }
     }
 }
 
