@@ -23,7 +23,7 @@ struct DetailReducer {
     enum Action: BindableAction {
         case binding(BindingAction<State>)
         case onAppear
-        case fetchJokeResponse(Result<Joke, APIError>)
+        case setJoke(Joke)
     }
     
     @Dependency(\.dismiss) var dismiss
@@ -34,22 +34,13 @@ struct DetailReducer {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .publisher {
-                    jokeClient.fetchJoke()
-                        .receive(on: DispatchQueue.main)
-                        .map { res in
-                            Action.fetchJokeResponse(.success(res))
-                        }
-                        .catch { error in
-                            Just(Action.fetchJokeResponse(.failure(error)))
-                        }
+                return .run { send in
+                    let res = try await jokeClient.fetchJoke()
+                    await send(.setJoke(res))
                 }
-            case let .fetchJokeResponse(.success(joke)):
+            case let .setJoke(joke):
                 state.setup = joke.setup
                 state.delivery = joke.delivery
-                return .none
-            case let .fetchJokeResponse(.failure(error)):
-                // TODO: 실패 핸들링 로직 추가 (ex: Alert)
                 return .none
             default:
                 return .none
