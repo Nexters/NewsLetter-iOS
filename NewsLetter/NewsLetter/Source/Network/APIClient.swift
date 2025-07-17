@@ -12,7 +12,8 @@ import CombineMoya
 import Moya
 
 protocol APIClient {
-    func request<T: Decodable>(_ target: TargetType, as type: T.Type) -> AnyPublisher<T, APIError>
+    func request(_ target: TargetType) -> AnyPublisher<Response, MoyaError>
+    func request(_ target: TargetType) async throws -> Response
 }
 
 final class MoyaAPIClient: APIClient {
@@ -22,32 +23,29 @@ final class MoyaAPIClient: APIClient {
         self.provider = provider
     }
     
-    func request<T: Decodable>(_ target: TargetType, as type: T.Type) -> AnyPublisher<T, APIError> {
+    func request(_ target: TargetType) -> AnyPublisher<Response, MoyaError> {
         provider.requestPublisher(MultiTarget(target))
-            .tryMap { response in
-                if  200..<300 ~= response.statusCode {
-                    return response.data
-                } else {
-                    throw APIError.serverError(code: response.statusCode)
-                }
-            }
-            .decode(type: T.self, decoder: JSONDecoder())
-            .mapError { error in
-                switch error {
-                case is DecodingError:            return .decodingError
-                case let moyaError as MoyaError:  return self.handleMoyaError(moyaError)
-                case let apiError as APIError:    return apiError
-                default:                          return .unknown
-                }
-            }
-            .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
     }
     
-    private func handleMoyaError(_ moyaError: MoyaError) -> APIError {
-        if case let .statusCode(response) = moyaError {
-            return .serverError(code: response.statusCode)
+    func request(_ target: TargetType) async throws -> Response {
+        try await withCheckedThrowingContinuation { continuation in
+            provider.request(.target(target)) { result in
+                switch result {
+                case let .success(response) where 200..<300 ~= response.statusCode:
+                    continuation.resume(returning: response)
+                case let .success(response) where 300... ~= response.statusCode:
+                    continuation.resume(throwing: MoyaError.statusCode(response))
+                case let .failure(error):
+                    continuation.resume(throwing: error)
+                default:
+                    let unknownError = NSError(
+                        domain: "com.nexters.newsletter",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Unknown error occurred."]
+                    )
+                    continuation.resume(throwing: unknownError)
+                }
+            }
         }
-        return .unknown
     }
 }
