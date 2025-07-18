@@ -16,9 +16,22 @@
 		AFA1FD4B2E2213C70064A381 /* NewsLetter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NewsLetter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		02E9A44A2E2A9528004939BC /* Exceptions for "NewsLetter" folder in "NewsLetter" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AFA1FD4A2E2213C70064A381 /* NewsLetter */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AFA1FD4D2E2213C70064A381 /* NewsLetter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				02E9A44A2E2A9528004939BC /* Exceptions for "NewsLetter" folder in "NewsLetter" target */,
+			);
 			path = NewsLetter;
 			sourceTree = "<group>";
 		};
@@ -274,6 +287,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SWPBG3YXG5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NewsLetter/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -307,6 +321,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SWPBG3YXG5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NewsLetter/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
