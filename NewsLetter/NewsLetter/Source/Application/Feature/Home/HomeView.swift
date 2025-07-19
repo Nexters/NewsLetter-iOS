@@ -17,6 +17,7 @@ struct HomeView: View {
              VStack {
                  Text("Welcome, \(store.userName)")
                      .font(.headline)
+                     .foregroundStyle(.semanticColor.text_primary)
 
                  Button(action: {
                      store.send(.detailPressed)
@@ -24,13 +25,14 @@ struct HomeView: View {
                      Text("Go to DetailView")
                          .foregroundStyle(.white)
                          .frame(width: 200, height: 42, alignment: .center)
-                         .background(.blue)
+                         .background(.accentColor.orange)
                          .cornerRadius(8)
                  })
 
                  Text("IT 직장인이라면 알아야 할 주 4일제의 모든 것을 알려준다")
                      .font(.caption12_bold)
                      .frame(width: 179)
+                     .foregroundStyle(ColorPalette.gray600)
              }
              .padding()
          } destination: { store in
