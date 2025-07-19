@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-public enum TypoStyle {
+public enum FontStyle {
     case head28_bold, head28_semiBold, head28_medium, head28_regular
     case head26_bold, head26_semiBold, head26_medium, head26_regular
     case head24_bold, head24_semiBold, head24_medium, head24_regular
@@ -174,7 +174,7 @@ public enum TypoStyle {
 }
 
 extension View {
-    func typo(_ style: TypoStyle) -> some View {
+    func font(_ style: FontStyle) -> some View {
         let systemLineHeight = style.uiFont.lineHeight
         let spacing = style.lineHeight - systemLineHeight
 
