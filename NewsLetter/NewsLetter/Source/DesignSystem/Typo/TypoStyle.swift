@@ -176,11 +176,11 @@ public enum TypoStyle {
 extension View {
     func typo(_ style: TypoStyle) -> some View {
         let systemLineHeight = style.uiFont.lineHeight
-        let spacing = (style.lineHeight - systemLineHeight) / 2
+        let spacing = style.lineHeight - systemLineHeight
 
         return self
             .font(style.font)
-            .lineSpacing(style.lineHeight - systemLineHeight)
-            .padding(.vertical, spacing)
+            .lineSpacing(spacing)
+            .padding(.vertical, spacing/2)
     }
 }
