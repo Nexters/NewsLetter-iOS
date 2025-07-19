@@ -20,7 +20,7 @@
 		02E9A44A2E2A9528004939BC /* Exceptions for "NewsLetter" folder in "NewsLetter" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resource/Info.plist,
 			);
 			target = AFA1FD4A2E2213C70064A381 /* NewsLetter */;
 		};
@@ -287,7 +287,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SWPBG3YXG5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NewsLetter/Info.plist;
+				INFOPLIST_FILE = NewsLetter/Resource/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -322,7 +322,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SWPBG3YXG5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NewsLetter/Info.plist;
+				INFOPLIST_FILE = NewsLetter/Resource/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
