@@ -41,8 +41,6 @@ struct HomeView: View {
          }
          .onAppear {
              store.send(.onAppear)
-
-
          }
      }
 }
