@@ -27,6 +27,10 @@ struct HomeView: View {
                          .background(.blue)
                          .cornerRadius(8)
                  })
+
+                 Text("IT 직장인이라면 알아야 할 주 4일제의 모든 것을 알려준다")
+                     .typo(.caption12_bold)
+                     .frame(width: 179)
              }
              .padding()
          } destination: { store in
@@ -37,6 +41,8 @@ struct HomeView: View {
          }
          .onAppear {
              store.send(.onAppear)
+
+
          }
      }
 }
