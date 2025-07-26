@@ -38,6 +38,7 @@ struct CardView: View {
     }
 
     @State private var vStackHeight: CGFloat = 0
+    @State private var titleBottomSpacing: CGFloat = 0
     @State private var cardScale: CGFloat = 1.0
 
     var body: some View {
@@ -50,7 +51,18 @@ struct CardView: View {
                     .font(cardType.fontName)
                     .foregroundStyle(.semanticColor.text_strong)
                     .padding(.top, hideCategoryAndSource ? 16 : cardType.topPadding)
-                    .padding(.bottom, hideCategoryAndSource ? cardType.bottomPadding : 4)
+                    .padding(.bottom, titleBottomSpacing)
+                    .task {
+                        if hideCategoryAndSource {
+                            if cardType == .two {
+                                titleBottomSpacing = 12
+                            } else {
+                                titleBottomSpacing = cardType.bottomPadding
+                            }
+                        } else {
+                            titleBottomSpacing = 4
+                        }
+                    }
 
                 if !hideCategoryAndSource {
                     HStack(spacing: 6) {
@@ -69,7 +81,7 @@ struct CardView: View {
                     .padding(.bottom, cardType.bottomPadding)
                 }
             }
-            .padding([.leading, .trailing], 20)
+            .padding(.horizontal, 20)
             .padding(.bottom, 0)
             .background(
                 GeometryReader { proxy in
@@ -77,14 +89,14 @@ struct CardView: View {
                         .onAppear {
                             self.vStackHeight = proxy.size.height
                         }
-                        .onChange(of: proxy.size.height) { newValue in
+                        .onChange(of: proxy.size.height) { _, newValue in
                             self.vStackHeight = newValue
                         }
                 }
             )
         }
         .padding([.leading, .trailing], cardType.sidePadding)
-        .frame(height: vStackHeight == 0 ? nil : vStackHeight + 30)
+        .frame(height: vStackHeight == 0 ? nil : vStackHeight + 35)
         .scaleEffect(cardScale)
         .onTapGesture {
             let generator = UIImpactFeedbackGenerator(style: .medium)
@@ -105,12 +117,12 @@ struct CardView: View {
 }
 
 #Preview {
-    VStack(spacing:-30) {
+    VStack(spacing:-35) {
         CardView(cardType: .one, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리",onTap: {print("===")})
         CardView(cardType: .two, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
         CardView(cardType: .three, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
         CardView(cardType: .four, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리")
-        CardView(cardType: .five, title: "이재명 정부 부동산 규제, 더 큰 게 온다? 전 대통령, 구속영장", category: "Kotlin", source: "안드로이드 위클리")
-        CardView(cardType: .six, title: "재구속 앞둔 윤석열 전 대통령, 구속영장은?", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .five, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .six, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
     }
 }
