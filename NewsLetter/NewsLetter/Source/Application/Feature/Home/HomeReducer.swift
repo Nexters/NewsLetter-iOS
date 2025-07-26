@@ -6,6 +6,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 @Reducer
 struct HomeReducer {
@@ -17,30 +18,75 @@ struct HomeReducer {
     @ObservableState
     struct State {
         var path = StackState<Path.State>()
-        var userName: String = "조은"
+        var todayDate: String = ""
+        var timerIsRunning: Bool = false
+        var remainingSeconds: Int = 0
+        var formattedTime: String {
+            let hours = remainingSeconds / 3600
+            let minutes = (remainingSeconds % 3600) / 60
+            let seconds = remainingSeconds % 60
+            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        }
     }
 
     enum Action: BindableAction {
         case binding(BindingAction<State>)
         case path(StackActionOf<Path>)
         case onAppear
-        case detailPressed
+        case onDisappear
+        case tick
+        case timerStarted
     }
+
+    private enum CancelID { case timer }
+
+    @Dependency(\.continuousClock) var clock
 
     var body: some Reducer<State, Action> {
         BindingReducer()
 
         Reduce { state, action in
             switch action {
+            case .binding(_):
+                return .none
+            case .path(_):
+                return .none
             case .onAppear:
-                print("HomeView Appear")
+                if state.timerIsRunning { return .none }
+                state.timerIsRunning = true
+
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy.MM.dd"
+                state.todayDate = formatter.string(from: Date())
+
+                let now = Date()
+                let calendar = Calendar.current
+                let midnight = calendar.nextDate(
+                    after: now,
+                    matching: DateComponents(hour: 0, minute: 0, second: 0),
+                    matchingPolicy: .nextTime
+                )!
+                state.remainingSeconds = Int(midnight.timeIntervalSince(now))
+
+                return .run { send in
+                    await send(.timerStarted)
+                    for await _ in self.clock.timer(interval: Duration.seconds(1)) {
+                        await send(.tick)
+                    }
+                }
+                .cancellable(id: CancelID.timer)
+
+            case .onDisappear:
+                state.timerIsRunning = false
+                return .cancel(id: CancelID.timer)
+
+            case .timerStarted:
                 return .none
 
-            case .detailPressed:
-                state.path.append(.detail(DetailReducer.State()))
-                return .none
-
-            default:
+            case .tick:
+                if state.remainingSeconds > 0 {
+                    state.remainingSeconds -= 1
+                }
                 return .none
             }
         }
