@@ -33,8 +33,15 @@ struct HomeView: View {
 
                 VStack(spacing: -30) {
                     ForEach(store.state.cardData, id: \.0) { type, title, category, source in
-                        CardView(cardType: type, title: title, category: category, source: source
-                                 , onTap: { print("hello")})
+                        CardView(
+                            cardType: type,
+                            title: title,
+                            category: category,
+                            source: source,
+                            onTap: {
+                                print("hello")
+                            }
+                        )
                     }
                 }
                 .padding(.bottom, -20)
