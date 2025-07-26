@@ -27,11 +27,10 @@ struct HomeView: View {
                     .font(.body16_semiBold)
                     .foregroundColor(.semanticColor.state_negative_primary)
                     .padding(.top, 8)
-                    .padding(.bottom, 68)
 
                 Spacer()
 
-                VStack(spacing: -30) {
+                VStack(spacing: -35) {
                     ForEach(store.state.cardData, id: \.0) { type, title, category, source in
                         CardView(
                             cardType: type,
