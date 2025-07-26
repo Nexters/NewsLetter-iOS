@@ -38,6 +38,7 @@ struct CardView: View {
     }
 
     @State private var vStackHeight: CGFloat = 0
+    @State private var cardScale: CGFloat = 1.0
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -84,8 +85,19 @@ struct CardView: View {
         }
         .padding([.leading, .trailing], cardType.sidePadding)
         .frame(height: vStackHeight == 0 ? nil : vStackHeight + 30)
+        .scaleEffect(cardScale)
         .onTapGesture {
-            // 애니메이션 추가
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+
+            withAnimation(.easeInOut(duration: 0.15)) {
+                cardScale = 1.03
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    cardScale = 1.0
+                }
+            }
 
             onTap?()
         }
