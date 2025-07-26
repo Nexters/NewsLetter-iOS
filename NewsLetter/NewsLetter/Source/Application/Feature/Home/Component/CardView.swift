@@ -12,6 +12,7 @@ struct CardView: View {
     let title: String
     let category: String
     let source: String
+    var onTap: (() -> Void)? = nil
 
     @State private var contentHeight: CGFloat = 0
 
@@ -83,12 +84,17 @@ struct CardView: View {
         }
         .padding([.leading, .trailing], cardType.sidePadding)
         .frame(height: vStackHeight == 0 ? nil : vStackHeight + 30)
+        .onTapGesture {
+            // 애니메이션 추가
+
+            onTap?()
+        }
     }
 }
 
 #Preview {
     VStack(spacing:-30) {
-        CardView(cardType: .one, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .one, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리",onTap: {print("===")})
         CardView(cardType: .two, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
         CardView(cardType: .three, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
         CardView(cardType: .four, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리")
