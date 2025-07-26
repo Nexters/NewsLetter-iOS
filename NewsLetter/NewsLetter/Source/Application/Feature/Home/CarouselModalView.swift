@@ -35,7 +35,7 @@ struct CarouselModalView: View {
         ZStack {
             Color.semanticColor.background_dimmed
                 .ignoresSafeArea()
-
+            
             VStack(spacing: 0) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: Metric.cardSpacing) {
