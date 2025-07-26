@@ -22,22 +22,19 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 44)
                     .fixedSize(horizontal: false, vertical: true)
-                
+
                 Text(store.state.formattedTime)
                     .font(.body16_semiBold)
                     .foregroundColor(.semanticColor.state_negative_primary)
                     .padding(.top, 8)
                     .padding(.bottom, 68)
-                
+
                 Spacer()
-                
-                VStack(spacing:-30) {
-                    CardView(cardType: .one, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리")
-                    CardView(cardType: .two, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-                    CardView(cardType: .three, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-                    CardView(cardType: .four, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-                    CardView(cardType: .five, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-                    CardView(cardType: .six, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+
+                VStack(spacing: -30) {
+                    ForEach(store.state.cardData, id: \.0) { type, title, category, source in
+                        CardView(cardType: type, title: title, category: category, source: source)
+                    }
                 }
                 .padding(.bottom, -20)
             }
