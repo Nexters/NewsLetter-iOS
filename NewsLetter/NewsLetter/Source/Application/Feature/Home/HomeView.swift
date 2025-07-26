@@ -67,4 +67,3 @@ struct HomeView: View {
         HomeReducer()
     })
 }
-
