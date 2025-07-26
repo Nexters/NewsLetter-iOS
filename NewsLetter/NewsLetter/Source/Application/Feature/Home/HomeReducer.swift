@@ -18,6 +18,7 @@ struct HomeReducer {
     @ObservableState
     struct State {
         var path = StackState<Path.State>()
+
         var todayDate: String = ""
         var timerIsRunning: Bool = false
         var remainingSeconds: Int = 0
@@ -27,6 +28,15 @@ struct HomeReducer {
             let seconds = remainingSeconds % 60
             return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
         }
+
+        var cardData: [(CardType, String, String, String)] = [
+            (.one,   "메가커피 컵빙수의 품절 대란", "Kotlin", "안드로이드 위클리"),
+            (.two,   "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", "Swift", "iOS 뉴스레터"),
+            (.three, "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", "기업정보", "전자신문"),
+            (.four,  "오늘의 날씨는?", "Weather", "기상청"),
+            (.five,  "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", "부동산", "매일경제"),
+            (.six,   "일이삼사오육칠팔구십일이삼사오육칠", "정치", "정치뉴스")
+        ]
     }
 
     enum Action: BindableAction {
@@ -79,7 +89,7 @@ struct HomeReducer {
             case .onDisappear:
                 state.timerIsRunning = false
                 return .cancel(id: CancelID.timer)
-
+                
             case .timerStarted:
                 return .none
 
