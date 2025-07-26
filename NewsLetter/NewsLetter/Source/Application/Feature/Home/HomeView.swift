@@ -11,47 +11,48 @@ import ComposableArchitecture
 
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
-    @State var isPresented: Bool = false
     
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-            ZStack {
-                VStack {
-                    Text("Welcome, \(store.userName)")
-                        .font(.headline)
-                        .foregroundStyle(.semanticColor.text_primary)
-                    
-                    Button(action: {
-                        isPresented = true
-                    }, label:{
-                        Text("Go to DetailView")
-                            .foregroundStyle(.white)
-                            .frame(width: 200, height: 42, alignment: .center)
-                            .background(.accentColor.orange)
-                            .cornerRadius(8)
-                    })
-                    
-                    Text("IT 직장인이라면 알아야 할 주 4일제의 모든 것을 알려준다")
-                        .font(.caption12_bold)
-                        .frame(width: 179)
-                        .foregroundStyle(ColorPalette.gray600)
-                }
-                .padding()
+            VStack {
+                Text("\(store.state.todayDate)\nToday’s Hot News")
+                    .font(Font.custom("Jalnan Gothic", size: 32))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.semanticColor.text_strong)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 44)
+                    .fixedSize(horizontal: false, vertical: true)
                 
-                if isPresented {
-                    CarouselModalView(isPresented: $isPresented)
-                        .transition(.opacity)
+                Text(store.state.formattedTime)
+                    .font(.body16_semiBold)
+                    .foregroundColor(.semanticColor.state_negative_primary)
+                    .padding(.top, 8)
+                    .padding(.bottom, 68)
+                
+                Spacer()
+                
+                VStack(spacing:-30) {
+                    CardView(cardType: .one, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리")
+                    CardView(cardType: .two, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+                    CardView(cardType: .three, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+                    CardView(cardType: .four, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+                    CardView(cardType: .five, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+                    CardView(cardType: .six, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
                 }
+                .padding(.bottom, -20)
             }
-            .animation(.easeInOut, value: isPresented)
+            .ignoresSafeArea(edges: .bottom)
+            .onAppear {
+                store.send(.onAppear)
+            }
+            .onDisappear {
+                store.send(.onDisappear)
+            }
         } destination: { store in
             switch store.case {
             case .detail(let store):
                 DetailView(store: store)
             }
-        }
-        .onAppear {
-            store.send(.onAppear)
         }
     }
 }
