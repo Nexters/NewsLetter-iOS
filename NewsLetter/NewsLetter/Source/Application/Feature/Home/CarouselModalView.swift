@@ -26,8 +26,8 @@ struct CarouselModalView: View {
         ]
     }
     
-    @State private var currentPage: Int = 0
     @Binding var isPresented: Bool
+    @Binding var currentPage: Int?
     
     let cards: [Card] = Array(repeating: .stub(), count: 6)
     
@@ -84,6 +84,6 @@ struct CarouselModalView: View {
 }
 
 #Preview {
-    CarouselModalView(isPresented: .constant(true))
+    CarouselModalView(isPresented: .constant(true), currentPage: .constant(2))
 }
 
