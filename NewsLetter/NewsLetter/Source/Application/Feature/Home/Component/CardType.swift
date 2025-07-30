@@ -34,17 +34,6 @@ enum CardType {
         }
     }
 
-    var backgroundColor: Color {
-        switch self {
-        case .one: return .accentColor.purple
-        case .two: return .accentColor.orange
-        case .three: return .accentColor.skyblue
-        case .four: return .accentColor.lemonyellow
-        case .five: return .accentColor.pink
-        case .six: return .accentColor.green
-        }
-    }
-
     var fontName: FontStyle {
         switch self {
         case .one: return .body13_bold
