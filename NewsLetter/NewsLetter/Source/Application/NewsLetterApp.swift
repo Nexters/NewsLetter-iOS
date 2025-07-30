@@ -8,14 +8,24 @@
 import SwiftUI
 
 import ComposableArchitecture
+import FirebaseCore
 
 @main
 struct NewsLetterApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     let store = Store(initialState: AppReducer.State()) { AppReducer() }
 
     var body: some Scene {
         WindowGroup {
             AppView(store: store)
         }
+    }
+}
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        FirebaseApp.configure()
+        return true
     }
 }
