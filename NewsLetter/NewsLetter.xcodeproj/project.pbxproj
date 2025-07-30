@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		023E73892E39066D00E63B83 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 023E73882E39066D00E63B83 /* FirebaseAnalytics */; };
+		023E73922E39076700E63B83 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 023E73912E39076700E63B83 /* FirebaseRemoteConfig */; };
 		0263F6D12E221A3C004837BB /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 0263F6D02E221A3C004837BB /* ComposableArchitecture */; };
 		AFD2BCAB2E233EF600E8319C /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = AFD2BCAA2E233EF600E8319C /* CombineMoya */; };
 		AFD2BCAD2E233EF600E8319C /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = AFD2BCAC2E233EF600E8319C /* Moya */; };
@@ -44,17 +46,27 @@
 			files = (
 				AFD2BCAB2E233EF600E8319C /* CombineMoya in Frameworks */,
 				0263F6D12E221A3C004837BB /* ComposableArchitecture in Frameworks */,
+				023E73892E39066D00E63B83 /* FirebaseAnalytics in Frameworks */,
 				AFD2BCAD2E233EF600E8319C /* Moya in Frameworks */,
+				023E73922E39076700E63B83 /* FirebaseRemoteConfig in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		023E73902E39076700E63B83 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		AFA1FD422E2213C70064A381 = {
 			isa = PBXGroup;
 			children = (
 				AFA1FD4D2E2213C70064A381 /* NewsLetter */,
+				023E73902E39076700E63B83 /* Frameworks */,
 				AFA1FD4C2E2213C70064A381 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +102,8 @@
 				0263F6D02E221A3C004837BB /* ComposableArchitecture */,
 				AFD2BCAA2E233EF600E8319C /* CombineMoya */,
 				AFD2BCAC2E233EF600E8319C /* Moya */,
+				023E73882E39066D00E63B83 /* FirebaseAnalytics */,
+				023E73912E39076700E63B83 /* FirebaseRemoteConfig */,
 			);
 			productName = NewsLetter;
 			productReference = AFA1FD4B2E2213C70064A381 /* NewsLetter.app */;
@@ -122,6 +136,7 @@
 			packageReferences = (
 				0263F6CF2E221A3C004837BB /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 				AFD2BCA92E233EF600E8319C /* XCRemoteSwiftPackageReference "Moya" */,
+				023E73852E39066D00E63B83 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AFA1FD4C2E2213C70064A381 /* Products */;
@@ -369,6 +384,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		023E73852E39066D00E63B83 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
 		0263F6CF2E221A3C004837BB /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture.git";
@@ -388,6 +411,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		023E73882E39066D00E63B83 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 023E73852E39066D00E63B83 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		023E73912E39076700E63B83 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 023E73852E39066D00E63B83 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
 		0263F6D02E221A3C004837BB /* ComposableArchitecture */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 0263F6CF2E221A3C004837BB /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
