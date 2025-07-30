@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CardView: View {
     let cardType: CardType
+    let color: Color
     let title: String
     let category: String
     let source: String
@@ -44,7 +45,7 @@ struct CardView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 24)
-                .foregroundStyle(cardType.backgroundColor)
+                .foregroundStyle(color)
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(trimmedTitle)
@@ -118,11 +119,11 @@ struct CardView: View {
 
 #Preview {
     VStack(spacing:-35) {
-        CardView(cardType: .one, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리",onTap: {print("===")})
-        CardView(cardType: .two, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-        CardView(cardType: .three, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-        CardView(cardType: .four, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리")
-        CardView(cardType: .five, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-        CardView(cardType: .six, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .one, color: .accentColor.purple, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리",onTap: {print("===")})
+        CardView(cardType: .two, color: .accentColor.orange, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .three, color: .accentColor.skyblue, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .four, color: .accentColor.lemonyellow, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .five, color: .accentColor.pink, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .six, color: .accentColor.green, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
     }
 }
