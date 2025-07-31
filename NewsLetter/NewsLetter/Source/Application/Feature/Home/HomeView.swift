@@ -35,7 +35,7 @@ struct HomeView: View {
                     Spacer()
 
                     if store.cardColors.count == store.cardData.count {
-                        VStack(spacing: -30) {
+                        VStack(spacing: -35) {
                             ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
                                 let (type, title, category, source) = item
                                 CardView(
