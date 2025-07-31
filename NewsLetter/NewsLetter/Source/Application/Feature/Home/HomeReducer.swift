@@ -94,13 +94,13 @@ struct HomeReducer {
 
                 if colorFlag == "A" {
                     let colors: [Color]
-                    colors = self.generateNewDailyColors(for: state.cardData)
+                    colors = self.generateNewDailyColors(for: state.cardData).reversed()
                     effects.append(.send(.setColorPalette(colors)))
-                } else { 
+                } else {
                     let fixedColors: [Color] = [ ColorPalette.pointPurple200, ColorPalette.pointOrange400, ColorPalette.pointBlue300, ColorPalette.pointLemonYellow300, ColorPalette.pointPink300, ColorPalette.pointGreen300]
                     effects.append(.send(.setColorPalette(fixedColors)))
                 }
-
+                
                 return .merge(effects)
 
             case let .setColorPalette(colors):
