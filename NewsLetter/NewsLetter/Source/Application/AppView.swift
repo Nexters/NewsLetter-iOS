@@ -15,36 +15,48 @@ struct AppView: View {
     @StateObject private var remoteConfigManager = RemoteConfigManager()
 
     var body: some View {
-        HomeView(store: store.scope(state: \.home, action: \.home),
-                 colorFlag: remoteConfigManager.colorFlag
-        )
+        if remoteConfigManager.isLoading {
+            // 로딩 중일 때 보여줄 화면 (추가되면 좋을 것 같아요)
+        } else {
+            HomeView(
+                store: store.scope(state: \.home, action: \.home),
+                colorFlag: remoteConfigManager.colorFlag
+            )
+        }
     }
 }
 
 class RemoteConfigManager: ObservableObject {
     @Published var colorFlag: String = "B"
+    @Published var isLoading: Bool = true
+
     private var remoteConfig: RemoteConfig
 
     init() {
         remoteConfig = RemoteConfig.remoteConfig()
         let settings = RemoteConfigSettings()
-        settings.minimumFetchInterval = 86400 // 하루 1번
+        settings.minimumFetchInterval = 86400
         remoteConfig.configSettings = settings
         fetchRemoteValues()
     }
 
     func fetchRemoteValues() {
         remoteConfig.fetchAndActivate { status, error in
-            if error != nil {
-                print("Remote Config fetch failed: \(error!.localizedDescription)")
+            if let error = error {
+                print("Remote Config fetch failed: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
                 return
             }
 
             let rawFlag = self.remoteConfig["testType"].stringValue
             let colorFlag = (rawFlag == "A" || rawFlag == "B") ? rawFlag : "B"
+
             DispatchQueue.main.async {
                 self.colorFlag = colorFlag
-                print("색상 실험 그룹 - \(rawFlag)")
+                self.isLoading = false
+                print("색상 실험 그룹 - \(colorFlag)")
             }
         }
     }
