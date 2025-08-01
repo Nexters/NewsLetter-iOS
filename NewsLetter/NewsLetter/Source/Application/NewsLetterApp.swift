@@ -25,6 +25,13 @@ struct NewsLetterApp: App {
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        if let deviceToken = KeychainManager.shared.retrieveString(forKey: "deviceToken") {
+            print("Device Token: \(deviceToken)")
+        } else {
+            let newDeviceToken = UUID().uuidString
+            KeychainManager.shared.saveString(newDeviceToken, forKey: "deviceToken")
+            print("New Device Token: \(newDeviceToken)")
+        }
         FirebaseApp.configure()
         return true
     }
