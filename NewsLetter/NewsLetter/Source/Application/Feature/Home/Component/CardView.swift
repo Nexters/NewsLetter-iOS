@@ -23,16 +23,16 @@ struct CardView: View {
     }
 
     // title이 몇 줄이 되는지 계산
-    var titleLineCount: Int {
+    var titleLineCount: Double {
         let lines = Double(title.count) / Double(cardType.oneLine)
-        return Int(ceil(lines))
+        return Double(round(10 * lines) / 10)
     }
 
     // 크기가 작은 3종류는 제목이 2줄이면 카테고리랑 출처가 없어야 한다.
     var hideCategoryAndSource: Bool {
         switch cardType {
         case .one, .two, .three:
-            return titleLineCount >= 2
+            return titleLineCount >= 1.5
         default:
             return false
         }
