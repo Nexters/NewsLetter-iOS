@@ -171,6 +171,8 @@
 /* Begin XCBuildConfiguration section */
 		AFA1FD542E2213C80064A381 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = AFA1FD4D2E2213C70064A381 /* NewsLetter */;
+			baseConfigurationReferenceRelativePath = Resource/secret.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -235,6 +237,8 @@
 		};
 		AFA1FD552E2213C80064A381 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = AFA1FD4D2E2213C70064A381 /* NewsLetter */;
+			baseConfigurationReferenceRelativePath = Resource/secret.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
