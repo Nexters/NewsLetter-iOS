@@ -30,6 +30,7 @@ struct CarouselModalView: View {
     @Binding var currentPage: Int?
     
     let cards: [Card] = Array(repeating: .stub(), count: 6)
+    let firstLookHandler: () -> Void
     
     var body: some View {
         ZStack {
@@ -70,6 +71,10 @@ struct CarouselModalView: View {
                 .padding(.top, 16)
                 
                 Button {
+                    if UserActionHistory.isFirstLook == false {
+                        UserActionHistory.isFirstLook = true
+                        firstLookHandler()
+                    }
                     isPresented = false
                 } label: {
                     Image("xbutton")
@@ -84,6 +89,6 @@ struct CarouselModalView: View {
 }
 
 #Preview {
-    CarouselModalView(isPresented: .constant(true), currentPage: .constant(2))
+    CarouselModalView(isPresented: .constant(true), currentPage: .constant(2), firstLookHandler: {})
 }
 
