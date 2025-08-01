@@ -33,14 +33,7 @@ struct HomeReducer {
 
         var cardColors: [Color] = []
 
-        var cardData: [(CardType, String, String, String)] = [
-            (.one, "메가커피 컵빙수의 품절 대란", "Kotiln", "안드로이드 위클리"),
-            (.two, "효과적인 상태 관리 라이브러리", "iOS", "iOS 위클리"),
-            (.three, "주 4일제, 과연 효과적일까?", "BE", "개발자 뉴스"),
-            (.four, "새로운 안드로이드 UI 프레임워크 UI 프레임워크", "Kotiln", "안드로이드 위클리"),
-            (.five, "SwiftUI 심층 분석", "iOS", "iOS 위클리"),
-            (.six, "TCA, 정말 모든 곳에 필요할까?", "BE", "개발자 뉴스")
-        ]
+        var cardData: [Card] = []
     }
 
     enum Action: BindableAction {
@@ -51,12 +44,15 @@ struct HomeReducer {
         case tick
         case timerStarted
         case setColorPalette([Color])
+        case fetchCards
+        case setCards([Card])
     }
 
     private enum CancelID { case timer }
 
-    @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var now
+    @Dependency(\.continuousClock) var clock
+    @Dependency(\.cardClient) var cardClient
 
     var body: some Reducer<State, Action> {
         BindingReducer()
@@ -100,7 +96,7 @@ struct HomeReducer {
                     let fixedColors: [Color] = [ ColorPalette.pointPurple200, ColorPalette.pointOrange400, ColorPalette.pointBlue300, ColorPalette.pointLemonYellow300, ColorPalette.pointPink300, ColorPalette.pointGreen300]
                     effects.append(.send(.setColorPalette(fixedColors)))
                 }
-                
+
                 return .merge(effects)
 
             case let .setColorPalette(colors):
@@ -119,6 +115,22 @@ struct HomeReducer {
                     state.remainingSeconds -= 1
                 }
                 return .none
+            case .fetchCards:
+                return .run { send in
+                    do {
+                        let userId = "3"
+                        let publishedDate: String? = nil
+
+                        let cards = try await cardClient.fetchCards(userId, publishedDate)
+                        await send(.setCards(cards))
+                    } catch {
+                        await send(.setCards([]))
+                    }
+                }
+
+            case .setCards(let cards):
+                state.cardData = cards
+                return .none
             }
         }
         .forEach(\.path, action: \.path)
@@ -130,7 +142,7 @@ struct HomeReducer {
         return formatter
     }
 
-    private func generateNewDailyColors(for cardData: [(CardType, String, String, String)], forceShuffle: Bool = true) -> [Color] {
+    private func generateNewDailyColors(for cardData: [Card], forceShuffle: Bool = true) -> [Color] {
         let colorFamilies: [[Color]] = [
             [ColorPalette.pointBlue300, ColorPalette.pointBlue200, ColorPalette.pointBlue400],
             [ColorPalette.pointOrange400, ColorPalette.pointOrange300, ColorPalette.pointOrange500],
@@ -141,14 +153,14 @@ struct HomeReducer {
         ]
 
         let shuffledFamilies = colorFamilies.shuffled()
-        let uniqueCategories = Array(Set(cardData.map { $0.2 }))
+        let uniqueCategories = Array(Set(cardData.map { $0.topKeyword }))
         var categoryToFamilyMap: [String: [Color]] = [:]
         for (index, category) in uniqueCategories.enumerated() {
             categoryToFamilyMap[category] = shuffledFamilies[index % shuffledFamilies.count]
         }
         var categoryUsageCount: [String: Int] = [:]
         return cardData.map { card in
-            let category = card.2
+            let category = card.topKeyword
             guard let colorFamily = categoryToFamilyMap[category] else {
                 return .gray
             }

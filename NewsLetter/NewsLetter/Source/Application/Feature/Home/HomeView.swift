@@ -18,7 +18,8 @@ struct HomeView: View {
     @State private var isPresentToastMessage: Bool = false
     @State private var selectedIndex: Int?
     @State private var cardTapCount: Int = 0
-    
+    let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
+
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack {
@@ -41,13 +42,12 @@ struct HomeView: View {
                     if store.cardColors.count == store.cardData.count {
                         VStack(spacing: -35) {
                             ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
-                                let (type, title, category, source) = item
                                 CardView(
-                                    cardType: type,
+                                    cardType: cardTypes[index],
                                     color: store.cardColors[index],
-                                    title: title,
-                                    category: category,
-                                    source: source,
+                                    title: item.title,
+                                    category: item.topKeyword,
+                                    source: item.newsletterName,
                                     onTap: {
                                         // FIXME: 추후 카드 데이터 순서 논의 필요
                                         selectedIndex = store.state.cardData.reversed().firstIndex(where: { $0.0 == type })
@@ -92,6 +92,7 @@ struct HomeView: View {
                 .ignoresSafeArea(edges: .bottom)
                 .onAppear {
                     store.send(.onAppear(colorFlag: self.colorFlag))
+                    store.send(.fetchCards)
                     
                     DateCalculator.checkAndIncrementVisitStreak()
                     
@@ -121,7 +122,7 @@ struct HomeView: View {
                 }
             }
             .animation(.easeInOut, value: isPresentModal)
-        }   destination: { store in
+        } destination: { store in
             switch store.case {
             case .detail(let store):
                 DetailView(store: store)

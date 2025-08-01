@@ -24,12 +24,12 @@ struct CarouselCard: View {
                 .font(.head20_bold)
                 .foregroundStyle(pointColor)
             
-            Text(card.keyword)
+            Text(card.topKeyword)
                 .font(.body13_medium)
                 .foregroundStyle(pointColor)
                 .padding(.top, 4)
             
-            Text(card.description)
+            Text(card.summary)
                 .font(.body14_regular)
                 .padding(.top, 16)
             
