@@ -16,11 +16,11 @@ struct HomeReducer {
     enum Path {
         case detail(DetailReducer)
     }
-
+    
     @ObservableState
     struct State {
         var path = StackState<Path.State>()
-
+        
         var todayDate: String = ""
         var timerIsRunning: Bool = false
         var remainingSeconds: Int = 0
@@ -30,12 +30,12 @@ struct HomeReducer {
             let seconds = remainingSeconds % 60
             return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
         }
-
-        var cardColors: [Color] = []
-
+        
         var cardData: [Card] = []
+        var colorFlag: String = ""
+        var cardColors: [Color] = []
     }
-
+    
     enum Action: BindableAction {
         case binding(BindingAction<State>)
         case path(StackActionOf<Path>)
@@ -47,16 +47,16 @@ struct HomeReducer {
         case fetchCards
         case setCards([Card])
     }
-
+    
     private enum CancelID { case timer }
-
+    
     @Dependency(\.date.now) var now
     @Dependency(\.continuousClock) var clock
     @Dependency(\.cardClient) var cardClient
-
+    
     var body: some Reducer<State, Action> {
         BindingReducer()
-
+        
         Reduce { state, action in
             switch action {
             case .binding(_):
@@ -65,18 +65,20 @@ struct HomeReducer {
                 return .none
             case let .onAppear(colorFlag):
                 var effects: [Effect<Action>] = []
-
+                
+                state.colorFlag = colorFlag
+                
                 if !state.timerIsRunning {
                     state.timerIsRunning = true
-
+                    
                     let formatter = DateFormatter()
                     formatter.dateFormat = "yyyy.MM.dd"
                     state.todayDate = formatter.string(from: self.now)
-
+                    
                     let calendar = Calendar.current
                     let midnight = calendar.nextDate(after: self.now, matching: DateComponents(hour: 0, minute: 0, second: 0), matchingPolicy: .nextTime)!
                     state.remainingSeconds = Int(midnight.timeIntervalSince(self.now))
-
+                    
                     effects.append(
                         .run { send in
                             await send(.timerStarted)
@@ -87,29 +89,22 @@ struct HomeReducer {
                             .cancellable(id: CancelID.timer)
                     )
                 }
-
-                if colorFlag == "A" {
-                    let colors: [Color]
-                    colors = self.generateNewDailyColors(for: state.cardData).reversed()
-                    effects.append(.send(.setColorPalette(colors)))
-                } else {
-                    let fixedColors: [Color] = [ ColorPalette.pointPurple200, ColorPalette.pointOrange400, ColorPalette.pointBlue300, ColorPalette.pointLemonYellow300, ColorPalette.pointPink300, ColorPalette.pointGreen300]
-                    effects.append(.send(.setColorPalette(fixedColors)))
-                }
-
+                
+                effects.append(.send(.fetchCards))
+                
                 return .merge(effects)
-
+                
             case let .setColorPalette(colors):
                 state.cardColors = colors
                 return .none
-
+                
             case .onDisappear:
                 state.timerIsRunning = false
                 return .cancel(id: CancelID.timer)
-
+                
             case .timerStarted:
                 return .none
-
+                
             case .tick:
                 if state.remainingSeconds > 0 {
                     state.remainingSeconds -= 1
@@ -120,28 +115,37 @@ struct HomeReducer {
                     do {
                         let userId = "3"
                         let publishedDate: String? = nil
-
+                        
                         let cards = try await cardClient.fetchCards(userId, publishedDate)
                         await send(.setCards(cards))
                     } catch {
                         await send(.setCards([]))
                     }
                 }
-
+                
             case .setCards(let cards):
                 state.cardData = cards
-                return .none
+                if state.cardData.isEmpty {
+                    return .none
+                }
+                if state.colorFlag == "A" {
+                    let colors = Array(self.generateNewDailyColors(for: state.cardData).reversed())
+                    return .send(.setColorPalette(colors))
+                } else {
+                    let fixedColors: [Color] = [ColorPalette.pointPurple200, ColorPalette.pointOrange400, ColorPalette.pointBlue300, ColorPalette.pointLemonYellow300, ColorPalette.pointPink300, ColorPalette.pointGreen300]
+                    return .send(.setColorPalette(fixedColors))
+                }
             }
         }
         .forEach(\.path, action: \.path)
     }
-
+    
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }
-
+    
     private func generateNewDailyColors(for cardData: [Card], forceShuffle: Bool = true) -> [Color] {
         let colorFamilies: [[Color]] = [
             [ColorPalette.pointBlue300, ColorPalette.pointBlue200, ColorPalette.pointBlue400],
@@ -151,7 +155,7 @@ struct HomeReducer {
             [ColorPalette.pointGreen300, ColorPalette.pointGreen200, ColorPalette.pointGreen400],
             [ColorPalette.pointLemonYellow300, ColorPalette.pointLemonYellow200, ColorPalette.pointLemonYellow400]
         ]
-
+        
         let shuffledFamilies = colorFamilies.shuffled()
         let uniqueCategories = Array(Set(cardData.map { $0.topKeyword }))
         var categoryToFamilyMap: [String: [Color]] = [:]
