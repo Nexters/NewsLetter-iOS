@@ -50,8 +50,8 @@ struct HomeView: View {
                                     source: item.newsletterName,
                                     onTap: {
                                         // FIXME: 추후 카드 데이터 순서 논의 필요
-                                        selectedIndex = store.state.cardData.reversed().firstIndex(where: { $0.0 == type })
-                                        
+                                        selectedIndex = index
+
                                         if cardTapCount >= 3 {
                                             guard UserActionHistory.isAlreadyInputJobDetail == false &&
                                                     DateCalculator.isCanShowJobDetailBottomSheet()
