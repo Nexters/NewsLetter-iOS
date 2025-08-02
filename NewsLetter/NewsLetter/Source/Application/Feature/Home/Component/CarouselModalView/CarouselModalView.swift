@@ -7,7 +7,10 @@
 
 import SwiftUI
 
+import ComposableArchitecture
+
 struct CarouselModalView: View {
+    let store: StoreOf<HomeReducer>
 
     private enum Metric {
         static let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.8
@@ -16,25 +19,16 @@ struct CarouselModalView: View {
         static let scrollViewHeight: CGFloat = 366
         static let indicatorSize: CGFloat = 8
         static let xButtonSize: CGFloat = 44
-        static let pointColorSet = [
-            ColorPalette.pointPurple600,
-            ColorPalette.pointOrange500,
-            ColorPalette.pointBlue600,
-            ColorPalette.pointLemonYellow700,
-            ColorPalette.pointPink600,
-            ColorPalette.pointGreen600
-        ]
     }
 
     @Binding var isPresented: Bool
     @Binding var currentPage: Int?
 
-    let cardData: [Card]
     let firstLookHandler: () -> Void
 
     var body: some View {
-        let reversedCardData = Array(cardData.reversed())
-        let reversedPointColors = Array(Metric.pointColorSet.reversed())
+        let cardData = Array(store.state.cardData.reversed())
+        let pointColors = Array(store.state.cardColors.reversed()).map { $0.toChangeColor() }
 
         ZStack {
             Color.semanticColor.background_dimmed
@@ -43,9 +37,9 @@ struct CarouselModalView: View {
             VStack(spacing: 0) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: Metric.cardSpacing) {
-                        ForEach(reversedCardData.indices, id: \.self) { index in
-                            let card = reversedCardData[index]
-                            let pointColor = reversedPointColors[index]
+                        ForEach(cardData.indices, id: \.self) { index in
+                            let card = cardData[index]
+                            let pointColor = pointColors[index]
                             CarouselCard(card: card, pointColor: pointColor)
                                 .frame(width: Metric.cardWidth)
                         }
@@ -58,19 +52,19 @@ struct CarouselModalView: View {
                 .scrollPosition(id: Binding<Int?>(
                     get: {
                         guard let page = self.currentPage else { return nil }
-                        return (cardData.count - 1) - page
+                        return (store.state.cardData.count - 1) - page
                     },
                     set: { reversedId in
                         if let id = reversedId {
-                            self.currentPage = (cardData.count - 1) - id
+                            self.currentPage = (store.state.cardData.count - 1) - id
                         }
                     }
                 ))
 
                 HStack(spacing: Metric.indicatorSize) {
-                    ForEach(0..<cardData.count, id: \.self) { index in
+                    ForEach(0..<store.state.cardData.count, id: \.self) { index in
                         Circle()
-                            .fill(index == (cardData.count - 1) - (currentPage ?? 0) ? Color.white : Color.gray.opacity(0.5))
+                            .fill(index == (store.state.cardData.count - 1) - (currentPage ?? 0) ? Color.white : Color.gray.opacity(0.5))
                             .frame(width: Metric.indicatorSize, height: Metric.indicatorSize)
                             .animation(.easeInOut, value: currentPage)
                     }
@@ -95,10 +89,40 @@ struct CarouselModalView: View {
     }
 }
 
+// 카드 컬러 받아서 캐로셀 글씨 컬러로 변경해주는 함수
+extension Color {
+    func toChangeColor() -> Color {
+        switch self {
+        case ColorPalette.pointPurple150, ColorPalette.pointPurple200, ColorPalette.pointPurple300:
+            return ColorPalette.pointPurple600
+
+        case ColorPalette.pointOrange300, ColorPalette.pointOrange400, ColorPalette.pointOrange500:
+            return ColorPalette.pointOrange500
+
+        case ColorPalette.pointBlue200, ColorPalette.pointBlue300, ColorPalette.pointBlue400:
+            return ColorPalette.pointBlue600
+
+        case ColorPalette.pointLemonYellow200, ColorPalette.pointLemonYellow300, ColorPalette.pointLemonYellow400:
+            return ColorPalette.pointLemonYellow700
+
+        case ColorPalette.pointPink200, ColorPalette.pointPink300, ColorPalette.pointPink400:
+            return ColorPalette.pointPink600
+
+        case ColorPalette.pointGreen200, ColorPalette.pointGreen300, ColorPalette.pointGreen400:
+            return ColorPalette.pointGreen600
+
+        default:
+            return self
+        }
+    }
+}
+
 #Preview {
-    CarouselModalView(isPresented: .constant(true),
+    CarouselModalView(store: Store(initialState: HomeReducer.State()) {
+                      HomeReducer()
+                    },
+                      isPresented: .constant(true),
                       currentPage: .constant(2),
-                      cardData: Array(repeating: .stub(), count: 6),
                       firstLookHandler: {}
     )
 }
