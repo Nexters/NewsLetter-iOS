@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CarouselModalView: View {
-    
+
     private enum Metric {
         static let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.8
         static let cardSpacing: CGFloat = 12
@@ -17,59 +17,66 @@ struct CarouselModalView: View {
         static let indicatorSize: CGFloat = 8
         static let xButtonSize: CGFloat = 44
         static let pointColorSet = [
-            ColorPalette.pointGreen600,
-            ColorPalette.pointPink600,
-            ColorPalette.pointLemonYellow700,
-            ColorPalette.pointBlue600,
+            ColorPalette.pointPurple600,
             ColorPalette.pointOrange500,
-            ColorPalette.pointPurple600
+            ColorPalette.pointBlue600,
+            ColorPalette.pointLemonYellow700,
+            ColorPalette.pointPink600,
+            ColorPalette.pointGreen600
         ]
     }
-    
+
     @Binding var isPresented: Bool
     @Binding var currentPage: Int?
-    
-    let cards: [Card] = Array(repeating: .stub(), count: 6)
+
+    let cardData: [Card]
     let firstLookHandler: () -> Void
-    
+
     var body: some View {
+        let reversedCardData = Array(cardData.reversed())
+        let reversedPointColors = Array(Metric.pointColorSet.reversed())
+
         ZStack {
             Color.semanticColor.background_dimmed
                 .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: Metric.cardSpacing) {
-                        ForEach(cards.indices, id: \.self) { index in
-                            let card = cards[index]
-                            CarouselCard(card: card, pointColor: Metric.pointColorSet[index])
+                        ForEach(reversedCardData.indices, id: \.self) { index in
+                            let card = reversedCardData[index]
+                            let pointColor = reversedPointColors[index]
+                            CarouselCard(card: card, pointColor: pointColor)
                                 .frame(width: Metric.cardWidth)
                         }
                     }
-                    .padding(.horizontal, Metric.cardStackHorizontalPadding)
                     .scrollTargetLayout()
                 }
                 .scrollTargetBehavior(.viewAligned)
+                .contentMargins(.horizontal, Metric.cardStackHorizontalPadding, for: .scrollContent)
                 .frame(height: Metric.scrollViewHeight)
                 .scrollPosition(id: Binding<Int?>(
-                    get: { self.currentPage },
-                    set: { id in
-                        if let id = id {
-                            self.currentPage = id
+                    get: {
+                        guard let page = self.currentPage else { return nil }
+                        return (cardData.count - 1) - page
+                    },
+                    set: { reversedId in
+                        if let id = reversedId {
+                            self.currentPage = (cardData.count - 1) - id
                         }
                     }
                 ))
-                
+
                 HStack(spacing: Metric.indicatorSize) {
-                    ForEach(0..<cards.count, id: \.self) { index in
+                    ForEach(0..<cardData.count, id: \.self) { index in
                         Circle()
-                            .fill(index == currentPage ? Color.white : Color.gray.opacity(0.5))
+                            .fill(index == (cardData.count - 1) - (currentPage ?? 0) ? Color.white : Color.gray.opacity(0.5))
                             .frame(width: Metric.indicatorSize, height: Metric.indicatorSize)
                             .animation(.easeInOut, value: currentPage)
                     }
                 }
                 .padding(.top, 16)
-                
+
                 Button {
                     if UserActionHistory.isFirstLook == false {
                         UserActionHistory.isFirstLook = true
@@ -89,6 +96,10 @@ struct CarouselModalView: View {
 }
 
 #Preview {
-    CarouselModalView(isPresented: .constant(true), currentPage: .constant(2), firstLookHandler: {})
+    CarouselModalView(isPresented: .constant(true),
+                      currentPage: .constant(2),
+                      cardData: Array(repeating: .stub(), count: 6),
+                      firstLookHandler: {}
+    )
 }
 

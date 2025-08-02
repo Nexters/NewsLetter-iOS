@@ -49,7 +49,6 @@ struct HomeView: View {
                                     category: item.topKeyword,
                                     source: item.newsletterName,
                                     onTap: {
-                                        // FIXME: 추후 카드 데이터 순서 논의 필요
                                         selectedIndex = index
 
                                         if cardTapCount >= 3 {
@@ -116,6 +115,7 @@ struct HomeView: View {
                     CarouselModalView(
                         isPresented: $isPresentModal,
                         currentPage: $selectedIndex,
+                        cardData: store.state.cardData,
                         firstLookHandler: { isPresentNotificationPermissionBottomSheet = true }
                     )
                     .transition(.opacity)
