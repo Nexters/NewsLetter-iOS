@@ -10,8 +10,6 @@ import SwiftUI
 import ComposableArchitecture
 
 struct CarouselModalView: View {
-    let store: StoreOf<HomeReducer>
-
     private enum Metric {
         static let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.8
         static let cardSpacing: CGFloat = 12
@@ -21,14 +19,16 @@ struct CarouselModalView: View {
         static let xButtonSize: CGFloat = 44
     }
 
+    @State var cardData: [Card]
+    @State var pointColors: [Color]
     @Binding var isPresented: Bool
     @Binding var currentPage: Int?
 
     let firstLookHandler: () -> Void
 
     var body: some View {
-        let cardData = Array(store.state.cardData.reversed())
-        let pointColors = Array(store.state.cardColors.reversed()).map { $0.toChangeColor() }
+        let cardData = Array(cardData.reversed())
+        let pointColors = Array(pointColors.reversed()).map { $0.toChangeColor() }
 
         ZStack {
             Color.semanticColor.background_dimmed
@@ -52,19 +52,19 @@ struct CarouselModalView: View {
                 .scrollPosition(id: Binding<Int?>(
                     get: {
                         guard let page = self.currentPage else { return nil }
-                        return (store.state.cardData.count - 1) - page
+                        return (cardData.count - 1) - page
                     },
                     set: { reversedId in
                         if let id = reversedId {
-                            self.currentPage = (store.state.cardData.count - 1) - id
+                            self.currentPage = (cardData.count - 1) - id
                         }
                     }
                 ))
 
                 HStack(spacing: Metric.indicatorSize) {
-                    ForEach(0..<store.state.cardData.count, id: \.self) { index in
+                    ForEach(0..<cardData.count, id: \.self) { index in
                         Circle()
-                            .fill(index == (store.state.cardData.count - 1) - (currentPage ?? 0) ? Color.white : Color.gray.opacity(0.5))
+                            .fill(index == (cardData.count - 1) - (currentPage ?? 0) ? Color.white : Color.gray.opacity(0.5))
                             .frame(width: Metric.indicatorSize, height: Metric.indicatorSize)
                             .animation(.easeInOut, value: currentPage)
                     }
@@ -118,12 +118,18 @@ extension Color {
 }
 
 #Preview {
-    CarouselModalView(store: Store(initialState: HomeReducer.State()) {
-                      HomeReducer()
-                    },
-                      isPresented: .constant(true),
-                      currentPage: .constant(2),
-                      firstLookHandler: {}
+    CarouselModalView(
+        cardData: Array(repeating: .stub(), count: 6),
+        pointColors: [
+            ColorPalette.pointPurple600,
+            ColorPalette.pointOrange500,
+            ColorPalette.pointBlue600,
+            ColorPalette.pointLemonYellow700,
+            ColorPalette.pointPink600,
+            ColorPalette.pointGreen600
+        ],
+        isPresented: .constant(true),
+        currentPage: .constant(2),
+        firstLookHandler: {}
     )
 }
-

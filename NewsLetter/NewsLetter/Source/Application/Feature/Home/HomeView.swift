@@ -113,7 +113,8 @@ struct HomeView: View {
                 
                 if isPresentModal {
                     CarouselModalView(
-                        store: store,
+                        cardData: store.cardData,
+                        pointColors: store.cardColors,
                         isPresented: $isPresentModal,
                         currentPage: $selectedIndex,
                         firstLookHandler: { isPresentNotificationPermissionBottomSheet = true }
