@@ -113,9 +113,9 @@ struct HomeView: View {
                 
                 if isPresentModal {
                     CarouselModalView(
+                        store: store,
                         isPresented: $isPresentModal,
                         currentPage: $selectedIndex,
-                        cardData: store.state.cardData,
                         firstLookHandler: { isPresentNotificationPermissionBottomSheet = true }
                     )
                     .transition(.opacity)
