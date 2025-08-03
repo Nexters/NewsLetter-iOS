@@ -9,7 +9,7 @@ import Foundation
 
 // API 요청 DTO 모델
 struct UserUpdateRequestDTO: Codable {
-    let preference: [Preference]
+    let preferences: [Preference]
     let workingExperience: WorkingExperience
 }
 
