@@ -45,6 +45,8 @@ struct HomeReducer {
         case timerStarted
         case setColorPalette([Color])
         case fetchCards
+        case registerUser
+        case updateUser(UserUpdateRequestDTO)
         case setCards([Card])
     }
     
@@ -53,7 +55,8 @@ struct HomeReducer {
     @Dependency(\.date.now) var now
     @Dependency(\.continuousClock) var clock
     @Dependency(\.cardClient) var cardClient
-    
+    @Dependency(\.userClient) var userClient
+
     var body: some Reducer<State, Action> {
         BindingReducer()
         
@@ -122,7 +125,30 @@ struct HomeReducer {
                         await send(.setCards([]))
                     }
                 }
-                
+            case .registerUser:
+                return .run { send in
+                    do {
+                        guard let deviceToken = KeychainManager.shared.retrieveString(forKey: "deviceToken") else {
+                            return
+                        }
+                        let requestDTO = UserRegisterRequestDTO(deviceToken: deviceToken)
+                        let userId = try await userClient.register(requestDTO)
+                        UserInfo.userId = userId
+                    } catch let error {
+                        // TODO: 에러 핸들링
+                        print(error.localizedDescription)
+                    }
+                }
+            case .updateUser(let dto):
+                return .run { send in
+                    do {
+                        guard let userId = UserInfo.userId else { return }
+                        try await userClient.update(userId, dto)
+                    } catch {
+                        // TODO: 에러 핸들링
+                        print(error.localizedDescription)
+                    }
+                }
             case .setCards(let cards):
                 state.cardData = cards
                 if state.cardData.isEmpty {

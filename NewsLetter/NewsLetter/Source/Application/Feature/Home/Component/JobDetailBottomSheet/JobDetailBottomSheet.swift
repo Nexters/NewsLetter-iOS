@@ -15,6 +15,8 @@ struct JobDetailBottomSheet: View {
         selectedCareer != nil && selectedJobCategory.isEmpty == false
     }
     
+    let confirmHandler: (Set<Int>, Int) -> Void
+    
     var body: some View {
         VStack {
             Text("정보를 등록하면\n매일 뉴스레터를 추천해 드려요")
@@ -73,6 +75,7 @@ struct JobDetailBottomSheet: View {
             Button(action: {
                 // TODO: 정보등록 API 호출
                 UserActionHistory.isAlreadyInputJobDetail = true
+                confirmHandler(selectedJobCategory, selectedCareer ?? 0)
             }) {
                 RoundedRectangle(cornerRadius: 100)
                     .frame(height: 56)
