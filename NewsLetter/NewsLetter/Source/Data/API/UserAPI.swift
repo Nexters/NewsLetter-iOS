@@ -20,7 +20,7 @@ extension UserAPI: TargetType {
     }
     
     var baseURL: URL {
-        return URL(string: "http://\(BASE_URL)/api/api")!
+        return URL(string: "https://\(BASE_URL)/api/api")!
     }
     
     var path: String {

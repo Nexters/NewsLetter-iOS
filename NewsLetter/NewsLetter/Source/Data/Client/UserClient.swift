@@ -31,7 +31,7 @@ extension UserClient: DependencyKey {
         register: { requestDTO in
             let response = try await apiClient.request(UserAPI.register(requestDTO))
             let dto = try response.map(UserRegisterResponseDTO.self)
-            return dto
+            return dto.id
         },
         update: { userId, requestDTO in
             let _ = try await apiClient.request(UserAPI.update(userId: userId, requestDTO: requestDTO))

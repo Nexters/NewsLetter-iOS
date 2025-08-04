@@ -7,4 +7,6 @@
 
 import Foundation
 
-typealias UserRegisterResponseDTO = Int
+struct UserRegisterResponseDTO: Decodable {
+    let id: Int
+}
