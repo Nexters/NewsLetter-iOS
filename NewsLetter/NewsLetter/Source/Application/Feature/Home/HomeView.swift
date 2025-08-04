@@ -19,7 +19,7 @@ struct HomeView: View {
     @State private var selectedIndex: Int?
     @State private var cardTapCount: Int = 0
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
-
+    
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack {
@@ -50,7 +50,7 @@ struct HomeView: View {
                                     source: item.newsletterName,
                                     onTap: {
                                         selectedIndex = index
-
+                                        
                                         if cardTapCount >= 3 {
                                             guard UserActionHistory.isAlreadyInputJobDetail == false &&
                                                     DateCalculator.isCanShowJobDetailBottomSheet()
@@ -77,7 +77,13 @@ struct HomeView: View {
                     isShow: $isPresentJobDetailBottomSheet,
                     dismissHandler: { UserActionHistory.deniedDateWhenInputJobDetail = Date() }
                 ) {
-                    JobDetailBottomSheet()
+                    JobDetailBottomSheet { selectedJobCategory, selectedCareer in
+                        let preferences = selectedJobCategory.map { Preference.allCases[$0] }
+                        let workingExperience = WorkingExperience.allCases[selectedCareer]
+                        let requestDTO = UserUpdateRequestDTO(preferences: preferences, workingExperience: workingExperience)
+                        store.send(.updateUser(requestDTO))
+                        isPresentJobDetailBottomSheet = false
+                    }
                 }
                 .draggableBottomSheet(
                     isShow: $isPresentNotificationPermissionBottomSheet,
@@ -85,7 +91,10 @@ struct HomeView: View {
                 ) {
                     NotificationPermissionBottomSheet(
                         isPresented: $isPresentNotificationPermissionBottomSheet,
-                        successHandler: { isPresentToastMessage = true }
+                        successHandler: {
+                            store.send(.registerUser)
+                            isPresentToastMessage = true
+                        }
                     )
                 }
                 .ignoresSafeArea(edges: .bottom)
