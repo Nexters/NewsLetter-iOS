@@ -53,10 +53,10 @@ struct NotificationPermissionBottomSheet: View {
                 if settings.authorizationStatus == .authorized {
                     UserActionHistory.isAlreadySetNotification = true
                     successHandler()
-                    // TODO: 알림등록 API 요청
                     isPresented = false
                 } else {
                     isCheckingPermission = true
+                    // TODO: 현재 앱 설정으로 이동은 하지만 알림메뉴가 표출되지 않는상황. 추후 알림메뉴 표출될 시 시나리오 테스트 필요
                     guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                     
                     if UIApplication.shared.canOpenURL(url){
