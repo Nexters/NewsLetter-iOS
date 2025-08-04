@@ -50,20 +50,7 @@ struct HomeView: View {
                                     source: item.newsletterName,
                                     onTap: {
                                         selectedIndex = index
-                                        
-                                        if cardTapCount >= 3 {
-                                            guard UserActionHistory.isAlreadyInputJobDetail == false &&
-                                                    DateCalculator.isCanShowJobDetailBottomSheet()
-                                            else {
-                                                isPresentModal = true
-                                                return
-                                            }
-                                            
-                                            isPresentJobDetailBottomSheet = true
-                                        } else {
-                                            isPresentModal = true
-                                        }
-                                        cardTapCount += 1
+                                        cardTapHandler()
                                     }
                                 )
                             }
@@ -78,11 +65,10 @@ struct HomeView: View {
                     dismissHandler: { UserActionHistory.deniedDateWhenInputJobDetail = Date() }
                 ) {
                     JobDetailBottomSheet { selectedJobCategory, selectedCareer in
-                        let preferences = selectedJobCategory.map { Preference.allCases[$0] }
-                        let workingExperience = WorkingExperience.allCases[selectedCareer]
-                        let requestDTO = UserUpdateRequestDTO(preferences: preferences, workingExperience: workingExperience)
-                        store.send(.updateUser(requestDTO))
-                        isPresentJobDetailBottomSheet = false
+                        jobDetailBottomSheetConfirmHandler(
+                            selectedJobCategory: selectedJobCategory,
+                            selectedCareer: selectedCareer
+                        )
                     }
                 }
                 .draggableBottomSheet(
@@ -98,6 +84,11 @@ struct HomeView: View {
                     )
                 }
                 .ignoresSafeArea(edges: .bottom)
+                .toastMessage(
+                    isPresented: $isPresentToastMessage,
+                    text: "뉴스레터 알림이 신청되었어요",
+                    bottomPadding: 0
+                )
                 .onAppear {
                     store.send(.onAppear(colorFlag: self.colorFlag))
                     store.send(.fetchCards)
@@ -114,11 +105,6 @@ struct HomeView: View {
                 .onDisappear {
                     store.send(.onDisappear)
                 }
-                .toastMessage(
-                    isPresented: $isPresentToastMessage,
-                    text: "뉴스레터 알림이 신청되었어요",
-                    bottomPadding: 0
-                )
                 
                 if isPresentModal {
                     CarouselModalView(
@@ -138,6 +124,38 @@ struct HomeView: View {
                 DetailView(store: store)
             }
         }
+    }
+    
+    // MARK: - Methods
+    
+    private func cardTapHandler() {
+        if cardTapCount >= 3 {
+            guard UserActionHistory.isAlreadyInputJobDetail == false &&
+                    DateCalculator.isCanShowJobDetailBottomSheet()
+            else {
+                isPresentModal = true
+                return
+            }
+            
+            isPresentJobDetailBottomSheet = true
+        } else {
+            isPresentModal = true
+        }
+        cardTapCount += 1
+    }
+    
+    private func jobDetailBottomSheetConfirmHandler(
+        selectedJobCategory: Set<Int>,
+        selectedCareer: Int
+    ) {
+        let preferences = selectedJobCategory.map { Preference.allCases[$0] }
+        let workingExperience = WorkingExperience.allCases[selectedCareer]
+        let requestDTO = UserUpdateRequestDTO(
+            preferences: preferences,
+            workingExperience: workingExperience
+        )
+        store.send(.updateUser(requestDTO))
+        isPresentJobDetailBottomSheet = false
     }
 }
 
