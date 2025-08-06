@@ -15,29 +15,13 @@ struct CardView: View {
     let source: String
     var onTap: (() -> Void)? = nil
 
-    @State private var contentHeight: CGFloat = 0
-
     // 제목 최대 28글자까지
     var trimmedTitle: String {
         String(title.prefix(28))
     }
 
-    // title이 몇 줄이 되는지 계산
-    var titleLineCount: Double {
-        let lines = Double(title.count) / Double(cardType.oneLine)
-        return Double(round(10 * lines) / 10)
-    }
-
-    // 크기가 작은 3종류는 제목이 2줄이면 카테고리랑 출처가 없어야 한다.
-    var hideCategoryAndSource: Bool {
-        switch cardType {
-        case .one, .two, .three:
-            return titleLineCount >= 1.5
-        default:
-            return false
-        }
-    }
-
+    @State private var titleHeight: CGFloat = 0
+    @State private var hideCategoryAndSource: Bool = false
     @State private var vStackHeight: CGFloat = 0
     @State private var titleBottomSpacing: CGFloat = 0
     @State private var cardScale: CGFloat = 1.0
@@ -54,16 +38,37 @@ struct CardView: View {
                     .padding(.top, hideCategoryAndSource ? 16 : cardType.topPadding)
                     .padding(.bottom, titleBottomSpacing)
                     .task {
+                        if cardType == .one || cardType == .two || cardType == .three {
+                            hideCategoryAndSource = titleHeight >= CGFloat(cardType.oneLineHeight)
+                        } else {
+                            hideCategoryAndSource = false
+                        }
+
                         if hideCategoryAndSource {
-                            if cardType == .two {
-                                titleBottomSpacing = 12
-                            } else {
-                                titleBottomSpacing = cardType.bottomPadding
-                            }
+                            titleBottomSpacing = (cardType == .two) ? 12 : cardType.bottomPadding
                         } else {
                             titleBottomSpacing = 4
                         }
                     }
+                    .background(
+                        GeometryReader { proxy in
+                            Color.blue
+                                .onAppear {
+                                    if hideCategoryAndSource {
+                                        self.titleHeight = proxy.size.height-16
+                                    } else {
+                                        self.titleHeight = proxy.size.height-cardType.topPadding
+                                    }
+                                }
+                                .onChange(of: proxy.size.height) { _, newValue in
+                                    if hideCategoryAndSource {
+                                        self.titleHeight = newValue-16
+                                    } else {
+                                        self.titleHeight = newValue-cardType.topPadding
+                                    }
+                                }
+                        }
+                    )
 
                 if !hideCategoryAndSource {
                     HStack(spacing: 6) {
@@ -119,9 +124,9 @@ struct CardView: View {
 
 #Preview {
     VStack(spacing:-35) {
-        CardView(cardType: .one, color: .accentColor.purple, title: "메가커피 컵빙수의 품절 대란", category: "Kotlin", source: "안드로이드 위클리",onTap: {print("===")})
-        CardView(cardType: .two, color: .accentColor.orange, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
-        CardView(cardType: .three, color: .accentColor.skyblue, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .one, color: .accentColor.purple, title: "사이드 프로젝트, AI로 출시까지? 지금 바로", category: "Kotlin", source: "안드로이드 위클리",onTap: {print("===")})
+        CardView(cardType: .two, color: .accentColor.orange, title: "SwiftUI 한 줄 코드로 번역? 믿기지 않죠!", category: "Kotlin", source: "안드로이드 위클리")
+        CardView(cardType: .three, color: .accentColor.skyblue, title: "일이삼사오육칠팔구십일이삼사오육칠", category: "Kotlin", source: "안드로이드 위클리")
         CardView(cardType: .four, color: .accentColor.lemonyellow, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리")
         CardView(cardType: .five, color: .accentColor.pink, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
         CardView(cardType: .six, color: .accentColor.green, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리")
