@@ -44,14 +44,14 @@ enum CardType {
         }
     }
 
-    var oneLine: Int {
+    var oneLineHeight: Int {
         switch self {
-        case .one:   return 15
-        case .two:   return 17
-        case .three: return 18
-        case .four:  return 19
-        case .five:  return 19
-        case .six:   return 21
+        case .one:   return 35
+        case .two:   return 41
+        case .three: return 45
+        case .four:  return 44
+        case .five:  return 47
+        case .six:   return 47
         }
     }
 }
