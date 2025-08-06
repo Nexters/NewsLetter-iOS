@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WebKit
 
 struct CarouselCard: View {
     private enum Metric {
@@ -15,6 +16,8 @@ struct CarouselCard: View {
         static let nextButtonCornerRadius: CGFloat = 100
         static let nextButtonHeight: CGFloat = 44
     }
+    
+    @State private var isWebViewPresented: Bool = false
     let card: Card
     let pointColor: Color
     
@@ -43,8 +46,7 @@ struct CarouselCard: View {
                         .foregroundStyle(.semanticColor.text_primary)
                 }
                 .onTapGesture {
-                    // TODO: 카드 상세화면으로 넘어가기
-                    print("hello world")
+                    isWebViewPresented = true
                 }
                 .padding(.top, 16)
         }
@@ -52,6 +54,12 @@ struct CarouselCard: View {
         .frame(height: Metric.height)
         .background(ColorPalette.white)
         .cornerRadius(Metric.cornerRadius)
+        .fullScreenCover(isPresented: $isWebViewPresented) {
+            WebViewFullScreen(
+                url: URL(string: card.contentURL)!,
+                isPresented: $isWebViewPresented
+            )
+        }
     }
 }
 
