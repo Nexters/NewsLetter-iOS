@@ -51,4 +51,27 @@ struct DateCalculator {
         let components = calendar.dateComponents([.day], from: date, to: today)
         return components.day ?? 0
     }
+
+    static func todayFormattedString(format: String = "yyyy.MM.dd") -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        return formatter.string(from: Date())
+    }
+
+    static func secondsUntilMidnight(from date: Date = Date()) -> Int {
+        let calendar = Calendar.current
+        guard let midnight = calendar.nextDate(
+            after: date,
+            matching: DateComponents(hour: 0, minute: 0, second: 0),
+            matchingPolicy: .nextTime
+        ) else {
+            return 0
+        }
+        return Int(midnight.timeIntervalSince(date))
+    }
+
+    static func todayWithoutTime() -> Date {
+        let calendar = Calendar.current
+        return calendar.startOfDay(for: Date())
+    }
 }
