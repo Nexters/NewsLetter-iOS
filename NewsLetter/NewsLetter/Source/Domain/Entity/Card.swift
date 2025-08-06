@@ -5,7 +5,7 @@
 //  Created by 이원빈 on 7/21/25.
 //
 
-struct Card {
+struct Card: Codable {
     let title: String
     let topKeyword: String
     let summary: String

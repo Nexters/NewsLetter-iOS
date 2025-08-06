@@ -70,18 +70,13 @@ struct HomeReducer {
                 var effects: [Effect<Action>] = []
                 
                 state.colorFlag = colorFlag
-                
+
+                state.todayDate = DateCalculator.todayFormattedString()
+                state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
+
                 if !state.timerIsRunning {
                     state.timerIsRunning = true
-                    
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy.MM.dd"
-                    state.todayDate = formatter.string(from: self.now)
-                    
-                    let calendar = Calendar.current
-                    let midnight = calendar.nextDate(after: self.now, matching: DateComponents(hour: 0, minute: 0, second: 0), matchingPolicy: .nextTime)!
-                    state.remainingSeconds = Int(midnight.timeIntervalSince(self.now))
-                    
+
                     effects.append(
                         .run { send in
                             await send(.timerStarted)
@@ -89,11 +84,27 @@ struct HomeReducer {
                                 await send(.tick)
                             }
                         }
-                            .cancellable(id: CancelID.timer)
+                        .cancellable(id: CancelID.timer)
                     )
                 }
-                
-                effects.append(.send(.fetchCards))
+
+                let today = DateCalculator.todayWithoutTime()
+                    let lastVisit = UserActionHistory.lastVisitDate
+
+                    if let last = lastVisit, Calendar.current.isDate(last, inSameDayAs: today),
+                       let cachedCards = UserActionHistory.cachedDailyCards,
+                       !cachedCards.isEmpty,
+                       let cachedColors = UserActionHistory.cachedDailyColors?.map({ $0.color }),
+                       !cachedColors.isEmpty {
+
+                        state.cardData = cachedCards
+                        state.cardColors = cachedColors
+
+                    } else {
+                        effects.append(.send(.fetchCards))
+                    }
+
+                    UserActionHistory.lastVisitDate = today
                 
                 return .merge(effects)
                 
@@ -111,6 +122,15 @@ struct HomeReducer {
             case .tick:
                 if state.remainingSeconds > 0 {
                     state.remainingSeconds -= 1
+                } else {
+                    state.todayDate = DateCalculator.todayFormattedString()
+                    state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
+
+                    UserActionHistory.lastVisitDate = nil
+                    UserActionHistory.cachedDailyCards = nil
+                    UserActionHistory.cachedDailyColors = nil
+
+                    return .send(.fetchCards)
                 }
                 return .none
             case .fetchCards:
@@ -151,25 +171,41 @@ struct HomeReducer {
                 }
             case .setCards(let cards):
                 state.cardData = cards
-                if state.cardData.isEmpty {
+                UserActionHistory.cachedDailyCards = cards
+
+                if cards.isEmpty {
                     return .none
                 }
-                if state.colorFlag == "A" {
-                    let colors = Array(self.generateNewDailyColors(for: state.cardData).reversed())
-                    return .send(.setColorPalette(colors))
-                } else {
-                    let fixedColors: [Color] = [ColorPalette.pointPurple200, ColorPalette.pointOrange400, ColorPalette.pointBlue300, ColorPalette.pointLemonYellow300, ColorPalette.pointPink300, ColorPalette.pointGreen300]
-                    return .send(.setColorPalette(fixedColors))
-                }
+
+                UserActionHistory.lastVisitDate = DateCalculator.todayWithoutTime()
+
+               if state.colorFlag == "A" {
+                   let colors = generateNewDailyColors(for: cards)
+                   let colorNames = colors.compactMap { ColorPaletteName.from(color: $0) }
+                   print("= colors ===: \(colorNames)")
+
+                   UserActionHistory.cachedDailyColors = colorNames
+
+                   return .send(.setColorPalette(Array(colors)))
+               } else {
+                   let fixedColors: [Color] = [
+                       ColorPalette.pointPurple200,
+                       ColorPalette.pointOrange400,
+                       ColorPalette.pointBlue300,
+                       ColorPalette.pointLemonYellow300,
+                       ColorPalette.pointPink300,
+                       ColorPalette.pointGreen300
+                   ]
+                   let colorNames = fixedColors.compactMap { ColorPaletteName.from(color: $0) }
+                   UserActionHistory.cachedDailyColors = colorNames
+
+
+
+                   return .send(.setColorPalette(fixedColors))
+               }
             }
         }
         .forEach(\.path, action: \.path)
-    }
-    
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
     }
     
     private func generateNewDailyColors(for cardData: [Card], forceShuffle: Bool = true) -> [Color] {
