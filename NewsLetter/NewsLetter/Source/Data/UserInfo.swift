@@ -19,4 +19,8 @@ struct UserInfo {
     /// 매핑된 카드 컬러 정보
     @UserDefaultWrapper(key: "cachedDailyColors", defaultValue: nil)
     static var cachedDailyColors: [ColorPaletteName]?
+
+    /// 유저가 마지막 API를 호출한 날짜
+    @UserDefaultWrapper(key: "lastCardFetchDate", defaultValue: nil)
+    static var lastCardFetchDate: Date?
 }
