@@ -136,7 +136,8 @@ struct HomeReducer {
             case .fetchCards:
                 return .run { send in
                     do {
-                        let userId = "3"
+                        // TODO: 고정으로 들어가는 userId 값 변경 필요
+                        let userId = String(UserInfo.userId ?? 3)
                         let publishedDate: String? = nil
                         
                         let cards = try await cardClient.fetchCards(userId, publishedDate)
