@@ -52,10 +52,11 @@ struct DateCalculator {
         return components.day ?? 0
     }
 
-    static func todayFormattedString(format: String = "yyyy.MM.dd") -> String {
+    static func formattedDateString(from date: Date = Date(), format: String = "yyyy-MM-dd") -> String {
         let formatter = DateFormatter()
+        formatter.locale = Locale.current
         formatter.dateFormat = format
-        return formatter.string(from: Date())
+        return formatter.string(from: date)
     }
 
     static func secondsUntilMidnight(from date: Date = Date()) -> Int {
@@ -68,10 +69,5 @@ struct DateCalculator {
             return 0
         }
         return Int(midnight.timeIntervalSince(date))
-    }
-
-    static func todayWithoutTime() -> Date {
-        let calendar = Calendar.current
-        return calendar.startOfDay(for: Date())
     }
 }
