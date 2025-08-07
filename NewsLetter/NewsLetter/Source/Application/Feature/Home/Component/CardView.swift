@@ -37,34 +37,45 @@ struct CardView: View {
                     .foregroundStyle(.semanticColor.text_strong)
                     .padding(.top, hideCategoryAndSource ? 16 : cardType.topPadding)
                     .padding(.bottom, titleBottomSpacing)
-                    .task {
-                        if cardType == .one || cardType == .two || cardType == .three {
-                            hideCategoryAndSource = titleHeight >= CGFloat(cardType.oneLineHeight)
-                        } else {
-                            hideCategoryAndSource = false
-                        }
-
-                        if hideCategoryAndSource {
-                            titleBottomSpacing = (cardType == .two) ? 12 : cardType.bottomPadding
-                        } else {
-                            titleBottomSpacing = 4
-                        }
-                    }
                     .background(
                         GeometryReader { proxy in
-                            Color.blue
+                            Color.clear
                                 .onAppear {
-                                    if hideCategoryAndSource {
-                                        self.titleHeight = proxy.size.height-16
+                                    let newHeight = proxy.size.height
+                                    let calculatedTitleHeight = newHeight - (hideCategoryAndSource ? 16 : cardType.topPadding) - titleBottomSpacing
+                                    self.titleHeight = calculatedTitleHeight
+
+                                    if cardType == .one || cardType == .two || cardType == .three {
+                                        let shouldHide = calculatedTitleHeight >= CGFloat(cardType.oneLineHeight)
+                                        if hideCategoryAndSource != shouldHide {
+                                            hideCategoryAndSource = shouldHide
+                                            titleBottomSpacing = shouldHide
+                                            ? (cardType == .two ? 12 : cardType.bottomPadding)
+                                            : 4
+                                        }
                                     } else {
-                                        self.titleHeight = proxy.size.height-cardType.topPadding
+                                        hideCategoryAndSource = false
+                                        titleBottomSpacing = 4
                                     }
                                 }
                                 .onChange(of: proxy.size.height) { _, newValue in
-                                    if hideCategoryAndSource {
-                                        self.titleHeight = newValue-16
-                                    } else {
-                                        self.titleHeight = newValue-cardType.topPadding
+                                    let calculatedTitleHeight = newValue - (hideCategoryAndSource ? 16 : cardType.topPadding) - titleBottomSpacing
+
+                                    if abs(titleHeight - calculatedTitleHeight) > 0.5 {
+                                        titleHeight = calculatedTitleHeight
+
+                                        if cardType == .one || cardType == .two || cardType == .three {
+                                            let shouldHide = calculatedTitleHeight >= CGFloat(cardType.oneLineHeight)
+                                            if hideCategoryAndSource != shouldHide {
+                                                hideCategoryAndSource = shouldHide
+                                                titleBottomSpacing = shouldHide
+                                                ? (cardType == .two ? 12 : cardType.bottomPadding)
+                                                : 4
+                                            }
+                                        } else {
+                                            hideCategoryAndSource = false
+                                            titleBottomSpacing = 4
+                                        }
                                     }
                                 }
                         }

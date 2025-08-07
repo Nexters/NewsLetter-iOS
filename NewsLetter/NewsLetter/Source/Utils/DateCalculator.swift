@@ -59,6 +59,13 @@ struct DateCalculator {
         return formatter.string(from: date)
     }
 
+    static func formattedDateStringForTitle(from date: Date = Date(), format: String = "yyyy.MM.dd") -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.dateFormat = format
+        return formatter.string(from: date)
+    }
+
     static func secondsUntilMidnight(from date: Date = Date()) -> Int {
         let calendar = Calendar.current
         guard let midnight = calendar.nextDate(

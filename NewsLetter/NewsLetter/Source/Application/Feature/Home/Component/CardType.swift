@@ -46,12 +46,12 @@ enum CardType {
 
     var oneLineHeight: Int {
         switch self {
-        case .one:   return 35
-        case .two:   return 41
-        case .three: return 45
-        case .four:  return 44
-        case .five:  return 47
-        case .six:   return 47
+        case .one:   return 19
+        case .two:   return 21
+        case .three: return 23
+        case .four:  return 25
+        case .five:  return 27
+        case .six:   return 27
         }
     }
 }

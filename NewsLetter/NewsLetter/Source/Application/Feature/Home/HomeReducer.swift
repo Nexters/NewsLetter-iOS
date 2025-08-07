@@ -21,6 +21,7 @@ struct HomeReducer {
     struct State {
         var path = StackState<Path.State>()
         
+        var todayDate: String = ""
         var timerIsRunning: Bool = false
         var remainingSeconds: Int = 0
         var formattedTime: String {
@@ -70,6 +71,7 @@ struct HomeReducer {
                 
                 state.colorFlag = colorFlag
 
+                state.todayDate = DateCalculator.formattedDateStringForTitle()
                 state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
 
                 if !state.timerIsRunning {
@@ -123,6 +125,7 @@ struct HomeReducer {
                 if state.remainingSeconds > 0 {
                     state.remainingSeconds -= 1
                 } else {
+                    state.todayDate = DateCalculator.formattedDateStringForTitle()
                     state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
 
                     UserInfo.lastCardFetchDate = nil
