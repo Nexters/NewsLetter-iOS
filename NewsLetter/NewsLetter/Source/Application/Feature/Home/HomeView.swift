@@ -113,6 +113,7 @@ struct HomeView: View {
                         firstLookHandler: { isPresentNotificationPermissionBottomSheet = true }
                     )
                     .transition(.opacity)
+                    .zIndex(1)
                 }
             }
             .animation(.easeInOut, value: isPresentModal)
@@ -131,13 +132,17 @@ struct HomeView: View {
             guard UserActionHistory.isAlreadyInputJobDetail == false &&
                     DateCalculator.isCanShowJobDetailBottomSheet()
             else {
-                isPresentModal = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.isPresentModal = true
+                }
                 return
             }
             
             isPresentJobDetailBottomSheet = true
         } else {
-            isPresentModal = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.isPresentModal = true
+            }
         }
         cardTapCount += 1
     }
