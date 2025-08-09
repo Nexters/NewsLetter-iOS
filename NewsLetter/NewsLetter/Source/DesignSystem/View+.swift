@@ -15,6 +15,10 @@ extension View {
     func toastMessage(isPresented: Binding<Bool>, text: String, bottomPadding: CGFloat) -> some View {
         self.modifier(ToastMessage(isPresented: isPresented, text: text, bottomPadding: bottomPadding))
     }
+    
+    func fontRangeLimited() -> some View {
+        self.dynamicTypeSize(.small ... .xxxLarge)
+    }
 }
 
 struct RoundedCorner: Shape {

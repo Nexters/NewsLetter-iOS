@@ -21,11 +21,13 @@ struct WebViewFullScreen: View {
                         reloadTrigger.toggle()
                     } label: {
                         Image(systemName: "arrow.clockwise")
+                            .fontRangeLimited()
                             .foregroundColor(.black)
                             .padding(8)
                     }
                     Spacer()
                     Text(currentURL.isEmpty ? url.absoluteString : currentURL)
+                        .fontRangeLimited()
                         .font(.caption)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -36,6 +38,7 @@ struct WebViewFullScreen: View {
                         isPresented = false
                     } label: {
                         Image(systemName: "xmark")
+                            .fontRangeLimited()
                             .foregroundColor(.black)
                             .padding(8)
                     }
