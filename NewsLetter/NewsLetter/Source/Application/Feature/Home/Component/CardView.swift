@@ -33,6 +33,7 @@ struct CardView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(trimmedTitle)
+                    .fontRangeLimited()
                     .font(cardType.fontName)
                     .foregroundStyle(.semanticColor.text_strong)
                     .padding(.top, hideCategoryAndSource ? 16 : cardType.topPadding)
@@ -84,6 +85,7 @@ struct CardView: View {
                 if !hideCategoryAndSource {
                     HStack(spacing: 6) {
                         Text(category)
+                            .fontRangeLimited()
                             .font(.body13_medium)
                             .foregroundStyle(.semanticColor.text_strong.opacity(0.5))
 
@@ -92,6 +94,7 @@ struct CardView: View {
                             .foregroundStyle(ColorPalette.black.opacity(0.1))
 
                         Text(source)
+                            .fontRangeLimited()
                             .font(.body13_medium)
                             .foregroundStyle(.semanticColor.text_strong.opacity(0.5))
                     }

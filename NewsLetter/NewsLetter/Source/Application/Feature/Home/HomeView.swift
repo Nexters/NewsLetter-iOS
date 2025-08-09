@@ -26,6 +26,7 @@ struct HomeView: View {
             ZStack {
                 VStack {
                     Text("\(store.state.todayDate)\nToday’s Hot News")
+                        .fontRangeLimited()
                         .font(Font.custom("Jalnan Gothic", size: 32))
                         .multilineTextAlignment(.center)
                         .foregroundColor(.semanticColor.text_strong)
@@ -45,6 +46,7 @@ struct HomeView: View {
                         }
 
                     Text(store.state.formattedTime)
+                        .fontRangeLimited()
                         .font(.body16_semiBold)
                         .foregroundColor(.semanticColor.state_negative_primary)
                         .padding(.top, 8)

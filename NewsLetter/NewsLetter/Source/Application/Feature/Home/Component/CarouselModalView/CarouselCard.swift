@@ -24,15 +24,18 @@ struct CarouselCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(card.title)
+                .fontRangeLimited()
                 .font(.head20_bold)
                 .foregroundStyle(pointColor)
             
             Text(card.topKeyword)
+                .fontRangeLimited()
                 .font(.body13_medium)
                 .foregroundStyle(pointColor)
                 .padding(.top, 4)
             
             Text(card.summary)
+                .fontRangeLimited()
                 .font(.body14_regular)
                 .padding(.top, 16)
             
@@ -42,6 +45,7 @@ struct CarouselCard: View {
                 .frame(height: Metric.nextButtonHeight)
                 .overlay {
                     Text("이어서 보기")
+                        .fontRangeLimited()
                         .font(.body14_semiBold)
                         .foregroundStyle(.semanticColor.text_primary)
                 }
