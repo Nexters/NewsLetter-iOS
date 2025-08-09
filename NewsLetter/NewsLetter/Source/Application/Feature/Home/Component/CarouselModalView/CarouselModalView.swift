@@ -33,6 +33,9 @@ struct CarouselModalView: View {
         ZStack {
             Color.semanticColor.background_dimmed
                 .ignoresSafeArea()
+                .onTapGesture {
+                    isPresented = false
+                }
 
             VStack(spacing: 0) {
                 ScrollView(.horizontal, showsIndicators: false) {
