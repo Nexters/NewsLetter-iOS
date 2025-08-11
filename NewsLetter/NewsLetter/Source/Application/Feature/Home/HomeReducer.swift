@@ -88,23 +88,23 @@ struct HomeReducer {
                     )
                 }
 
-//                let todayString = DateCalculator.formattedDateString()
-//                let lastVisitString = UserInfo.lastCardFetchDate.map {
-//                    DateCalculator.formattedDateString(from: $0)
-//                } ?? ""
-//
-//                if todayString == lastVisitString ,
-//                   let cachedCards = UserInfo.cachedDailyCards,
-//                   !cachedCards.isEmpty,
-//                   let cachedColors = UserInfo.cachedDailyColors?.map({ $0.color }),
-//                   !cachedColors.isEmpty {
-//
-//                    state.cardData = cachedCards
-//                    state.cardColors = cachedColors
-//
-//                } else {
-//                    effects.append(.send(.fetchCards))
-//                }
+                let todayString = DateCalculator.formattedDateString()
+                let lastVisitString = UserInfo.lastCardFetchDate.map {
+                    DateCalculator.formattedDateString(from: $0)
+                } ?? ""
+
+                if todayString == lastVisitString ,
+                   let cachedCards = UserInfo.cachedDailyCards,
+                   !cachedCards.isEmpty,
+                   let cachedColors = UserInfo.cachedDailyColors?.map({ $0.color }),
+                   !cachedColors.isEmpty {
+
+                    state.cardData = cachedCards
+                    state.cardColors = cachedColors
+
+                } else {
+                    effects.append(.send(.fetchCards))
+                }
                 effects.append(.send(.fetchCards))
 
                 UserInfo.lastCardFetchDate = Date()

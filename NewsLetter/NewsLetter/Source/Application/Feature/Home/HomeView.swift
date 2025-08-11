@@ -11,14 +11,13 @@ import ComposableArchitecture
 
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
-    @State var colorFlag: String
+    let colorFlag: String
     @State private var isPresentModal: Bool = false
     @State private var isPresentJobDetailBottomSheet: Bool = false
     @State private var isPresentNotificationPermissionBottomSheet: Bool = false
     @State private var isPresentToastMessage: Bool = false
     @State private var selectedIndex: Int?
     @State private var cardTapCount: Int = 0
-    @State private var titleTapCount: Int = 0
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
     
     var body: some View {
@@ -33,17 +32,6 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 44)
                         .fixedSize(horizontal: false, vertical: true)
-                        .onTapGesture {
-                            if titleTapCount < 9 {
-                                titleTapCount += 1
-                            } else {
-                                titleTapCount = 0
-                                colorFlag = colorFlag == "A" ? "B" : "A"
-                                store.send(.onAppear(colorFlag: colorFlag))
-                                print("== ")
-                            }
-                            print("== count: \(titleTapCount)")
-                        }
 
                     Text(store.state.formattedTime)
                         .fontRangeLimited()
@@ -52,25 +40,23 @@ struct HomeView: View {
                         .padding(.top, 8)
                     
                     Spacer()
-                    
-                    if store.cardColors.count == store.cardData.count {
-                        VStack(spacing: -35) {
-                            ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
-                                CardView(
-                                    cardType: cardTypes[index],
-                                    color: store.cardColors[index],
-                                    title: item.title,
-                                    category: item.topKeyword,
-                                    source: item.newsletterName,
-                                    onTap: {
-                                        selectedIndex = index
-                                        cardTapHandler()
-                                    }
-                                )
-                            }
+
+                    VStack(spacing: -35) {
+                        ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
+                            CardView(
+                                cardType: cardTypes[index],
+                                color: store.cardColors[index],
+                                title: item.title,
+                                category: item.topKeyword,
+                                source: item.newsletterName,
+                                onTap: {
+                                    selectedIndex = index
+                                    cardTapHandler()
+                                }
+                            )
                         }
-                        .padding(.bottom, -20)
                     }
+                    .padding(.bottom, -20)
                 }
                 .ignoresSafeArea(edges: .bottom)
                 .transition(.opacity)
@@ -105,6 +91,7 @@ struct HomeView: View {
                 )
                 .onAppear {
                     store.send(.onAppear(colorFlag: self.colorFlag))
+                    print()
                     DateCalculator.checkAndIncrementVisitStreak()
                     
                     guard UserActionHistory.streakCount >= 2 &&
