@@ -28,7 +28,9 @@ struct CarouselModalView: View {
 
     var body: some View {
         let cardData = Array(cardData.reversed())
-        let pointColors = Array(pointColors.reversed()).map { $0.toChangeColor() }
+        let pointColors = Array(pointColors.reversed()
+            .dropFirst(pointColors.count - cardData.count))
+            .map { $0.toChangeColor() }
 
         ZStack {
             Color.semanticColor.background_dimmed
