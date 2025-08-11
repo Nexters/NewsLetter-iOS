@@ -91,7 +91,6 @@ struct HomeView: View {
                 )
                 .onAppear {
                     store.send(.onAppear(colorFlag: self.colorFlag))
-                    print()
                     DateCalculator.checkAndIncrementVisitStreak()
                     
                     guard UserActionHistory.streakCount >= 2 &&

@@ -23,4 +23,8 @@ struct UserInfo {
     /// 유저가 마지막 API를 호출한 날짜
     @UserDefaultWrapper(key: "lastCardFetchDate", defaultValue: nil)
     static var lastCardFetchDate: Date?
+
+    /// 유저의 유니크 id
+    @UserDefaultWrapper(key: "fcmToken", defaultValue: nil)
+    static var fcmToken: String?
 }

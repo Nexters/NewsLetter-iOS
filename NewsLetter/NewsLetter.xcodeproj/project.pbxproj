@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		021B01F82E44D6FD003AD0C1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 021B01F72E44D6FD003AD0C1 /* FirebaseMessaging */; };
 		023E73892E39066D00E63B83 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 023E73882E39066D00E63B83 /* FirebaseAnalytics */; };
 		023E73922E39076700E63B83 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 023E73912E39076700E63B83 /* FirebaseRemoteConfig */; };
 		0263F6D12E221A3C004837BB /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 0263F6D02E221A3C004837BB /* ComposableArchitecture */; };
@@ -44,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				021B01F82E44D6FD003AD0C1 /* FirebaseMessaging in Frameworks */,
 				AFD2BCAB2E233EF600E8319C /* CombineMoya in Frameworks */,
 				0263F6D12E221A3C004837BB /* ComposableArchitecture in Frameworks */,
 				023E73892E39066D00E63B83 /* FirebaseAnalytics in Frameworks */,
@@ -104,6 +106,7 @@
 				AFD2BCAC2E233EF600E8319C /* Moya */,
 				023E73882E39066D00E63B83 /* FirebaseAnalytics */,
 				023E73912E39076700E63B83 /* FirebaseRemoteConfig */,
+				021B01F72E44D6FD003AD0C1 /* FirebaseMessaging */,
 			);
 			productName = NewsLetter;
 			productReference = AFA1FD4B2E2213C70064A381 /* NewsLetter.app */;
@@ -429,6 +432,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		021B01F72E44D6FD003AD0C1 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 023E73852E39066D00E63B83 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
 		023E73882E39066D00E63B83 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 023E73852E39066D00E63B83 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
