@@ -8,6 +8,7 @@
 import SwiftUI
 
 import ComposableArchitecture
+import FirebaseAnalytics
 
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
@@ -52,6 +53,18 @@ struct HomeView: View {
                                 onTap: {
                                     selectedIndex = index
                                     cardTapHandler()
+
+                                    let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": 5-index]))
+                                        .flatMap { String(data: $0, encoding: .utf8) }
+
+                                    Analytics.logEvent("click_newsletter", parameters: [
+                                        "category": "click",
+                                        "navigation": "main",
+                                        "object_section": "newsletter_list",
+                                        "object_type": "newsletter",
+                                        "object_id": item.title,
+                                        "data": dataString ?? ""
+                                    ])
                                 }
                             )
                         }
@@ -90,6 +103,11 @@ struct HomeView: View {
                     bottomPadding: 0
                 )
                 .onAppear {
+                    Analytics.logEvent(AnalyticsEventScreenView,
+                   parameters: [
+                    AnalyticsParameterScreenName: "main"
+                   ])
+
                     store.send(.onAppear(colorFlag: self.colorFlag))
                     DateCalculator.checkAndIncrementVisitStreak()
                     

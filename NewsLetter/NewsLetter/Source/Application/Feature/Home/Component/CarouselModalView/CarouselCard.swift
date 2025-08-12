@@ -8,6 +8,8 @@
 import SwiftUI
 import WebKit
 
+import FirebaseAnalytics
+
 struct CarouselCard: View {
     private enum Metric {
         static let height: CGFloat = 366
@@ -19,6 +21,7 @@ struct CarouselCard: View {
     
     @State private var isWebViewPresented: Bool = false
     let card: Card
+    let index: Int
     let pointColor: Color
     
     var body: some View {
@@ -51,6 +54,18 @@ struct CarouselCard: View {
                 }
                 .onTapGesture {
                     isWebViewPresented = true
+
+                    let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": index]))
+                        .flatMap { String(data: $0, encoding: .utf8) } 
+
+                    Analytics.logEvent("click_newsletter_carousel", parameters: [
+                        "category": "click",
+                        "navigation": "newsletter_carousel",
+                        "object_section": "newsletter_card",
+                        "object_type": "newsletter",
+                        "object_id": card.title,
+                        "data": dataString ?? ""
+                    ])
                 }
                 .padding(.top, 16)
         }
@@ -68,5 +83,5 @@ struct CarouselCard: View {
 }
 
 #Preview {
-    CarouselCard(card: .stub(), pointColor: ColorPalette.pointPink500)
+    CarouselCard(card: .stub(), index: 0, pointColor: ColorPalette.pointPink500)
 }

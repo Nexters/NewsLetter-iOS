@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+import FirebaseAnalytics
 import FirebaseMessaging
 
 struct NotificationPermissionBottomSheet: View {
@@ -42,6 +43,12 @@ struct NotificationPermissionBottomSheet: View {
             }
             .padding(.top, 32)
         }
+        .onAppear() {
+            Analytics.logEvent(AnalyticsEventScreenView,
+           parameters: [
+            AnalyticsParameterScreenName: "bottom_sheet_notification"
+           ])
+        }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && isCheckingPermission {
                 checkNotificationStatusAndDismissIfAllowed()
@@ -55,6 +62,11 @@ struct NotificationPermissionBottomSheet: View {
                 if granted {
                     self.sendTokenToServer()
 
+                    Analytics.logEvent("click_bottom_sheet_notification", parameters: [
+                        "category": "click",
+                        "navigation": "bottom_sheet_notification",
+                        "object_type": "button"
+                    ])
                     successHandler()
                     isPresented = false
                 } else {
