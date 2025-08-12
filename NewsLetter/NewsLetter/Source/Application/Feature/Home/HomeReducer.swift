@@ -45,6 +45,7 @@ struct HomeReducer {
         case timerStarted
         case setColorPalette([Color])
         case fetchCards
+        case loginUser
         case registerUser
         case updateUser(UserUpdateRequestDTO)
         case setCards([Card])
@@ -108,9 +109,14 @@ struct HomeReducer {
                 effects.append(.send(.fetchCards))
 
                 UserInfo.lastCardFetchDate = Date()
-
-                return .merge(effects)
-
+                
+                let loginEffect = Effect<Action>.send(.loginUser)
+                let delayEffect = Effect<Action>.run { _ in
+                    try await clock.sleep(for: .seconds(0.5))
+                }
+                let restEffect = Effect<Action>.merge(effects)
+                return .concatenate(loginEffect, delayEffect, restEffect)
+                
             case let .setColorPalette(colors):
                 state.cardColors = colors
                 return .none
@@ -147,6 +153,21 @@ struct HomeReducer {
                         await send(.setCards(cards))
                     } catch {
                         await send(.setCards([]))
+                    }
+                }
+            case .loginUser:
+                return .run { send in
+                    do {
+                        guard let deviceToken = KeychainManager.shared.retrieveString(forKey: "deviceToken") else {
+                            return
+                        }
+                        let requestDTO = UserLoginRequestDTO(deviceToken: deviceToken)
+                        let userId = try await userClient.login(requestDTO)
+                        UserInfo.userId = userId
+                    } catch let error {
+                        // TODO: 에러 핸들링
+                        print(error.localizedDescription)
+                        await send(.registerUser)
                     }
                 }
             case .registerUser:
