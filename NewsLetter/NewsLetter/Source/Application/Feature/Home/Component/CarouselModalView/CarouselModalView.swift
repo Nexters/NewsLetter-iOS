@@ -8,6 +8,7 @@
 import SwiftUI
 
 import ComposableArchitecture
+import FirebaseAnalytics
 
 struct CarouselModalView: View {
     private enum Metric {
@@ -45,7 +46,7 @@ struct CarouselModalView: View {
                         ForEach(cardData.indices, id: \.self) { index in
                             let card = cardData[index]
                             let pointColor = pointColors[index]
-                            CarouselCard(card: card, pointColor: pointColor)
+                            CarouselCard(card: card, index: index, pointColor: pointColor)
                                 .frame(width: Metric.cardWidth)
                         }
                     }
@@ -90,6 +91,12 @@ struct CarouselModalView: View {
                 }
                 .padding(.top, 43)
             }
+        }
+        .onAppear() {
+            Analytics.logEvent(AnalyticsEventScreenView,
+           parameters: [
+            AnalyticsParameterScreenName: "newsletter_carousel"
+           ])
         }
     }
 }
