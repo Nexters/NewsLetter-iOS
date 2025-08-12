@@ -105,7 +105,6 @@ struct HomeReducer {
                 } else {
                     effects.append(.send(.fetchCards))
                 }
-                effects.append(.send(.fetchCards))
 
                 UserInfo.lastCardFetchDate = Date()
 
