@@ -54,7 +54,7 @@ struct HomeView: View {
                                     selectedIndex = index
                                     cardTapHandler()
 
-                                    let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": 5-index]))
+                                    let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": store.state.cardData.count-1-index]))
                                         .flatMap { String(data: $0, encoding: .utf8) }
 
                                     Analytics.logEvent("click_newsletter", parameters: [
