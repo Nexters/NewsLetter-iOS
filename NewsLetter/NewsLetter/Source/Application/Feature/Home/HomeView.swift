@@ -24,13 +24,27 @@ struct HomeView: View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack {
                 VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            // TODO: 설정 화면으로 Navigation 이동
+                        } label: {
+                            Image("setting_icon")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .padding(8)
+                                .padding(.trailing, 8)
+                        }
+                    }
+                    .frame(height: 48)
+                    
                     Text("\(store.state.todayDate)\nToday’s Hot News")
                         .fontRangeLimited()
                         .font(Font.custom("Jalnan Gothic", size: 32))
                         .multilineTextAlignment(.center)
                         .foregroundColor(.semanticColor.text_strong)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 44)
+                        .padding(.top, 20)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(store.state.formattedTime)
