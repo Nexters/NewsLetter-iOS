@@ -14,7 +14,7 @@ import ComposableArchitecture
 struct HomeReducer {
     @Reducer
     enum Path {
-        case detail(DetailReducer)
+        case setting(SettingReducer)
     }
     
     @ObservableState
@@ -41,6 +41,7 @@ struct HomeReducer {
         case path(StackActionOf<Path>)
         case onAppear(colorFlag: String)
         case onDisappear
+        case settingPressed
         case tick
         case timerStarted
         case setColorPalette([Color])
@@ -124,7 +125,9 @@ struct HomeReducer {
             case .onDisappear:
                 state.timerIsRunning = false
                 return .cancel(id: CancelID.timer)
-
+            case .settingPressed:
+                state.path.append(.setting(SettingReducer.State()))
+                return .none
             case .timerStarted:
                 return .none
 
