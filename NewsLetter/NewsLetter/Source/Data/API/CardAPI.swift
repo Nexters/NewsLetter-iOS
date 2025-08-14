@@ -9,15 +9,13 @@ import Foundation
 
 import Moya
 
-let BASE_URL = Bundle.main.infoDictionary?["BASE_URL"] as? String ?? "fairy-band.com"
-
 enum CardAPI {
     case fetchCards(userId: String, publishedDate: String?)
 }
 
 extension CardAPI: TargetType {
     var baseURL: URL {
-        return URL(string: "https://\(BASE_URL)/api/api")!
+        return URL(string: "https://\(AppInfo.baseURL)/api/api")!
     }
 
     var path: String {
