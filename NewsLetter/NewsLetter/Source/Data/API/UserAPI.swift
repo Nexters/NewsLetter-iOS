@@ -21,12 +21,12 @@ extension UserAPI: TargetType {
     }
     
     var baseURL: URL {
-        return URL(string: "https://\(BASE_URL)/api/api")!
+        return URL(string: "https://\(AppInfo.baseURL)/api/api")!
     }
     
     var path: String {
         switch self {
-        case .login(let deviceToken): return "/users/login"
+        case .login: return "/users/login"
         case .register:               return "/users/register"
         case .update(let userId, _):  return "/users/\(userId)"
         }
