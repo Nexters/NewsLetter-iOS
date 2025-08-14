@@ -28,7 +28,7 @@ struct HomeView: View {
                     HStack {
                         Spacer()
                         Button {
-                            // TODO: 설정 화면으로 Navigation 이동
+                            store.send(.settingPressed)
                         } label: {
                             Image("setting_icon")
                                 .resizable()
@@ -160,8 +160,8 @@ struct HomeView: View {
             .animation(.easeInOut, value: isPresentModal)
         } destination: { store in
             switch store.case {
-            case .detail(let store):
-                DetailView(store: store)
+            case .setting(let store):
+                SettingView(store: store)
             }
         }
     }
