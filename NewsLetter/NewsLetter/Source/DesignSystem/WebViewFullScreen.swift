@@ -12,6 +12,8 @@ struct WebViewFullScreen: View {
     @Binding var isPresented: Bool
     @State private var reloadTrigger: Bool = false
     @State private var currentURL: String = ""
+    @State private var isLoading: Bool = false
+    @State private var isFail: Bool = false
     
     var body: some View {
         ZStack {
@@ -48,8 +50,23 @@ struct WebViewFullScreen: View {
                 .padding(.top, 40)
                 .padding(.horizontal, 12)
                 
-                WebView(url: url, reloadTrigger: reloadTrigger, currentURL: $currentURL)
+                if !isFail {
+                    WebView(
+                        url: url,
+                        reloadTrigger: reloadTrigger,
+                        currentURL: $currentURL,
+                        isLoading: $isLoading,
+                        isFail: $isFail
+                    )
                     .edgesIgnoringSafeArea(.bottom)
+                } else {
+                    Spacer()
+                    Text("페이지를 불러오는데 실패했습니다.\n다시 시도해주세요.") // TODO: Error UI 구성 필요
+                    Spacer()
+                }
+            }
+            if isLoading {
+                ProgressView()
             }
         }
         .edgesIgnoringSafeArea(.all)
