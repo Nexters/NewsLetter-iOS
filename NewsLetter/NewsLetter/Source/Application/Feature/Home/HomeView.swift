@@ -109,6 +109,15 @@ struct HomeView: View {
                    ])
 
                     store.send(.onAppear(colorFlag: self.colorFlag))
+                    
+                    if UserActionHistory.isFirstAppLaunch {
+                        UserActionHistory.isFirstAppLaunch = false
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            isPresentJobDetailBottomSheet = true
+                        }
+                    }
+
                     DateCalculator.checkAndIncrementVisitStreak()
                     
                     guard UserActionHistory.streakCount >= 2 &&
