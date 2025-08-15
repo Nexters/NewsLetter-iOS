@@ -19,11 +19,11 @@ extension FirebaseAPI: TargetType {
     }
 
     var path: String {
-            switch self {
-            case .registerNotification:
-                return "/notifications/token"
-            }
+        switch self {
+        case .registerNotification:
+            return "/notifications/token"
         }
+    }
 
     var method: Moya.Method {
         switch self {
