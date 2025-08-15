@@ -8,6 +8,7 @@
 import SwiftUI
 
 import ComposableArchitecture
+import FirebaseAnalytics
 
 struct CarouselModalView: View {
     private enum Metric {
@@ -19,6 +20,8 @@ struct CarouselModalView: View {
         static let xButtonSize: CGFloat = 44
     }
 
+    @State private var loggedImpressionIndices: Set<Int> = []
+
     @State var cardData: [Card]
     @State var pointColors: [Color]
     @Binding var isPresented: Bool
@@ -28,9 +31,7 @@ struct CarouselModalView: View {
 
     var body: some View {
         let cardData = Array(cardData.reversed())
-        let pointColors = Array(pointColors.reversed()
-            .dropFirst(pointColors.count - cardData.count))
-            .map { $0.toChangeColor() }
+        let pointColors = Array(pointColors.reversed().prefix(cardData.count)).map { $0.toChangeColor() }
 
         ZStack {
             Color.semanticColor.background_dimmed
@@ -45,7 +46,7 @@ struct CarouselModalView: View {
                         ForEach(cardData.indices, id: \.self) { index in
                             let card = cardData[index]
                             let pointColor = pointColors[index]
-                            CarouselCard(card: card, pointColor: pointColor)
+                            CarouselCard(card: card, index: index, pointColor: pointColor)
                                 .frame(width: Metric.cardWidth)
                         }
                     }
@@ -65,6 +66,28 @@ struct CarouselModalView: View {
                         }
                     }
                 ))
+                .onChange(of: currentPage) { _, newPage in
+                    guard let newIndex = newPage else { return }
+
+                    if !loggedImpressionIndices.contains(newIndex) {
+                        let actualIndex = cardData.count - 1 - newIndex
+
+                        let card = cardData[actualIndex]
+                        let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": actualIndex]))
+                            .flatMap { String(data: $0, encoding: .utf8) }
+
+                        Analytics.logEvent("impression_newsletter_carousel", parameters: [
+                            "category": "impression",
+                            "navigation": "newsletter_carousel",
+                            "object_section": "newsletter_card",
+                            "object_type": "newsletter",
+                            "object_id": card.title,
+                            "data": dataString ?? ""
+                        ])
+
+                        loggedImpressionIndices.insert(actualIndex)
+                    }
+                }
 
                 HStack(spacing: Metric.indicatorSize) {
                     ForEach(0..<cardData.count, id: \.self) { index in
@@ -89,6 +112,30 @@ struct CarouselModalView: View {
                         .frame(width: Metric.xButtonSize, height: Metric.xButtonSize)
                 }
                 .padding(.top, 43)
+            }
+        }
+        .onAppear() {
+            Analytics.logEvent(AnalyticsEventScreenView,
+                               parameters: [
+                                AnalyticsParameterScreenName: "newsletter_carousel"
+                               ])
+
+            if let initialIndex = currentPage, !loggedImpressionIndices.contains(initialIndex) {
+                let actualIndex = cardData.count-1-initialIndex
+                let card = cardData[actualIndex]
+                let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": actualIndex]))
+                    .flatMap { String(data: $0, encoding: .utf8) }
+
+                Analytics.logEvent("impression_newsletter_carousel", parameters: [
+                    "category": "impression",
+                    "navigation": "newsletter_carousel",
+                    "object_section": "newsletter_card",
+                    "object_type": "newsletter",
+                    "object_id": card.title,
+                    "data": dataString ?? ""
+                ])
+
+                loggedImpressionIndices.insert(actualIndex)
             }
         }
     }
