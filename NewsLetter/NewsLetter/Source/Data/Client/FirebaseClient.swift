@@ -14,7 +14,7 @@ import Moya
 struct FirebaseClient {
     static let apiClient = MoyaAPIClient()
 
-    var sendDeviceToken: (_ deviceToken: String, _ fcmToken: String, _ deviceType: String) async throws -> Void
+    var sendDeviceToken: (_ deviceToken: String, _ fcmToken: String) async throws -> Void
 }
 
 extension DependencyValues {
@@ -27,7 +27,7 @@ extension DependencyValues {
 extension FirebaseClient: DependencyKey {
     static var liveValue: FirebaseClient = {
         return FirebaseClient(
-            sendDeviceToken: { deviceToken, fcmToken, deviceType in
+            sendDeviceToken: { deviceToken, fcmToken in
                 let dto = RegisterNotificationRequestDTO(
                     deviceToken: deviceToken,
                     fcmToken: fcmToken,
@@ -40,7 +40,7 @@ extension FirebaseClient: DependencyKey {
 
     static var previewValue: FirebaseClient = {
         return FirebaseClient(
-            sendDeviceToken: { _, _, _ in
+            sendDeviceToken: { _, _ in
                 print("📦 preview sendDeviceToken")
             }
         )

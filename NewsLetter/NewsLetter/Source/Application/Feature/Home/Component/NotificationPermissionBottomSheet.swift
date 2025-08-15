@@ -87,7 +87,7 @@ struct NotificationPermissionBottomSheet: View {
         Task {
             do {
                 let firebaseClient = FirebaseClient.liveValue
-                try await firebaseClient.sendDeviceToken(deviceToken, fcmToken, "IOS")
+                try await firebaseClient.sendDeviceToken(deviceToken, fcmToken)
             } catch {
                 print("=== ❌ FCM 토큰 등록 실패: \(error.localizedDescription)")
             }
