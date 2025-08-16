@@ -84,6 +84,12 @@ struct HomeView: View {
                         }
                     }
                     .padding(.bottom, -20)
+                    .background(
+                        Image("bg_drawers")
+                            .resizable()
+                            .scaledToFill()
+                            .padding(.top, -25)
+                    )
                 }
                 .ignoresSafeArea(edges: .bottom)
                 .transition(.opacity)
