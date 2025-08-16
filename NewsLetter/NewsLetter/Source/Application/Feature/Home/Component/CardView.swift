@@ -24,6 +24,7 @@ struct CardView: View {
     @State private var hideCategoryAndSource: Bool = false
     @State private var vStackHeight: CGFloat = 0
     @State private var titleBottomSpacing: CGFloat = 0
+    @State private var categoryBottomSpacing: CGFloat = 0
     @State private var cardScale: CGFloat = 1.0
 
     var body: some View {
@@ -57,6 +58,10 @@ struct CardView: View {
                                     } else {
                                         hideCategoryAndSource = false
                                         titleBottomSpacing = 4
+                                        let shouldHide = calculatedTitleHeight >= CGFloat(cardType.oneLineHeight)
+                                        if !shouldHide {
+                                            categoryBottomSpacing = CGFloat(cardType.oneLineHeight)
+                                        }
                                     }
                                 }
                                 .onChange(of: proxy.size.height) { _, newValue in
@@ -102,7 +107,7 @@ struct CardView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 0)
+            .padding(.bottom, categoryBottomSpacing)
             .background(
                 GeometryReader { proxy in
                     Color.clear

@@ -38,22 +38,32 @@ struct HomeView: View {
                         }
                     }
                     .frame(height: 48)
-                    
-                    Text("\(store.state.todayDate)\nToday’s Hot News")
-                        .fontRangeLimited()
-                        .font(Font.custom("Jalnan Gothic", size: 32))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.semanticColor.text_strong)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 20)
-                        .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 50)
 
-                    Text(store.state.formattedTime)
-                        .fontRangeLimited()
-                        .font(.body16_semiBold)
-                        .foregroundColor(.semanticColor.state_negative_primary)
-                        .padding(.top, 8)
-                    
+                    VStack(spacing: 8) {
+                        Text("\(store.state.todayDate)\nToday’s Hot News")
+                            .fontRangeLimited()
+                            .font(.jalnanGothic)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.semanticColor.text_strong)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.top, 12)
+                            .padding(.bottom, 0)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        HStack(spacing: 0) {
+                            Text(store.state.formattedTime)
+                                .fontRangeLimited()
+                                .font(.body16_semiBold)
+                                .foregroundColor(.semanticColor.state_negative_primary)
+                            Text(" 동안 볼 수 있어요")
+                                .font(.body15_medium)
+                                .foregroundColor(.semanticColor.text_secondary)
+                        }
+                        .padding(.bottom, 0)
+                        .padding(.top, 0)
+                    }
+
                     Spacer()
 
                     VStack(spacing: -35) {
@@ -91,7 +101,7 @@ struct HomeView: View {
                             .padding(.top, -25)
                     )
                 }
-                .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea(edges: .all)
                 .transition(.opacity)
                 .draggableBottomSheet(
                     isShow: $isPresentJobDetailBottomSheet,
