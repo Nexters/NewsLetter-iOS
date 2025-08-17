@@ -35,7 +35,7 @@ struct SettingView: View {
                 Divider()
                 
                 sectionTitle(title: "고객지원")
-                normalRow(title: "문의하기", value: "soak@gmail.com")
+                normalRow(title: "문의하기", value: "newsletter.feeding@gmail.com")
                 
                 Divider()
                 
@@ -119,9 +119,17 @@ struct SettingView: View {
                 .font(.body18_medium)
                 .foregroundColor(Color(hex: 0x404249))
             Spacer()
-            Text(value)
-                .font(.body16_regular)
-                .foregroundColor(Color(hex: 0x404249))
+            
+            if value.contains("@"),
+               let url = URL(string: "mailto:\(value)") {
+                Link(value, destination: url)
+                    .font(.body16_regular)
+                    .foregroundColor(.blue)
+            } else {
+                Text(value)
+                    .font(.body16_regular)
+                    .foregroundColor(Color(hex: 0x404249))
+            }
         }
     }
 }
