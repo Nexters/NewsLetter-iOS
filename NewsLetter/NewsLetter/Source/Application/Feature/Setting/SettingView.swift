@@ -10,12 +10,7 @@ import SwiftUI
 import ComposableArchitecture
 
 struct SettingView: View {
-    @Environment(\.dismiss) private var dismiss
     @Bindable var store: StoreOf<SettingReducer>
-    @State private var isPresentJobDetailBottomSheet: Bool = false
-    @State private var isPresentToastMessage: Bool = false
-    @State private var navigateToPrivacyPolicy: Bool = false
-    @State private var navigateToTermsOfService: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +19,7 @@ struct SettingView: View {
             
             VStack(alignment: .leading, spacing: 24) {
                 sectionTitle(title: "내정보")
-                navigationRow(title: "맞춤 설정") { isPresentJobDetailBottomSheet = true }
+                navigationRow(title: "맞춤 설정") { store.send(.setIsPresentJobDetailBottomSheet(true)) }
                 navigationRow(title: "알림") { } // TODO: 정책 미정.
                 
                 Divider()
@@ -40,15 +35,15 @@ struct SettingView: View {
                 Divider()
                 
                 sectionTitle(title: "약관 및 정책")
-                navigationRow(title: "서비스 이용약관") { navigateToTermsOfService = true }
-                navigationRow(title: "개인정보 취급 방침") { navigateToPrivacyPolicy = true }
+                navigationRow(title: "서비스 이용약관") { store.send(.setNavigateToTermsOfService(true)) }
+                navigationRow(title: "개인정보 취급 방침") { store.send(.setNavigateToPrivacyPolicy(true)) }
                 
                 Spacer()
             }
             .padding(.horizontal, 16)
         }
         .draggableBottomSheet(
-            isShow: $isPresentJobDetailBottomSheet,
+            isShow: $store.isPresentJobDetailBottomSheet,
             dismissHandler: { UserActionHistory.deniedDateWhenInputJobDetail = Date() }
         ) {
             JobDetailBottomSheet { selectedJobCategory, selectedCareer in
@@ -56,20 +51,20 @@ struct SettingView: View {
                     selectedJobCategory: selectedJobCategory,
                     selectedCareer: selectedCareer
                 )
-                isPresentToastMessage = true
+                store.send(.setIsPresentJobDetailBottomSheet(false))
             }
         }
         .ignoresSafeArea(edges: .bottom)
         .toastMessage(
-            isPresented: $isPresentToastMessage,
+            isPresented: $store.isPresentToastMessage,
             text: "직군정보 등록이 완료되었어요.",
             bottomPadding: 0
         )
         .toolbar(.hidden)
-        .navigationDestination(isPresented: $navigateToPrivacyPolicy) {
+        .navigationDestination(isPresented: $store.navigateToPrivacyPolicy) {
             PrivacyPolicyView()
         }
-        .navigationDestination(isPresented: $navigateToTermsOfService) {
+        .navigationDestination(isPresented: $store.navigateToTermsOfService) {
             TermsOfServiceView()
         }
     }
@@ -85,7 +80,7 @@ struct SettingView: View {
             workingExperience: workingExperience
         )
         store.send(.updateUser(requestDTO))
-        isPresentJobDetailBottomSheet = false
+        store.send(.setIsPresentJobDetailBottomSheet(false))
     }
     
     @ViewBuilder

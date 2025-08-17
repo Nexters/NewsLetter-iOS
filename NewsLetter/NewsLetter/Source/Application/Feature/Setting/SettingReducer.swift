@@ -20,6 +20,10 @@ struct SettingReducer {
     @ObservableState
     struct State {
         var path = StackState<Path.State>()
+        var isPresentJobDetailBottomSheet = false
+        var isPresentToastMessage = false
+        var navigateToPrivacyPolicy = false
+        var navigateToTermsOfService = false
     }
     
     enum Action: BindableAction {
@@ -28,6 +32,10 @@ struct SettingReducer {
         case onAppear
         case onDisappear
         case updateUser(UserUpdateRequestDTO)
+        case setIsPresentJobDetailBottomSheet(Bool)
+        case setIsPresentToastMessage(Bool)
+        case setNavigateToPrivacyPolicy(Bool)
+        case setNavigateToTermsOfService(Bool)
     }
     
     @Dependency(\.userClient) var userClient
@@ -55,6 +63,18 @@ struct SettingReducer {
                         print(error.localizedDescription)
                     }
                 }
+            case .setIsPresentJobDetailBottomSheet(let bool):
+                state.isPresentJobDetailBottomSheet = bool
+                return .none
+            case .setIsPresentToastMessage(let bool):
+                state.isPresentToastMessage = bool
+                return .none
+            case .setNavigateToPrivacyPolicy(let bool):
+                state.navigateToPrivacyPolicy = bool
+                return .none
+            case .setNavigateToTermsOfService(let bool):
+                state.navigateToTermsOfService = bool
+                return .none
             }
         }
         .forEach(\.path, action: \.path)
