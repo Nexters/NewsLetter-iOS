@@ -15,7 +15,7 @@ enum FirebaseAPI {
 
 extension FirebaseAPI: TargetType {
     var baseURL: URL {
-        return URL(string: "https://\(BASE_URL)/api/api")!
+        return URL(string: "https://\(AppInfo.baseURL)/api/api")!
     }
 
     var path: String {
