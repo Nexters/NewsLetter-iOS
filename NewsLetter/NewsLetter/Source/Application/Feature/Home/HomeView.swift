@@ -48,7 +48,6 @@ struct HomeView: View {
                             .foregroundColor(.semanticColor.text_strong)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, 12)
-                            .padding(.bottom, 0)
                             .fixedSize(horizontal: false, vertical: true)
 
                         HStack(spacing: 0) {
@@ -60,8 +59,6 @@ struct HomeView: View {
                                 .font(.body15_medium)
                                 .foregroundColor(.semanticColor.text_secondary)
                         }
-                        .padding(.bottom, 0)
-                        .padding(.top, 0)
                     }
 
                     Spacer()
