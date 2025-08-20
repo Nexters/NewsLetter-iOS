@@ -10,6 +10,7 @@ import Foundation
 import Moya
 
 enum UserAPI {
+    case login(UserLoginRequestDTO)
     case register(UserRegisterRequestDTO)
     case update(userId: Int, requestDTO: UserUpdateRequestDTO)
 }
@@ -20,25 +21,35 @@ extension UserAPI: TargetType {
     }
     
     var baseURL: URL {
-        return URL(string: "https://\(BASE_URL)/api/api")!
+        return URL(string: "https://\(AppInfo.baseURL)/api/api")!
     }
     
     var path: String {
         switch self {
-        case .register: return "/users/register"
-        case .update(let userId, _): return "/users/\(userId)"
+        case .login: return "/users/login"
+        case .register:               return "/users/register"
+        case .update(let userId, _):  return "/users/\(userId)"
         }
     }
     
     var method: Moya.Method {
         switch self {
+        case .login:    return .get
         case .register: return .post
-        case .update: return .put
+        case .update:   return .put
         }
     }
     
     var task: Task {
         switch self {
+        case .login(let dto):
+            guard let parameters = dto.toDictionary() else {
+                return .requestPlain
+            }
+            return .requestParameters(
+                parameters: parameters,
+                encoding: URLEncoding.queryString
+            )
         case .register(let dto):
             guard let parameters = dto.toDictionary() else {
                 return .requestPlain

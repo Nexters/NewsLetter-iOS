@@ -8,6 +8,10 @@
 import Foundation
 
 struct UserActionHistory {
+    /// 유저가 처음 앱을 실행했는지 여부
+    @UserDefaultWrapper(key: "isFirstAppLaunch", defaultValue: true)
+    static var isFirstAppLaunch: Bool
+    
     /// 유저가 첫 카드를 열고 닫았는지 여부
     @UserDefaultWrapper(key: "isFirstLook", defaultValue: false)
     static var isFirstLook: Bool

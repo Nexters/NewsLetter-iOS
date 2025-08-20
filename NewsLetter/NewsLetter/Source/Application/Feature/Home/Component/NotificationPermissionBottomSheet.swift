@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+import FirebaseAnalytics
+import FirebaseMessaging
+
 struct NotificationPermissionBottomSheet: View {
     @Environment(\.scenePhase) private var scenePhase
     @Binding var isPresented: Bool
@@ -40,33 +43,57 @@ struct NotificationPermissionBottomSheet: View {
             }
             .padding(.top, 32)
         }
+        .onAppear() {
+            Analytics.logEvent(AnalyticsEventScreenView,
+           parameters: [
+            AnalyticsParameterScreenName: "bottom_sheet_notification"
+           ])
+        }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && isCheckingPermission {
                 checkNotificationStatusAndDismissIfAllowed()
             }
         }
     }
-    
+
     private func checkNotificationPermission() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
             DispatchQueue.main.async {
-                if settings.authorizationStatus == .authorized {
-                    UserActionHistory.isAlreadySetNotification = true
+                if granted {
+                    self.sendTokenToServer()
+
+                    Analytics.logEvent("click_bottom_sheet_notification", parameters: [
+                        "category": "click",
+                        "navigation": "bottom_sheet_notification",
+                        "object_type": "button"
+                    ])
                     successHandler()
                     isPresented = false
                 } else {
                     isCheckingPermission = true
-                    // TODO: 현재 앱 설정으로 이동은 하지만 알림메뉴가 표출되지 않는상황. 추후 알림메뉴 표출될 시 시나리오 테스트 필요
-                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-                    
-                    if UIApplication.shared.canOpenURL(url){
-                        UIApplication.shared.open(url)
-                    }
+                    isPresented = false
                 }
             }
         }
     }
-    
+
+    private func sendTokenToServer() {
+        guard let deviceToken = KeychainManager.shared.retrieveString(forKey: "deviceToken"),
+              let fcmToken = UserInfo.fcmToken
+        else {
+            return
+        }
+
+        Task {
+            do {
+                let firebaseClient = FirebaseClient.liveValue
+                try await firebaseClient.sendDeviceToken(deviceToken, fcmToken)
+            } catch {
+                print("=== ❌ FCM 토큰 등록 실패: \(error.localizedDescription)")
+            }
+        }
+    }
+
     private func checkNotificationStatusAndDismissIfAllowed() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {

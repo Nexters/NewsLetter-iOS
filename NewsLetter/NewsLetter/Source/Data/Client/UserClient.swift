@@ -14,6 +14,7 @@ import Moya
 struct UserClient {
     static let apiClient = MoyaAPIClient()
     
+    var login: (UserLoginRequestDTO) async throws -> Int
     var register: (UserRegisterRequestDTO) async throws -> Int
     var update: (Int, UserUpdateRequestDTO) async throws -> Void
 }
@@ -28,6 +29,11 @@ extension DependencyValues {
 extension UserClient: DependencyKey {
     static var liveValue: UserClient = {
        return UserClient(
+        login: { requestDTO in
+            let response = try await apiClient.request(UserAPI.login(requestDTO))
+            let dto = try response.map(UserLoginResponseDTO.self)
+            return dto.id
+        },
         register: { requestDTO in
             let response = try await apiClient.request(UserAPI.register(requestDTO))
             let dto = try response.map(UserRegisterResponseDTO.self)
@@ -41,6 +47,7 @@ extension UserClient: DependencyKey {
     
     static var previewValue: UserClient = {
         return UserClient(
+            login: { _ in return 0 },
             register: { _ in return 0 },
             update: { _, _ in return }
         )

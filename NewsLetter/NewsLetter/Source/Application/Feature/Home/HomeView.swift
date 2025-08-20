@@ -8,6 +8,7 @@
 import SwiftUI
 
 import ComposableArchitecture
+import FirebaseAnalytics
 
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
@@ -18,27 +19,50 @@ struct HomeView: View {
     @State private var isPresentToastMessage: Bool = false
     @State private var selectedIndex: Int?
     @State private var cardTapCount: Int = 0
+    @State private var pulseOffsets: [Int: CGFloat] = [:]
+    @State private var didAnimateIndex: Set<Int> = []
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
     
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack {
                 VStack {
-                    Text("\(store.state.todayDate)\nToday’s Hot News")
-                        .fontRangeLimited()
-                        .font(Font.custom("Jalnan Gothic", size: 32))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.semanticColor.text_strong)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 44)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HStack {
+                        Spacer()
+                        Button {
+                            store.send(.settingPressed)
+                        } label: {
+                            Image("setting_icon")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .padding(8)
+                                .padding(.trailing, 8)
+                        }
+                    }
+                    .frame(height: 48)
+                    .padding(.top, 50)
 
-                    Text(store.state.formattedTime)
-                        .fontRangeLimited()
-                        .font(.body16_semiBold)
-                        .foregroundColor(.semanticColor.state_negative_primary)
-                        .padding(.top, 8)
-                    
+                    VStack(spacing: 8) {
+                        Text("\(store.state.todayDate)\nToday’s Hot News")
+                            .fontRangeLimited()
+                            .font(.jalnanGothic)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.semanticColor.text_strong)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.top, 12)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        HStack(spacing: 0) {
+                            Text(store.state.formattedTime)
+                                .fontRangeLimited()
+                                .font(.body16_semiBold)
+                                .foregroundColor(.semanticColor.state_negative_primary)
+                            Text(" 동안 볼 수 있어요")
+                                .font(.body15_medium)
+                                .foregroundColor(.semanticColor.text_secondary)
+                        }
+                    }
+
                     Spacer()
 
                     VStack(spacing: -35) {
@@ -52,13 +76,50 @@ struct HomeView: View {
                                 onTap: {
                                     selectedIndex = index
                                     cardTapHandler()
+
+                                    let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": store.state.cardData.count-1-index]))
+                                        .flatMap { String(data: $0, encoding: .utf8) }
+
+                                    Analytics.logEvent("click_newsletter", parameters: [
+                                        "category": "click",
+                                        "navigation": "main",
+                                        "object_section": "newsletter_list",
+                                        "object_type": "newsletter",
+                                        "object_id": item.title,
+                                        "data": dataString ?? ""
+                                    ])
                                 }
                             )
+                            .offset(y: pulseOffsets[index] ?? 0)
+                            .onAppear {
+                                guard !didAnimateIndex.contains(index) else { return }
+                                didAnimateIndex.insert(index)
+
+                                let playOrder = (store.state.cardData.count - 1) - index
+                                let delayMs = playOrder * 150
+
+                                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        pulseOffsets[index] = -5
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
+                                        withAnimation(.easeInOut(duration: 0.1)) {
+                                            pulseOffsets[index] = 0
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     .padding(.bottom, -20)
+                    .background(
+                        Image("bg_drawers")
+                            .resizable()
+                            .scaledToFill()
+                            .padding(.top, -25)
+                    )
                 }
-                .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea(edges: .all)
                 .transition(.opacity)
                 .draggableBottomSheet(
                     isShow: $isPresentJobDetailBottomSheet,
@@ -90,8 +151,21 @@ struct HomeView: View {
                     bottomPadding: 0
                 )
                 .onAppear {
+                    Analytics.logEvent(AnalyticsEventScreenView,
+                   parameters: [
+                    AnalyticsParameterScreenName: "main"
+                   ])
+
                     store.send(.onAppear(colorFlag: self.colorFlag))
-                    print()
+                    
+                    if UserActionHistory.isFirstAppLaunch {
+                        UserActionHistory.isFirstAppLaunch = false
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            isPresentJobDetailBottomSheet = true
+                        }
+                    }
+
                     DateCalculator.checkAndIncrementVisitStreak()
                     
                     guard UserActionHistory.streakCount >= 2 &&
@@ -120,8 +194,8 @@ struct HomeView: View {
             .animation(.easeInOut, value: isPresentModal)
         } destination: { store in
             switch store.case {
-            case .detail(let store):
-                DetailView(store: store)
+            case .setting(let store):
+                SettingView(store: store)
             }
         }
     }
