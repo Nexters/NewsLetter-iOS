@@ -47,7 +47,7 @@ struct CarouselCard: View {
                 .background(ColorPalette.white)
                 .frame(height: Metric.nextButtonHeight)
                 .overlay {
-                    Text("이어서 보기")
+                    Text("원문 보기")
                         .fontRangeLimited()
                         .font(.body14_semiBold)
                         .foregroundStyle(.semanticColor.text_primary)
