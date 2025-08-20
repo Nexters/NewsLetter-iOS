@@ -15,6 +15,7 @@ struct CarouselCard: View {
         static let height: CGFloat = 366
         static let cornerRadius: CGFloat = 16
         static let padding: CGFloat = 20
+        static let shareButtonSize: CGFloat = 44
         static let nextButtonCornerRadius: CGFloat = 100
         static let nextButtonHeight: CGFloat = 44
     }
@@ -41,23 +42,29 @@ struct CarouselCard: View {
                 .fontRangeLimited()
                 .font(.body14_regular)
                 .padding(.top, 16)
-            
-            RoundedRectangle(cornerRadius: Metric.nextButtonCornerRadius)
-                .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
-                .background(ColorPalette.white)
-                .frame(height: Metric.nextButtonHeight)
-                .overlay {
-                    Text("원문 보기")
-                        .fontRangeLimited()
-                        .font(.body14_semiBold)
-                        .foregroundStyle(.semanticColor.text_primary)
+            HStack(spacing: 8) {
+                Button {
+                    // TODO: 공유하기 기능구현
+                } label: {
+                    RoundedRectangle(cornerRadius: Metric.shareButtonSize/2)
+                        .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
+                        .background(ColorPalette.white)
+                        .frame(width: Metric.shareButtonSize, height: Metric.shareButtonSize)
+                        .overlay {
+                            Image("share_icon")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundStyle(.semanticColor.text_primary)
+                            
+                        }
                 }
-                .onTapGesture {
+                
+                Button {
                     isWebViewPresented = true
-
+                    
                     let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": index]))
-                        .flatMap { String(data: $0, encoding: .utf8) } 
-
+                        .flatMap { String(data: $0, encoding: .utf8) }
+                    
                     Analytics.logEvent("click_newsletter_carousel", parameters: [
                         "category": "click",
                         "navigation": "newsletter_carousel",
@@ -66,8 +73,20 @@ struct CarouselCard: View {
                         "object_id": card.title,
                         "data": dataString ?? ""
                     ])
+                } label: {
+                    RoundedRectangle(cornerRadius: Metric.nextButtonCornerRadius)
+                        .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
+                        .background(ColorPalette.white)
+                        .frame(height: Metric.nextButtonHeight)
+                        .overlay {
+                            Text("원문 보기")
+                                .fontRangeLimited()
+                                .font(.body14_semiBold)
+                                .foregroundStyle(.semanticColor.text_primary)
+                        }
                 }
-                .padding(.top, 16)
+            }
+            .padding(.top, 16)
         }
         .padding(Metric.padding)
         .frame(height: Metric.height)
