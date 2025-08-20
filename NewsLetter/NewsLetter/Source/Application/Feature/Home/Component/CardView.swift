@@ -29,6 +29,7 @@ struct CardView: View {
     @State private var titleBottomSpacing: CGFloat = 0
     @State private var categoryBottomSpacing: CGFloat = 0
     @State private var cardScale: CGFloat = 1.0
+    /// 카드 뽑기 애니메이션에 사용되는 변수들
     @State private var cardWidth: CGFloat? = nil
     @State private var cardHeight: CGFloat? = nil
     @State private var cardOffsetY: CGFloat = 0
@@ -141,9 +142,6 @@ struct CardView: View {
                 cardOffsetY = shouldMoveY /// carousel y offset 각각 지정해주어야함.
                 cardZIndex = 10 /// carousel ModalView는 zindex 20 임
                 cardHeight = 300
-//                isTapped = true
-//                cardWidth = Device.width * 0.8
-//                cardHeight = 366
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 withAnimation(.easeInOut(duration: 0.5)) {

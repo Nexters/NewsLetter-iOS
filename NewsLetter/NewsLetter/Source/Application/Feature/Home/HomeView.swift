@@ -12,7 +12,7 @@ import FirebaseAnalytics
 
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
-    let colorFlag: String
+
     @State private var isPresentModal: Bool = false
     @State private var isPresentJobDetailBottomSheet: Bool = false
     @State private var isPresentNotificationPermissionBottomSheet: Bool = false
@@ -21,6 +21,8 @@ struct HomeView: View {
     @State private var cardTapCount: Int = 0
     @State private var pulseOffsets: [Int: CGFloat] = [:]
     @State private var didAnimateIndex: Set<Int> = []
+
+    let colorFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
     
     var body: some View {
@@ -78,9 +80,9 @@ struct HomeView: View {
                             title: item.title,
                             category: item.topKeyword,
                             source: item.newsletterName,
-                            shouldMoveY: ((Device.height - 477) / 2) + 180 - (Device.height - 450 + CGFloat(index * 80)),
                             /// 477 은 CarouselCard 부터 하단 X 버튼 까지의 높이
-                            /// 200 은 조정값 (position 이 뷰의 중앙을 표현하는 값인 거 같아서 뷰의 높이 절반을 추가해주는 거)
+                            /// 180 은 조정값
+                            shouldMoveY: ((Device.height - 477) / 2) + 180 - (Device.height - 450 + CGFloat(index * 80)),
                             onTap: {
                                 selectedIndex = index
                                 cardTapHandler()
@@ -99,7 +101,7 @@ struct HomeView: View {
                             },
                             isPresentModal: $isPresentModal,
                         )
-                        .position(x: Device.width / 2, y: Device.height - 450 + CGFloat(index * 80))
+                        .position(x: Device.width / 2, y: Device.height - 450 + CGFloat(index * 80)) /// index 에 따라 세부 조정값 필요
                         .offset(y: pulseOffsets[index] ?? 0)
                         .onAppear {
                             guard !didAnimateIndex.contains(index) else { return }
