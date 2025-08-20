@@ -39,7 +39,7 @@ struct HomeView: View {
                                 .padding(.trailing, 8)
                         }
                     }
-                    .frame(height: 48)
+                    .frame(width: Device.width, height: 48)
                     .padding(.top, 50)
 
                     VStack(spacing: 8) {
@@ -100,6 +100,25 @@ struct HomeView: View {
                             isPresentModal: $isPresentModal,
                         )
                         .position(x: Device.width / 2, y: Device.height - 450 + CGFloat(index * 80))
+                        .offset(y: pulseOffsets[index] ?? 0)
+                        .onAppear {
+                            guard !didAnimateIndex.contains(index) else { return }
+                            didAnimateIndex.insert(index)
+
+                            let playOrder = (store.state.cardData.count - 1) - index
+                            let delayMs = playOrder * 150
+
+                            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    pulseOffsets[index] = -5
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
+                                    withAnimation(.easeInOut(duration: 0.1)) {
+                                        pulseOffsets[index] = 0
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 .padding(.bottom, -20)
