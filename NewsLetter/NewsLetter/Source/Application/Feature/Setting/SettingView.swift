@@ -20,7 +20,7 @@ struct SettingView: View {
             VStack(alignment: .leading, spacing: 24) {
                 sectionTitle(title: "내정보")
                 navigationRow(title: "맞춤 설정") { store.send(.setIsPresentJobDetailBottomSheet(true)) }
-                navigationRow(title: "알림") { } // TODO: 정책 미정.
+                navigationRow(title: "알림") { store.send(.setIsPresentNotificationPermissionBottomSheet(true)) }
                 
                 Divider()
                 
@@ -58,6 +58,24 @@ struct SettingView: View {
         .toastMessage(
             isPresented: $store.isPresentToastMessage,
             text: "직군정보 등록이 완료되었어요.",
+            bottomPadding: 0
+        )
+        .draggableBottomSheet(
+            isShow: $store.isPresentNotificationPermissionBottomSheet,
+            dismissHandler: { UserActionHistory.deniedDateWhenSetNotification = Date() }
+        ) {
+            NotificationPermissionBottomSheet(
+                isPresented: $store.isPresentNotificationPermissionBottomSheet,
+                successHandler: {
+//                    store.send(.registerUser) /// 앱 처음 진입 시 registerUser 를 하므로, 기존 요청 주석처리. 추후 제거
+                    store.send(.setIsPresentNotiToastMessage(true))
+                }
+            )
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .toastMessage(
+            isPresented: $store.isPresentNotiToastMessage,
+            text: "뉴스레터 알림이 신청되었어요",
             bottomPadding: 0
         )
         .toolbar(.hidden)
