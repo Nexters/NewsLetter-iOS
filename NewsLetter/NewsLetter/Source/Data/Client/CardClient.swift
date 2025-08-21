@@ -15,6 +15,7 @@ struct CardClient {
     static let apiClient = MoyaAPIClient()
 
     var fetchCards: (String, String?) async throws -> [Card]
+    var fetchOGShareURL: (OGShareURLRequestDTO) async throws -> OGShareURLResponseDTO
 }
 
 extension DependencyValues {
@@ -41,6 +42,11 @@ extension CardClient: DependencyKey {
                         )
                     }
                     return cards
+                },
+                fetchOGShareURL: { requestDTO in
+                    let response = try await apiClient.request(CardAPI.fetchOGShareURL(requestDTO))
+                    let ogShareURL = try response.map(OGShareURLResponseDTO.self)
+                    return ogShareURL
                 }
             )
         }()
@@ -56,6 +62,9 @@ extension CardClient: DependencyKey {
                     Card(title: "Preview Title 5", topKeyword: "Preview Keyword 5", summary: "Preview Summary 5", contentURL: "https://example.com", newsletterName: "Preview Newsletter 5"),
                     Card(title: "Preview Title 6", topKeyword: "Preview Keyword 6", summary: "Preview Summary 6", contentURL: "https://example.com", newsletterName: "Preview Newsletter 6")
                 ]
+            },
+            fetchOGShareURL: { _ in
+                return "www.example-og-share-url.com"
             }
         )
     }()
