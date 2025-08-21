@@ -69,7 +69,9 @@ struct HomeView: View {
 
                     Image("bg_drawers")
                         .resizable()
-                        .frame(width: 600, height: 526)
+                        .frame(width: 600, height: Device.height*0.65)
+                        .padding(.bottom, Device.safeAreaInsets.bottom)
+//                        .frame(width: 600, height: 526)
                 }
 
                 Group {
@@ -82,7 +84,7 @@ struct HomeView: View {
                             source: item.newsletterName,
                             /// 477 은 CarouselCard 부터 하단 X 버튼 까지의 높이
                             /// 180 은 조정값
-                            shouldMoveY: ((Device.height - 477) / 2) + 180 - (Device.height - 450 + CGFloat(index * 80)),
+                            shouldMoveY: ((Device.height - 477) / 2) + 180 - (Device.height - 500 + CGFloat(index * 90)),
                             onTap: {
                                 selectedIndex = index
                                 cardTapHandler()
@@ -101,7 +103,7 @@ struct HomeView: View {
                             },
                             isPresentModal: $isPresentModal,
                         )
-                        .position(x: Device.width / 2, y: Device.height - 450 + CGFloat(index * 80)) /// index 에 따라 세부 조정값 필요
+                        .position(x: Device.width / 2, y: Device.height - 500 + CGFloat(index * 90)) /// index 에 따라 세부 조정값 필요
                         .offset(y: pulseOffsets[index] ?? 0)
                         .onAppear {
                             guard !didAnimateIndex.contains(index) else { return }
