@@ -42,6 +42,9 @@ struct CarouselCard: View {
                 .fontRangeLimited()
                 .font(.body14_regular)
                 .padding(.top, 16)
+            
+            Spacer()
+            
             HStack(spacing: 8) {
                 Button {
                     // TODO: 공유하기 기능구현
