@@ -46,9 +46,7 @@ struct CarouselCard: View {
             Spacer()
             
             HStack(spacing: 8) {
-                Button {
-                    // TODO: 공유하기 기능구현
-                } label: {
+                ShareLink(item: card.contentURL) { // FIXME: item 에 og share url 이 들어가야함
                     RoundedRectangle(cornerRadius: Metric.shareButtonSize/2)
                         .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
                         .background(ColorPalette.white)
