@@ -26,9 +26,9 @@ extension UserAPI: TargetType {
     
     var path: String {
         switch self {
-        case .login: return "/users/login"
-        case .register:               return "/users/register"
-        case .update(let userId, _):  return "/users/\(userId)"
+        case .login:                 return "/users/login"
+        case .register:              return "/users/register"
+        case .update(let userId, _): return "/users/\(userId)"
         }
     }
     
