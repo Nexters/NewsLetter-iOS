@@ -25,7 +25,7 @@ struct CardView: View {
 
     @State private var titleHeight: CGFloat = 0
     @State private var hideCategoryAndSource: Bool = false
-    @State private var vStackHeight: CGFloat = 0
+//    @State private var vStackHeight: CGFloat = 0
     @State private var titleBottomSpacing: CGFloat = 0
     @State private var categoryBottomSpacing: CGFloat = 0
     @State private var cardScale: CGFloat = 1.0
@@ -117,17 +117,17 @@ struct CardView: View {
             }
             .padding(.horizontal, 20)
             .padding(.bottom, categoryBottomSpacing)
-            .background(
-                GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            self.vStackHeight = proxy.size.height
-                        }
-                        .onChange(of: proxy.size.height) { _, newValue in
-                            self.vStackHeight = newValue
-                        }
-                }
-            )
+//            .background(
+//                GeometryReader { proxy in
+//                    Color.clear
+//                        .onAppear {
+//                            self.vStackHeight = proxy.size.height
+//                        }
+//                        .onChange(of: proxy.size.height) { _, newValue in
+//                            self.vStackHeight = newValue
+//                        }
+//                }
+//            )
         }
         .padding([.leading, .trailing], isTapped ? 0 : cardType.sidePadding)
         .frame(width: cardWidth, height: cardHeight)
@@ -161,13 +161,13 @@ struct CardView: View {
                     cardOffsetY = 0
                     isTapped = false
                     cardWidth = nil
-                    cardHeight = vStackHeight == 0 ? nil : vStackHeight + 35
+                    cardHeight = 166
                     cardZIndex = 0
                 }
             }
         }
         .onAppear {
-            cardHeight = vStackHeight == 0 ? nil : vStackHeight + 35
+            cardHeight = 166
         }
     }
 }
