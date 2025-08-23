@@ -31,6 +31,7 @@ struct SettingView: View {
                 
                 sectionTitle(title: "고객지원")
                 normalRow(title: "문의하기", value: "newsletter.feeding@gmail.com")
+                normalRowCopy(title: "fcmToken", value: UserInfo.fcmToken ?? "없음")
                 
                 Divider()
                 
@@ -143,6 +144,28 @@ struct SettingView: View {
                     .font(.body16_regular)
                     .foregroundColor(Color(hex: 0x404249))
             }
+        }
+    }
+    
+    @ViewBuilder
+    private func normalRowCopy(title: String, value: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.body18_medium)
+                .foregroundColor(Color(hex: 0x404249))
+            Spacer()
+            
+            Text(value)
+                .lineLimit(1)
+                .font(.body16_regular)
+                .foregroundColor(Color(hex: 0x404249))
+            
+            Button {
+                UIPasteboard.general.string = value
+            } label: {
+                Text("copy")
+            }
+            
         }
     }
 }
