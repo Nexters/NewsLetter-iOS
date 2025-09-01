@@ -56,7 +56,7 @@ struct DraggableBottomSheetInfo<DialogContent: View>: ViewModifier {
                     insertion: AnyTransition.move(edge: .bottom),
                     removal: AnyTransition.move(edge: .bottom))
                 )
-                .zIndex(1)
+                .zIndex(50)
                 .ignoresSafeArea(edges: .bottom)
                 .animation(.default, value: isShowModal)
                 
@@ -183,7 +183,7 @@ struct DraggableBottomSheet<DragGesture: Gesture, InjectedView: View>: View {
                 height = proxy.frame(in: .local).height
             }
         })
-        .cornerRadius(24, corners: [.topLeft, .topRight])
+        .cornerRadius(12, corners: [.topLeft, .topRight])
     }
     
     var handleBar: some View {
@@ -191,14 +191,14 @@ struct DraggableBottomSheet<DragGesture: Gesture, InjectedView: View>: View {
             Rectangle()
                 .frame(
                     width: Device.width,
-                    height: 36
+                    height: 24
                 )
                 .foregroundColor(Color(.white))
             
             Capsule()
-                .frame(width: 34, height: 4)
-                .foregroundColor(.gray)
-                .padding(.top, 8)
+                .frame(width: 40, height: 4)
+                .foregroundColor(Color(hex: 0xE2E5E6))
+                .padding(.top, 12)
         }
     }
 }
