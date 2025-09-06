@@ -19,7 +19,15 @@ struct UserActionHistory {
     /// 유저가 정보 등록을 완료했는지 여부
     @UserDefaultWrapper(key: "isAlreadyInputJobDetail", defaultValue: false)
     static var isAlreadyInputJobDetail: Bool
-    
+
+    /// 유저의 직군
+    @UserDefaultWrapper(key: "selectedCareer", defaultValue: [])
+    static var selectedCareer: [[String]]
+
+    /// 유저의 직군이 변경되었는지 확인
+    @UserDefaultWrapper(key: "isChangedCareer", defaultValue: false)
+    static var isChangedCareer: Bool
+
     /// 유저가 알림 받기를 완료했는지 여부
     @UserDefaultWrapper(key: "isAlreadySetNotification", defaultValue: false)
     static var isAlreadySetNotification: Bool

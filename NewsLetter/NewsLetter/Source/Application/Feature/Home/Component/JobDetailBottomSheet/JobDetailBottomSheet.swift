@@ -87,6 +87,11 @@ struct JobDetailBottomSheet: View {
                 }
                 let workingExperience = WorkingExperience.allCases[selectedCareer].rawValue
 
+                if UserActionHistory.selectedCareer != [preferences, [workingExperience]] {
+                    UserActionHistory.isChangedCareer = true
+                    UserActionHistory.selectedCareer = [preferences, [workingExperience]]
+                }
+
                 let dataDictionary: [String: Any] = [
                     "job_group": preferences,
                     "career_level": workingExperience
