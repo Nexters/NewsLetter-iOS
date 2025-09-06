@@ -21,7 +21,9 @@ struct SettingReducer {
     struct State {
         var path = StackState<Path.State>()
         var isPresentJobDetailBottomSheet = false
+        var isPresentNotificationPermissionBottomSheet = false
         var isPresentToastMessage = false
+        var isPresentNotiToastMessage = false
         var navigateToPrivacyPolicy = false
         var navigateToTermsOfService = false
     }
@@ -33,7 +35,9 @@ struct SettingReducer {
         case onDisappear
         case updateUser(UserUpdateRequestDTO)
         case setIsPresentJobDetailBottomSheet(Bool)
+        case setIsPresentNotificationPermissionBottomSheet(Bool)
         case setIsPresentToastMessage(Bool)
+        case setIsPresentNotiToastMessage(Bool)
         case setNavigateToPrivacyPolicy(Bool)
         case setNavigateToTermsOfService(Bool)
     }
@@ -66,8 +70,14 @@ struct SettingReducer {
             case .setIsPresentJobDetailBottomSheet(let bool):
                 state.isPresentJobDetailBottomSheet = bool
                 return .none
+            case .setIsPresentNotificationPermissionBottomSheet(let bool):
+                state.isPresentNotificationPermissionBottomSheet = bool
+                return .none
             case .setIsPresentToastMessage(let bool):
                 state.isPresentToastMessage = bool
+                return .none
+            case .setIsPresentNotiToastMessage(let bool):
+                state.isPresentNotiToastMessage = bool
                 return .none
             case .setNavigateToPrivacyPolicy(let bool):
                 state.navigateToPrivacyPolicy = bool

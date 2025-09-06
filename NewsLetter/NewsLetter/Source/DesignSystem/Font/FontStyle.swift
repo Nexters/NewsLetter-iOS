@@ -23,7 +23,7 @@ public enum FontStyle {
     case caption12_bold, caption12_semiBold, caption12_medium, caption12_regular
     case caption11_bold, caption11_semiBold, caption11_medium, caption11_regular
 
-    case jalnanGothic
+    case jalnanGothic, jalnanGothicSE
 
     var font: Font {
         switch self {
@@ -88,6 +88,7 @@ public enum FontStyle {
         case .caption11_regular: return Font.custom("Pretendard-Regular", size: 11)
 
         case .jalnanGothic: return Font.custom("Jalnan Gothic", size: 24)
+        case .jalnanGothicSE: return Font.custom("Jalnan Gothic", size: 16)
         }
     }
 
@@ -109,6 +110,7 @@ public enum FontStyle {
         case .caption11_bold, .caption11_semiBold, .caption11_medium, .caption11_regular: return 14
 
         case .jalnanGothic: return 34
+        case .jalnanGothicSE: return 14
         }
     }
 
@@ -177,6 +179,7 @@ public enum FontStyle {
         case .caption11_regular: return UIFont(name: "Pretendard-Regular", size: 11)!
 
         case .jalnanGothic: return UIFont(name: "Jalnan Gothic", size: 24)!
+        case .jalnanGothicSE: return UIFont(name: "Jalnan Gothic", size: 16)!
         }
     }
 }

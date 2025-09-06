@@ -44,7 +44,7 @@ struct CardView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(trimmedTitle)
                     .fontRangeLimited()
-                    .font(cardType.fontName)
+                    .font(UIDevice.isSmallScreen ? cardType.fontNameSE : cardType.fontName)
                     .foregroundStyle(.semanticColor.text_strong)
                     .padding(.top, hideCategoryAndSource ? 16 : cardType.topPadding)
                     .padding(.bottom, titleBottomSpacing)
@@ -69,7 +69,7 @@ struct CardView: View {
                                         titleBottomSpacing = 4
                                         let shouldHide = calculatedTitleHeight >= CGFloat(cardType.oneLineHeight)
                                         if !shouldHide {
-                                            categoryBottomSpacing = CGFloat(cardType.oneLineHeight)
+                                            categoryBottomSpacing = UIDevice.isSmallScreen ? CGFloat(4) :  CGFloat(cardType.oneLineHeight)
                                         }
                                     }
                                 }
@@ -100,7 +100,7 @@ struct CardView: View {
                     HStack(spacing: 6) {
                         Text(category)
                             .fontRangeLimited()
-                            .font(.body13_medium)
+                            .font(UIDevice.isSmallScreen ? .caption12_medium : .body13_medium)
                             .foregroundStyle(.semanticColor.text_strong.opacity(0.5))
                         
                         Rectangle()
@@ -109,10 +109,10 @@ struct CardView: View {
                         
                         Text(source)
                             .fontRangeLimited()
-                            .font(.body13_medium)
+                            .font(UIDevice.isSmallScreen ? .caption12_medium : .body13_medium)
                             .foregroundStyle(.semanticColor.text_strong.opacity(0.5))
                     }
-                    .padding(.bottom, cardType.bottomPadding)
+                    .padding(.bottom, UIDevice.isSmallScreen ? 4 : cardType.bottomPadding)
                 }
             }
             .padding(.horizontal, 20)

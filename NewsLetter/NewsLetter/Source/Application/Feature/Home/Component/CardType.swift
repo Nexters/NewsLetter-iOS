@@ -44,6 +44,16 @@ enum CardType {
         }
     }
 
+    var fontNameSE: FontStyle {
+        switch self {
+        case .one: return .caption12_bold
+        case .two: return .body13_bold
+        case .three: return .body14_bold
+        case .four: return .body15_bold
+        case .five, .six: return .body16_bold
+        }
+    }
+
     var oneLineHeight: Int {
         switch self {
         case .one:   return 19

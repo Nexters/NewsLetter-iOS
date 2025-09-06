@@ -41,17 +41,17 @@ struct HomeView: View {
                                 .padding(.trailing, 8)
                         }
                     }
-                    .frame(width: Device.width, height: 48)
-                    .padding(.top, 50)
+                    .frame(width: Device.width, height: UIDevice.isSmallScreen ? 36 : 48)
+                    .padding(.top, UIDevice.isSmallScreen ? 24 : 50)
 
                     VStack(spacing: 8) {
                         Text("\(store.state.todayDate)\nToday’s Hot News")
                             .fontRangeLimited()
-                            .font(.jalnanGothic)
+                            .font(UIDevice.isSmallScreen ? .jalnanGothicSE : .jalnanGothic)
                             .multilineTextAlignment(.center)
                             .foregroundColor(.semanticColor.text_strong)
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.top, 12)
+                            .padding(.top, UIDevice.isSmallScreen ? 4 : 12)
                             .fixedSize(horizontal: false, vertical: true)
 
                         HStack(spacing: 0) {
@@ -244,6 +244,13 @@ struct HomeView: View {
         store.send(.updateUser(requestDTO))
         isPresentJobDetailBottomSheet = false
     }
+}
+
+extension UIDevice {
+    static var isSmallScreen: Bool {
+          let screenBounds = UIScreen.main.bounds
+          return screenBounds.width <= 320 || screenBounds.height <= 667
+      }
 }
 
 #Preview {
