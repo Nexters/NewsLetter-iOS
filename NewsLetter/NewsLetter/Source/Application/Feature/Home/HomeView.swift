@@ -13,6 +13,8 @@ import FirebaseAnalytics
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isPresentModal: Bool = false
     @State private var isPresentJobDetailBottomSheet: Bool = false
     @State private var isPresentNotificationPermissionBottomSheet: Bool = false
@@ -202,6 +204,11 @@ struct HomeView: View {
             }
             .onDisappear {
                 store.send(.onDisappear)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    store.send(.startTimer)
+                }
             }
         } destination: { store in
             switch store.case {
