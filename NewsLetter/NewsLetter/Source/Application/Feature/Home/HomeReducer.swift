@@ -43,7 +43,7 @@ struct HomeReducer {
         case onDisappear
         case settingPressed
         case tick
-        case timerStarted
+        case startTimer
         case setColorPalette([Color])
         case fetchCards
         case loginUser
@@ -72,23 +72,7 @@ struct HomeReducer {
                 var effects: [Effect<Action>] = []
                 
                 state.colorFlag = colorFlag
-
                 state.todayDate = DateCalculator.formattedDateStringForTitle()
-                state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
-
-                if !state.timerIsRunning {
-                    state.timerIsRunning = true
-
-                    effects.append(
-                        .run { send in
-                            await send(.timerStarted)
-                            for await _ in self.clock.timer(interval: .seconds(1)) {
-                                await send(.tick)
-                            }
-                        }
-                            .cancellable(id: CancelID.timer)
-                    )
-                }
 
                 let todayString = DateCalculator.formattedDateString()
                 let lastVisitString = UserInfo.lastCardFetchDate.map {
@@ -109,14 +93,15 @@ struct HomeReducer {
                 }
 
                 UserInfo.lastCardFetchDate = Date()
-                
+
+                let timerEffect = Effect<Action>.send(.startTimer)
                 let loginEffect = Effect<Action>.send(.loginUser)
                 let delayEffect = Effect<Action>.run { _ in
                     try await clock.sleep(for: .seconds(0.5))
                 }
                 let restEffect = Effect<Action>.merge(effects)
-                return .concatenate(loginEffect, delayEffect, restEffect)
-                
+                return .concatenate(timerEffect, loginEffect, delayEffect, restEffect)
+
             case let .setColorPalette(colors):
                 state.cardColors = colors
                 return .none
@@ -127,8 +112,17 @@ struct HomeReducer {
             case .settingPressed:
                 state.path.append(.setting(SettingReducer.State()))
                 return .none
-            case .timerStarted:
-                return .none
+            case .startTimer:
+                state.timerIsRunning = true
+                state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
+
+                return .run { send in
+                    await send(.startTimer)
+                    for await _ in self.clock.timer(interval: .seconds(1)) {
+                        await send(.tick)
+                    }
+                }
+                .cancellable(id: CancelID.timer, cancelInFlight: true)
 
             case .tick:
                 if state.remainingSeconds > 0 {
