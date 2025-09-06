@@ -251,6 +251,7 @@ struct HomeView: View {
             workingExperience: workingExperience
         )
         store.send(.updateUser(requestDTO))
+        store.send(.onAppear(colorFlag: self.colorFlag))
         isPresentJobDetailBottomSheet = false
     }
 }

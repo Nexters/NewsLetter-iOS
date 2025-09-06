@@ -85,8 +85,13 @@ struct HomeReducer {
                    let cachedColors = UserInfo.cachedDailyColors?.map({ $0.color }),
                    !cachedColors.isEmpty {
 
-                    state.cardData = cachedCards
-                    state.cardColors = cachedColors
+                    if UserActionHistory.isChangedCareer == true {
+                        effects.append(.send(.fetchCards))
+                        UserActionHistory.isChangedCareer = false
+                    } else {
+                        state.cardData = cachedCards
+                        state.cardColors = cachedColors
+                    }
 
                 } else {
                     effects.append(.send(.fetchCards))
