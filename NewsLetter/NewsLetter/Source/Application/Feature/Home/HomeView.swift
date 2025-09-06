@@ -67,11 +67,13 @@ struct HomeView: View {
 
                     Spacer()
 
-                    Image("bg_drawers")
-                        .resizable()
-                        .frame(width: 600, height: Device.height*0.65)
-                        .padding(.bottom, Device.safeAreaInsets.bottom)
-//                        .frame(width: 600, height: 526)
+                    if store.state.cardData.count > 0 {
+                        Image("bg_drawers")
+                            .resizable()
+                            .frame(width: 600, height: Device.height*0.65)
+                            .padding(.bottom, Device.safeAreaInsets.bottom)
+                        //                        .frame(width: 600, height: 526)
+                    }
                 }
 
                 Group {
