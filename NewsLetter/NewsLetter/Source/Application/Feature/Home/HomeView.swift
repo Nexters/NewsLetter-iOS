@@ -178,10 +178,10 @@ struct HomeView: View {
                 bottomPadding: 0
             )
             .onAppear {
-                Analytics.logEvent(AnalyticsEventScreenView,
-               parameters: [
-                AnalyticsParameterScreenName: "main"
-               ])
+                Analytics.logEvent("pageview_main", parameters: [
+                    "category": "pageview",
+                    "navigation": "main"
+                ])
 
                 store.send(.onAppear(colorFlag: self.colorFlag))
                 

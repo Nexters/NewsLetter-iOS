@@ -115,10 +115,10 @@ struct CarouselModalView: View {
             }
         }
         .onAppear() {
-            Analytics.logEvent(AnalyticsEventScreenView,
-                               parameters: [
-                                AnalyticsParameterScreenName: "newsletter_carousel"
-                               ])
+            Analytics.logEvent("pageview_newsletter_carousel", parameters: [
+                "category": "pageview",
+                "navigation": "newsletter_carousel"
+            ])
 
             if let initialIndex = currentPage, !loggedImpressionIndices.contains(initialIndex) {
                 let actualIndex = cardData.count-1-initialIndex

@@ -44,10 +44,10 @@ struct NotificationPermissionBottomSheet: View {
             .padding(.top, 32)
         }
         .onAppear() {
-            Analytics.logEvent(AnalyticsEventScreenView,
-           parameters: [
-            AnalyticsParameterScreenName: "bottom_sheet_notification"
-           ])
+            Analytics.logEvent("pageview_bottom_sheet_notification", parameters: [
+                "category": "pageview",
+                "navigation": "bottom_sheet_notification"
+            ])
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && isCheckingPermission {
