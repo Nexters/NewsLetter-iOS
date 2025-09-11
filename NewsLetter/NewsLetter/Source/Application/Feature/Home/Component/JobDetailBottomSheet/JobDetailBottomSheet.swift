@@ -121,10 +121,10 @@ struct JobDetailBottomSheet: View {
             .disabled(!isEnabledButton)
         }
         .onAppear() {
-            Analytics.logEvent(AnalyticsEventScreenView,
-                               parameters: [
-                                AnalyticsParameterScreenName: "bottom_sheet_custom"
-                               ])
+            Analytics.logEvent("pageview_bottom_sheet_custom", parameters: [
+                "category": "pageview",
+                "navigation": "bottom_sheet_custom"
+            ])
         }
     }
 }
