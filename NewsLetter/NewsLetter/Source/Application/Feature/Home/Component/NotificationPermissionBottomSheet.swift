@@ -46,7 +46,8 @@ struct NotificationPermissionBottomSheet: View {
         .onAppear() {
             Analytics.logEvent("pageview_bottom_sheet_notification", parameters: [
                 "category": "pageview",
-                "navigation": "bottom_sheet_notification"
+                "navigation": "bottom_sheet_notification",
+                "object_type": "bottom_sheet",
             ])
         }
         .onChange(of: scenePhase) { _, newPhase in

@@ -123,7 +123,8 @@ struct JobDetailBottomSheet: View {
         .onAppear() {
             Analytics.logEvent("pageview_bottom_sheet_custom", parameters: [
                 "category": "pageview",
-                "navigation": "bottom_sheet_custom"
+                "navigation": "bottom_sheet_custom",
+                "object_type": "bottom_sheet"
             ])
         }
     }
