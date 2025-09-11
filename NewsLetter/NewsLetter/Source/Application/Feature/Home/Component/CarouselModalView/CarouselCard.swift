@@ -70,7 +70,7 @@ struct CarouselCard: View {
                         "category": "click",
                         "navigation": "newsletter_carousel",
                         "object_section": "newsletter_card",
-                        "object_type": "newsletter",
+                        "object_type": "button",
                         "object_id": card.title,
                         "data": dataString ?? ""
                     ])
