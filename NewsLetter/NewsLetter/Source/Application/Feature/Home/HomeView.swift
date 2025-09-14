@@ -142,7 +142,7 @@ struct HomeView: View {
                     )
                     .frame(width: Device.width)
                     .transition(.opacity)
-                    .zIndex(20)
+                    .zIndex(Z.carouselModal)
                 }
             }
             .animation(.easeInOut, value: isPresentModal)
