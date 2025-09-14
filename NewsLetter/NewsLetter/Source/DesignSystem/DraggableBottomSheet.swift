@@ -56,7 +56,7 @@ struct DraggableBottomSheetInfo<DialogContent: View>: ViewModifier {
                     insertion: AnyTransition.move(edge: .bottom),
                     removal: AnyTransition.move(edge: .bottom))
                 )
-                .zIndex(50)
+                .zIndex(Z.bottomSheet)
                 .ignoresSafeArea(edges: .bottom)
                 .animation(.default, value: isShowModal)
                 

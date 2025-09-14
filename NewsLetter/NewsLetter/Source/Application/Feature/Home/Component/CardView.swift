@@ -33,7 +33,7 @@ struct CardView: View {
     @State private var cardWidth: CGFloat? = nil
     @State private var cardHeight: CGFloat? = nil
     @State private var cardOffsetY: CGFloat = 0
-    @State private var cardZIndex: Double = 0
+    @State private var cardZIndex: Double = Z.cardDefault
     @State private var isTapped: Bool = false
     
     var body: some View {
@@ -140,7 +140,7 @@ struct CardView: View {
             
             withAnimation(.spring(duration: 0.5)) {
                 cardOffsetY = shouldMoveY /// carousel y offset 각각 지정해주어야함.
-                cardZIndex = 10 /// carousel ModalView는 zindex 20 임
+                cardZIndex = Z.cardElevated /// carousel ModalView는 zindex 20 임
                 cardHeight = 300
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -162,7 +162,7 @@ struct CardView: View {
                     isTapped = false
                     cardWidth = nil
                     cardHeight = vStackHeight == 0 ? nil : vStackHeight + 35
-                    cardZIndex = 0
+                    cardZIndex = Z.cardDefault
                 }
             }
         }
