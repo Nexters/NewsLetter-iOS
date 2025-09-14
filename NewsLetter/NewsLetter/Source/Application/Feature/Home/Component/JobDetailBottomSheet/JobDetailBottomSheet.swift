@@ -20,14 +20,17 @@ struct JobDetailBottomSheet: View {
     let confirmHandler: (Set<Int>, Int) -> Void
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             Text("정보를 등록하면\n매일 뉴스레터를 추천해 드려요")
                 .font(.head22_bold)
                 .multilineTextAlignment(.center)
+                .padding(.top, 20)
+                .padding(.bottom, 12)
 
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("관심직군")
                     .font(.body14_semiBold)
+                    .padding(.vertical, 12)
 
                 LeftAlignedCollectionView<JobCell>(
                     data: .constant([
@@ -54,10 +57,12 @@ struct JobDetailBottomSheet: View {
                 .frame(height: 38)
             }
             .padding(.horizontal, 16)
+            .padding(.bottom, 20)
 
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("경력")
                     .font(.body14_semiBold)
+                    .padding(.vertical, 12)
 
                 LeftAlignedCollectionView<CareerCell>(
                     data: .constant([
@@ -73,9 +78,9 @@ struct JobDetailBottomSheet: View {
                 .frame(height: 84)
             }
             .padding(.horizontal, 16)
+            .padding(.bottom, 24)
 
-            Button(action: {
-                // TODO: 정보등록 API 호출
+            Button {
                 UserActionHistory.isAlreadyInputJobDetail = true
                 confirmHandler(selectedJobCategory, selectedCareer ?? 0)
 
@@ -86,6 +91,11 @@ struct JobDetailBottomSheet: View {
                     return
                 }
                 let workingExperience = WorkingExperience.allCases[selectedCareer].rawValue
+
+                if UserActionHistory.selectedCareer != [preferences, [workingExperience]] {
+                    UserActionHistory.isChangedCareer = true
+                    UserActionHistory.selectedCareer = [preferences, [workingExperience]]
+                }
 
                 let dataDictionary: [String: Any] = [
                     "job_group": preferences,
@@ -102,7 +112,7 @@ struct JobDetailBottomSheet: View {
                     "object_type": "button",
                     "user_properties": dataString ?? ""
                 ])
-            }) {
+            } label: {
                 RoundedRectangle(cornerRadius: 100)
                     .frame(height: 56)
                     .foregroundStyle(isEnabledButton ? .semanticColor.fill_primaryInversion : .semanticColor.fill_disabled)
@@ -113,13 +123,21 @@ struct JobDetailBottomSheet: View {
                             .foregroundStyle(isEnabledButton ? .semanticColor.text_strongInverse : .semanticColor.text_disabled)
                     }
             }
+            .padding(.bottom, 16)
             .disabled(!isEnabledButton)
         }
         .onAppear() {
-            Analytics.logEvent(AnalyticsEventScreenView,
-                               parameters: [
-                                AnalyticsParameterScreenName: "bottom_sheet_custom"
-                               ])
+            Analytics.logEvent("pageview_bottom_sheet_custom", parameters: [
+                "category": "pageview",
+                "navigation": "bottom_sheet_custom",
+                "object_type": "bottom_sheet"
+            ])
         }
     }
+}
+
+#Preview {
+    JobDetailBottomSheet { _, _ in
+    }
+    .debug()
 }

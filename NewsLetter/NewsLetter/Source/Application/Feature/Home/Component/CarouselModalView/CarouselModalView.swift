@@ -115,16 +115,18 @@ struct CarouselModalView: View {
             }
         }
         .onAppear() {
-            Analytics.logEvent(AnalyticsEventScreenView,
-                               parameters: [
-                                AnalyticsParameterScreenName: "newsletter_carousel"
-                               ])
-
             if let initialIndex = currentPage, !loggedImpressionIndices.contains(initialIndex) {
                 let actualIndex = cardData.count-1-initialIndex
                 let card = cardData[actualIndex]
                 let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": actualIndex]))
                     .flatMap { String(data: $0, encoding: .utf8) }
+                
+                Analytics.logEvent("pageview_newsletter_carousel", parameters: [
+                    "category": "pageview",
+                    "navigation": "newsletter_carousel",
+                    "object_type": "newsletter",
+                    "object_id": card.title
+                ])
 
                 Analytics.logEvent("impression_newsletter_carousel", parameters: [
                     "category": "impression",

@@ -13,6 +13,8 @@ import FirebaseAnalytics
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isPresentModal: Bool = false
     @State private var isPresentJobDetailBottomSheet: Bool = false
     @State private var isPresentNotificationPermissionBottomSheet: Bool = false
@@ -67,11 +69,13 @@ struct HomeView: View {
 
                     Spacer()
 
-                    Image("bg_drawers")
-                        .resizable()
-                        .frame(width: 600, height: Device.height*0.65)
-                        .padding(.bottom, Device.safeAreaInsets.bottom)
-//                        .frame(width: 600, height: 526)
+                    if store.state.cardData.count > 0 {
+                        Image("bg_drawers")
+                            .resizable()
+                            .frame(width: 600, height: Device.height*0.65)
+                            .padding(.bottom, Device.safeAreaInsets.bottom)
+                        //                        .frame(width: 600, height: 526)
+                    }
                 }
 
                 Group {
@@ -138,7 +142,7 @@ struct HomeView: View {
                     )
                     .frame(width: Device.width)
                     .transition(.opacity)
-                    .zIndex(20)
+                    .zIndex(Z.carouselModal)
                 }
             }
             .animation(.easeInOut, value: isPresentModal)
@@ -174,10 +178,10 @@ struct HomeView: View {
                 bottomPadding: 0
             )
             .onAppear {
-                Analytics.logEvent(AnalyticsEventScreenView,
-               parameters: [
-                AnalyticsParameterScreenName: "main"
-               ])
+                Analytics.logEvent("pageview_main", parameters: [
+                    "category": "pageview",
+                    "navigation": "main"
+                ])
 
                 store.send(.onAppear(colorFlag: self.colorFlag))
                 
@@ -200,6 +204,11 @@ struct HomeView: View {
             }
             .onDisappear {
                 store.send(.onDisappear)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    store.send(.startTimer)
+                }
             }
         } destination: { store in
             switch store.case {
@@ -242,6 +251,7 @@ struct HomeView: View {
             workingExperience: workingExperience
         )
         store.send(.updateUser(requestDTO))
+        store.send(.onAppear(colorFlag: self.colorFlag))
         isPresentJobDetailBottomSheet = false
     }
 }
