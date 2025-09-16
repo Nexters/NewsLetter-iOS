@@ -122,7 +122,6 @@ struct HomeReducer {
                 state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
 
                 return .run { send in
-                    await send(.startTimer)
                     for await _ in self.clock.timer(interval: .seconds(1)) {
                         await send(.tick)
                     }
