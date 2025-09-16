@@ -118,9 +118,6 @@ struct HomeReducer {
                 state.path.append(.setting(SettingReducer.State()))
                 return .none
             case .startTimer:
-                guard state.timerIsRunning == false else {
-                    return .none
-                }
                 state.timerIsRunning = true
                 state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
 
