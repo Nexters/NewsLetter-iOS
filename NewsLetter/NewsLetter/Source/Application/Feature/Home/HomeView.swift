@@ -93,8 +93,7 @@ struct HomeView: View {
                     if store.state.cardData.count > 0 {
                         Image("bg_drawers")
                             .resizable()
-                            .frame(width: 600, height: Device.height * 0.65)
-                            .padding(.bottom, Device.safeAreaInsets.bottom)
+                            .frame(width: 600, height: Device.height * 0.7)
                     }
                 }
 
