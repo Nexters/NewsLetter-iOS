@@ -6,15 +6,21 @@
 //
 
 import SwiftUI
-
 import ComposableArchitecture
 import FirebaseAnalytics
 
 struct HomeView: View {
+    private enum Metric {
+        static let cardSpacing: CGFloat = 90
+        static let stackOriginY: CGFloat = 500
+        static let carouselHeight: CGFloat = 477
+        static let adjustY: CGFloat = 180
+    }
+
     @Bindable var store: StoreOf<HomeReducer>
-
+    
     @Environment(\.scenePhase) private var scenePhase
-
+    
     @State private var isPresentModal: Bool = false
     @State private var isPresentJobDetailBottomSheet: Bool = false
     @State private var isPresentNotificationPermissionBottomSheet: Bool = false
@@ -24,10 +30,25 @@ struct HomeView: View {
     @State private var pulseOffsets: [Int: CGFloat] = [:]
     @State private var didAnimateIndex: Set<Int> = []
 
+    /// 카드 스크롤  Animation 관련 변수
+    @State private var stackProgress: CGFloat = 0
+    @State private var stackDirection: CardStackDirection? = nil
+    @Namespace private var cardNS
+    
+    private func targetIndex(for index: Int, total: Int, direction: CardStackDirection?) -> Int {
+        guard let direction else { return index }
+        switch direction {
+        case .up:   return index == 0 ? (total - 1) : (index - 1)
+        case .down: return index == total - 1 ? 0 : (index + 1)
+        }
+    }
+    
     let colorFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
     
     var body: some View {
+        let cardIDs: [String] = store.state.cardData.map { $0.contentURL }
+        
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack(alignment: .bottom) {
                 VStack {
@@ -45,7 +66,7 @@ struct HomeView: View {
                     }
                     .frame(width: Device.width, height: UIDevice.isSmallScreen ? 36 : 48)
                     .padding(.top, UIDevice.isSmallScreen ? 24 : 50)
-
+                    
                     VStack(spacing: 8) {
                         Text("\(store.state.todayDate)\nToday’s Hot News")
                             .fontRangeLimited()
@@ -55,7 +76,7 @@ struct HomeView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, UIDevice.isSmallScreen ? 4 : 12)
                             .fixedSize(horizontal: false, vertical: true)
-
+                        
                         HStack(spacing: 0) {
                             Text(store.state.formattedTime)
                                 .fontRangeLimited()
@@ -66,34 +87,49 @@ struct HomeView: View {
                                 .foregroundColor(.semanticColor.text_secondary)
                         }
                     }
-
+                    
                     Spacer()
-
+                    
                     if store.state.cardData.count > 0 {
                         Image("bg_drawers")
                             .resizable()
-                            .frame(width: 600, height: Device.height*0.65)
+                            .frame(width: 600, height: Device.height * 0.65)
                             .padding(.bottom, Device.safeAreaInsets.bottom)
-                        //                        .frame(width: 600, height: 526)
                     }
                 }
 
+                let totalCount: Int = store.state.cardData.count
+
                 Group {
-                    ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
+                    ForEach(Array(store.state.cardData.enumerated()), id: \.element.contentURL) { pair in
+
+                        let index: Int = pair.offset
+                        let item = pair.element
+
+                        let baseY: CGFloat = Device.height - Metric.stackOriginY + CGFloat(index) * Metric.cardSpacing
+                        let shouldMoveY: CGFloat = ((Device.height - Metric.carouselHeight) / 2) + Metric.adjustY - baseY
+                        let pulseY: CGFloat = pulseOffsets[index] ?? 0
+
+                        let toIdx: Int = targetIndex(for: index, total: totalCount, direction: stackDirection)
+                        let targetY: CGFloat = Device.height - Metric.stackOriginY + CGFloat(toIdx) * Metric.cardSpacing
+                        let isWrapDown: Bool = (stackDirection == .down && index == totalCount - 1 && toIdx == 0)
+                        let previewDeltaY: CGFloat = isWrapDown ? 0 : ((stackDirection == nil) ? 0 : (targetY - baseY) * stackProgress)
+                        let fromType: CardType = cardTypes[index]
+                        let toType: CardType = isWrapDown ? .one : cardTypes[toIdx]
+
                         CardView(
                             cardType: cardTypes[index],
                             color: store.cardColors[index],
                             title: item.title,
                             category: item.topKeyword,
                             source: item.newsletterName,
-                            /// 477 은 CarouselCard 부터 하단 X 버튼 까지의 높이
-                            /// 180 은 조정값
-                            shouldMoveY: ((Device.height - 477) / 2) + 180 - (Device.height - 500 + CGFloat(index * 90)),
+                            shouldMoveY: shouldMoveY,
                             onTap: {
                                 selectedIndex = index
                                 cardTapHandler()
 
-                                let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": store.state.cardData.count-1-index]))
+                                let listIndex = totalCount - 1 - index
+                                let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": listIndex]))
                                     .flatMap { String(data: $0, encoding: .utf8) }
 
                                 Analytics.logEvent("click_newsletter", parameters: [
@@ -105,25 +141,26 @@ struct HomeView: View {
                                     "data": dataString ?? ""
                                 ])
                             },
-                            isPresentModal: $isPresentModal,
+                            isPresentModal: $isPresentModal
                         )
-                        .position(x: Device.width / 2, y: Device.height - 500 + CGFloat(index * 90)) /// index 에 따라 세부 조정값 필요
-                        .offset(y: pulseOffsets[index] ?? 0)
+                        .cardTypeScaleAppearance(
+                            id: item.contentURL,
+                            from: fromType,
+                            to: toType,
+                            progress: stackProgress,
+                            namespace: cardNS
+                        )
+                        .position(x: Device.width / 2, y: baseY)
+                        .offset(y: pulseY + previewDeltaY)
                         .onAppear {
                             guard !didAnimateIndex.contains(index) else { return }
                             didAnimateIndex.insert(index)
-
-                            let playOrder = (store.state.cardData.count - 1) - index
-                            let delayMs = playOrder * 150
-
+                            let playOrder: Int = (totalCount - 1) - index
+                            let delayMs: Int = playOrder * 150
                             DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    pulseOffsets[index] = -5
-                                }
+                                withAnimation(.easeInOut(duration: 0.2)) { pulseOffsets[index] = -5 }
                                 DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
-                                    withAnimation(.easeInOut(duration: 0.1)) {
-                                        pulseOffsets[index] = 0
-                                    }
+                                    withAnimation(.easeInOut(duration: 0.1)) { pulseOffsets[index] = 0 }
                                 }
                             }
                         }
@@ -145,6 +182,20 @@ struct HomeView: View {
                     .zIndex(Z.carouselModal)
                 }
             }
+            .cardStackDragGesture(
+                trigger: 90,
+                maxStepsPerFling: 3,
+                interStepDelay: 0.06,
+                onProgress: { (prog: CGFloat, dir: CardStackDirection?) in
+                    withAnimation(.interactiveSpring(response: 0.40, dampingFraction: 0.9)) {
+                        stackProgress  = prog   
+                        stackDirection = dir
+                    }
+                },
+                onRotateDown: { store.send(.rotateBottomToTop) },
+                onRotateUp:   { store.send(.rotateTopToBottom) }
+            )
+            .animation(CardStackAnimator.rotation, value: cardIDs)
             .animation(.easeInOut, value: isPresentModal)
             .ignoresSafeArea(edges: .all)
             .transition(.opacity)
@@ -182,7 +233,7 @@ struct HomeView: View {
                     "category": "pageview",
                     "navigation": "main"
                 ])
-
+                
                 store.send(.onAppear(colorFlag: self.colorFlag))
                 
                 if UserActionHistory.isFirstAppLaunch {
@@ -192,7 +243,7 @@ struct HomeView: View {
                         isPresentJobDetailBottomSheet = true
                     }
                 }
-
+                
                 DateCalculator.checkAndIncrementVisitStreak()
                 
                 guard UserActionHistory.streakCount >= 2 &&
@@ -258,15 +309,15 @@ struct HomeView: View {
 
 extension UIDevice {
     static var isSmallScreen: Bool {
-          let screenBounds = UIScreen.main.bounds
-          return screenBounds.width <= 320 || screenBounds.height <= 667
-      }
+        let screenBounds = UIScreen.main.bounds
+        return screenBounds.width <= 320 || screenBounds.height <= 667
+    }
 }
 
 #Preview {
-    HomeView(store: Store(initialState: HomeReducer.State()) {
-        HomeReducer()
-    },
-             colorFlag: "A")
+    HomeView(
+        store: Store(initialState: HomeReducer.State()) { HomeReducer() },
+        colorFlag: "A"
+    )
 }
 

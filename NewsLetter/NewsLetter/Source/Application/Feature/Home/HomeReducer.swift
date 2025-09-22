@@ -50,6 +50,9 @@ struct HomeReducer {
         case registerUser
         case updateUser(UserUpdateRequestDTO)
         case setCards([Card])
+
+        case rotateBottomToTop
+        case rotateTopToBottom
     }
     
     private enum CancelID { case timer }
@@ -229,6 +232,21 @@ struct HomeReducer {
 
                     return .send(.setColorPalette(fixedColors))
                 }
+            case .rotateBottomToTop:
+                if let last = state.cardData.popLast() { state.cardData.insert(last, at: 0) }
+                if let c = state.cardColors.popLast() { state.cardColors.insert(c, at: 0) }
+                return .none
+
+            case .rotateTopToBottom:
+                if let first = state.cardData.first {
+                    state.cardData.removeFirst()
+                    state.cardData.append(first)
+                }
+                if let c = state.cardColors.first {
+                    state.cardColors.removeFirst()
+                    state.cardColors.append(c)
+                }
+                return .none
             }
         }
         .forEach(\.path, action: \.path)
