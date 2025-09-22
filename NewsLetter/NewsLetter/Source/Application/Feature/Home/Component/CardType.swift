@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-enum CardType {
+public enum CardType {
     case one, two, three, four, five, six
 
     var topPadding: CGFloat {
@@ -62,6 +62,17 @@ enum CardType {
         case .four:  return 25
         case .five:  return 27
         case .six:   return 27
+        }
+    }
+
+    var visualScale: CGFloat {
+        switch self {
+        case .one:   return 0.86
+        case .two:   return 0.90
+        case .three: return 0.93
+        case .four:  return 0.96
+        case .five:  return 0.98
+        case .six:   return 1.00
         }
     }
 }
