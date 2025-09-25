@@ -207,7 +207,7 @@ struct HomeView: View {
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
-                    store.send(.startTimer)
+                    store.send(.onAppear(colorFlag: self.colorFlag))
                 }
             }
         } destination: { store in
