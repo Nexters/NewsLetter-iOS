@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-public enum CardType {
+enum CardType {
     case one, two, three, four, five, six
 
     var topPadding: CGFloat {

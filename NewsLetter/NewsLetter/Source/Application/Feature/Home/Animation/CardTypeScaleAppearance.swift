@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 카드 타입에 따른 크기(스케일) 변화를 드래그 진행도(progress)에 맞춰 보간하는 AnimatableModifier
 /// 즉, 카드가 fromType → toType으로 바뀔 때 크기가 자연스럽게 애니메이션되도록 도와주는 역할을 합니다.
-public struct CardTypeScaleAppearance<ID: Hashable>: AnimatableModifier {
+struct CardTypeScaleAppearance<ID: Hashable>: AnimatableModifier {
     public var id: ID
     public var fromType: CardType
     public var toType: CardType
@@ -33,7 +33,7 @@ public struct CardTypeScaleAppearance<ID: Hashable>: AnimatableModifier {
     }
 }
 
-public extension View {
+extension View {
     func cardTypeScaleAppearance<ID: Hashable>(
         id: ID,
         from fromType: CardType,
