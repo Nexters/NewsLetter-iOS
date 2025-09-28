@@ -23,6 +23,7 @@ struct HomeView: View {
     @State private var cardTapCount: Int = 0
     @State private var pulseOffsets: [Int: CGFloat] = [:]
     @State private var didAnimateIndex: Set<Int> = []
+    @State private var indexGap: Int = 0
 
     let colorFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
@@ -34,7 +35,8 @@ struct HomeView: View {
                     HStack {
                         Spacer()
                         Button {
-                            store.send(.settingPressed)
+//                            store.send(.settingPressed)
+                            indexGap = addGap(current: indexGap)
                         } label: {
                             Image("setting_icon")
                                 .resizable()
@@ -107,7 +109,7 @@ struct HomeView: View {
                             },
                             isPresentModal: $isPresentModal,
                         )
-                        .position(x: Device.width / 2, y: cardPositionY(at: index)) /// index 에 따라 세부 조정값 필요
+                        .position(x: Device.width / 2, y: cardPositionY(at: (index + indexGap) > 5 ? 0 : (index + indexGap))) /// index 에 따라 세부 조정값 필요
                         .offset(y: pulseOffsets[index] ?? 0)
                         .onAppear {
                             guard !didAnimateIndex.contains(index) else { return }
@@ -129,6 +131,7 @@ struct HomeView: View {
                         }
                     }
                 }
+                .animation(.easeInOut, value: indexGap)
                 .padding(.bottom, -20)
                 .frame(width: Device.width)
                 
@@ -226,6 +229,22 @@ struct HomeView: View {
             return Device.height - 530 + CGFloat(index * 95)
         } else {
             return Device.height - 490 + CGFloat(index * 90)
+        }
+    }
+    
+    private func addGap(current: Int) -> Int {
+        if current == 5 {
+            return 0
+        } else  {
+            return current + 1
+        }
+    }
+    
+    private func deleteGap(current: Int) -> Int {
+        if current == 0 {
+            return 5
+        } else {
+            return current - 1
         }
     }
     
