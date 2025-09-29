@@ -93,17 +93,7 @@ struct HomeView: View {
                                 selectedIndex = index
                                 cardTapHandler()
 
-                                let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": store.state.cardData.count-1-index]))
-                                    .flatMap { String(data: $0, encoding: .utf8) }
-
-                                Analytics.logEvent("click_newsletter", parameters: [
-                                    "category": "click",
-                                    "navigation": "main",
-                                    "object_section": "newsletter_list",
-                                    "object_type": "newsletter",
-                                    "object_id": item.title,
-                                    "data": dataString ?? ""
-                                ])
+                                GA.click_newsletter_carousel(title: item.title, listIndex: store.state.cardData.count-1-index)
                             },
                             isPresentModal: $isPresentModal,
                         )
@@ -178,10 +168,7 @@ struct HomeView: View {
                 bottomPadding: 0
             )
             .onAppear {
-                Analytics.logEvent("pageview_main", parameters: [
-                    "category": "pageview",
-                    "navigation": "main"
-                ])
+                GA.pageview_main()
 
                 store.send(.onAppear(colorFlag: self.colorFlag))
                 

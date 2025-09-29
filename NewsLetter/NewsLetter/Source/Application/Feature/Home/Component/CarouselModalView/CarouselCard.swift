@@ -62,18 +62,8 @@ struct CarouselCard: View {
                 
                 Button {
                     isWebViewPresented = true
-                    
-                    let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": index]))
-                        .flatMap { String(data: $0, encoding: .utf8) }
-                    
-                    Analytics.logEvent("click_newsletter_carousel", parameters: [
-                        "category": "click",
-                        "navigation": "newsletter_carousel",
-                        "object_section": "newsletter_card",
-                        "object_type": "button",
-                        "object_id": card.title,
-                        "data": dataString ?? ""
-                    ])
+
+                    GA.click_newsletter_carousel(title: card.title, listIndex: index)
                 } label: {
                     RoundedRectangle(cornerRadius: Metric.nextButtonCornerRadius)
                         .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
