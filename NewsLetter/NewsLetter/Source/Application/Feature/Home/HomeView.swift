@@ -35,8 +35,9 @@ struct HomeView: View {
                     HStack {
                         Spacer()
                         Button {
-//                            store.send(.settingPressed)
-                            indexGap = addGap(current: indexGap)
+                            //                            store.send(.settingPressed)
+                            //                            indexGap = addGap(current: indexGap)
+                            indexGap += 1
                         } label: {
                             Image("setting_icon")
                                 .resizable()
@@ -47,7 +48,7 @@ struct HomeView: View {
                     }
                     .frame(width: Device.width, height: UIDevice.isSmallScreen ? 36 : 48)
                     .padding(.top, UIDevice.isSmallScreen ? 24 : 50)
-
+                    
                     VStack(spacing: 8) {
                         Text("\(store.state.todayDate)\nToday’s Hot News")
                             .fontRangeLimited()
@@ -57,7 +58,7 @@ struct HomeView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, UIDevice.isSmallScreen ? 4 : 12)
                             .fixedSize(horizontal: false, vertical: true)
-
+                        
                         HStack(spacing: 0) {
                             Text(store.state.formattedTime)
                                 .fontRangeLimited()
@@ -68,9 +69,9 @@ struct HomeView: View {
                                 .foregroundColor(.semanticColor.text_secondary)
                         }
                     }
-
+                    
                     Spacer()
-
+                    
                     if store.state.cardData.count > 0 {
                         Image("bg_drawers")
                             .resizable()
@@ -79,58 +80,59 @@ struct HomeView: View {
                         //                        .frame(width: 600, height: 526)
                     }
                 }
-
-                Group {
-                    ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
-                        CardView(
-                            cardType: cardTypes[index],
-                            color: store.cardColors[index],
-                            title: item.title,
-                            category: item.topKeyword,
-                            source: item.newsletterName,
-                            /// 477 은 CarouselCard 부터 하단 X 버튼 까지의 높이
-                            /// 180 은 조정값
-                            shouldMoveY: ((Device.height - 477) / 2) + 180 - cardPositionY(at: index),
-                            onTap: {
-                                selectedIndex = index
-                                cardTapHandler()
-
-                                let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": store.state.cardData.count-1-index]))
-                                    .flatMap { String(data: $0, encoding: .utf8) }
-
-                                Analytics.logEvent("click_newsletter", parameters: [
-                                    "category": "click",
-                                    "navigation": "main",
-                                    "object_section": "newsletter_list",
-                                    "object_type": "newsletter",
-                                    "object_id": item.title,
-                                    "data": dataString ?? ""
-                                ])
-                            },
-                            isPresentModal: $isPresentModal,
-                        )
-                        .position(x: Device.width / 2, y: cardPositionY(at: (index + indexGap) > 5 ? 0 : (index + indexGap))) /// index 에 따라 세부 조정값 필요
-                        .offset(y: pulseOffsets[index] ?? 0)
-                        .onAppear {
-                            guard !didAnimateIndex.contains(index) else { return }
-                            didAnimateIndex.insert(index)
-
-                            let playOrder = (store.state.cardData.count - 1) - index
-                            let delayMs = playOrder * 150
-
-                            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    pulseOffsets[index] = -5
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
-                                    withAnimation(.easeInOut(duration: 0.1)) {
-                                        pulseOffsets[index] = 0
-                                    }
+                
+                //                Group {
+                ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
+                    CardView(
+                        cardType: cardTypes[(index + indexGap) % 6],
+                        color: store.cardColors[index],
+                        title: item.title,
+                        category: item.topKeyword,
+                        source: item.newsletterName,
+                        /// 477 은 CarouselCard 부터 하단 X 버튼 까지의 높이
+                        /// 180 은 조정값
+                        shouldMoveY: ((Device.height - 477) / 2) + 180 - cardPositionY(at: index),
+                        onTap: {
+                            selectedIndex = index
+                            cardTapHandler()
+                            
+                            let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": store.state.cardData.count-1-index]))
+                                .flatMap { String(data: $0, encoding: .utf8) }
+                            
+                            Analytics.logEvent("click_newsletter", parameters: [
+                                "category": "click",
+                                "navigation": "main",
+                                "object_section": "newsletter_list",
+                                "object_type": "newsletter",
+                                "object_id": item.title,
+                                "data": dataString ?? ""
+                            ])
+                        },
+                        isPresentModal: $isPresentModal,
+                    )
+                    .position(x: Device.width / 2, y: cardPositionY(at: (index + indexGap) % 6)) /// index 에 따라 세부 조정값 필요
+                    .offset(y: pulseOffsets[index] ?? 0)
+                    .zIndex(cardTypes[(index + indexGap) % 6].zIndex)
+                    .onAppear {
+                        guard !didAnimateIndex.contains(index) else { return }
+                        didAnimateIndex.insert(index)
+                        
+                        let playOrder = (store.state.cardData.count - 1) - index
+                        let delayMs = playOrder * 150
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                pulseOffsets[index] = -5
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
+                                withAnimation(.easeInOut(duration: 0.1)) {
+                                    pulseOffsets[index] = 0
                                 }
                             }
                         }
                     }
                 }
+//            }
                 .animation(.easeInOut, value: indexGap)
                 .padding(.bottom, -20)
                 .frame(width: Device.width)
