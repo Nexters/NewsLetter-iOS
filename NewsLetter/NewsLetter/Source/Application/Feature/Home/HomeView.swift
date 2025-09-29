@@ -93,7 +93,7 @@ struct HomeView: View {
                                 selectedIndex = index
                                 cardTapHandler()
 
-                                GA.click_newsletter_carousel(title: item.title, listIndex: store.state.cardData.count-1-index)
+                                GA.click_newsletter(title: item.title, listIndex: store.state.cardData.count-1-index)
                             },
                             isPresentModal: $isPresentModal,
                         )
