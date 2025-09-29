@@ -12,9 +12,9 @@ import FirebaseAnalytics
 
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
-
+    
     @Environment(\.scenePhase) private var scenePhase
-
+    
     @State private var isPresentModal: Bool = false
     @State private var isPresentJobDetailBottomSheet: Bool = false
     @State private var isPresentNotificationPermissionBottomSheet: Bool = false
@@ -24,7 +24,7 @@ struct HomeView: View {
     @State private var pulseOffsets: [Int: CGFloat] = [:]
     @State private var didAnimateIndex: Set<Int> = []
     @State private var indexGap: Int = 0
-
+    
     let colorFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
     
@@ -35,9 +35,7 @@ struct HomeView: View {
                     HStack {
                         Spacer()
                         Button {
-                            //                            store.send(.settingPressed)
-                            //                            indexGap = addGap(current: indexGap)
-                            indexGap -= 1
+                            store.send(.settingPressed)
                         } label: {
                             Image("setting_icon")
                                 .resizable()
@@ -77,14 +75,14 @@ struct HomeView: View {
                             .resizable()
                             .frame(width: 600, height: UIDevice.isSmallScreen ? Device.height*0.75 : Device.height*0.65)
                             .padding(.bottom, Device.safeAreaInsets.bottom)
-                        //                        .frame(width: 600, height: 526)
+//                        .frame(width: 600, height: 526)
                     }
                 }
                 
-                //                Group {
+//                Group {
                 ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
                     CardView(
-                        cardType: cardTypes[getFinalIndex(from: index)],
+                        cardType: cardTypes[getOffsetIndex(from: index)],
                         color: store.cardColors[index],
                         title: item.title,
                         category: item.topKeyword,
@@ -110,9 +108,26 @@ struct HomeView: View {
                         },
                         isPresentModal: $isPresentModal,
                     )
-                    .position(x: Device.width / 2, y: cardPositionY(at: getFinalIndex(from: index))) /// index 에 따라 세부 조정값 필요
+                    .position(x: Device.width / 2, y: cardPositionY(at: getOffsetIndex(from: index))) /// index 에 따라 세부 조정값 필요
                     .offset(y: pulseOffsets[index] ?? 0)
-                    .zIndex(cardTypes[getFinalIndex(from: index)].zIndex)
+                    .zIndex(cardTypes[getOffsetIndex(from: index)].zIndex)
+                    .gesture(
+                        DragGesture()
+//                            .onChanged { gesture in
+//                                switch gesture.translation.height {
+//                                case 50.0...50.1: indexGap += 1
+//                                case 100.0...100.1: indexGap += 1
+//                                default: print(gesture.translation.height)
+//                                }
+//                            }
+                            .onEnded { gesture in
+                                if gesture.translation.height > 50 {
+                                    indexGap += 1
+                                } else if gesture.translation.height < -50 {
+                                    indexGap -= 1
+                                }
+                            }
+                    )
                     .onAppear {
                         guard !didAnimateIndex.contains(index) else { return }
                         didAnimateIndex.insert(index)
@@ -187,7 +202,7 @@ struct HomeView: View {
                     "category": "pageview",
                     "navigation": "main"
                 ])
-
+                
                 store.send(.onAppear(colorFlag: self.colorFlag))
                 
                 if UserActionHistory.isFirstAppLaunch {
@@ -197,7 +212,7 @@ struct HomeView: View {
                         isPresentJobDetailBottomSheet = true
                     }
                 }
-
+                
                 DateCalculator.checkAndIncrementVisitStreak()
                 
                 guard UserActionHistory.streakCount >= 2 &&
@@ -250,7 +265,7 @@ struct HomeView: View {
         }
     }
     
-    private func getFinalIndex(from currentIndex: Int) -> Int {
+    private func getOffsetIndex(from currentIndex: Int) -> Int {
         if (currentIndex + indexGap) >= 0 {
             return (currentIndex + indexGap) % 6
         } else {
