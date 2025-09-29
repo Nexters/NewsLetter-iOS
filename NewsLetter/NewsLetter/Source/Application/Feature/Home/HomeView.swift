@@ -37,7 +37,7 @@ struct HomeView: View {
                         Button {
                             //                            store.send(.settingPressed)
                             //                            indexGap = addGap(current: indexGap)
-                            indexGap += 1
+                            indexGap -= 1
                         } label: {
                             Image("setting_icon")
                                 .resizable()
@@ -84,7 +84,7 @@ struct HomeView: View {
                 //                Group {
                 ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
                     CardView(
-                        cardType: cardTypes[(index + indexGap) % 6],
+                        cardType: cardTypes[getFinalIndex(from: index)],
                         color: store.cardColors[index],
                         title: item.title,
                         category: item.topKeyword,
@@ -110,9 +110,9 @@ struct HomeView: View {
                         },
                         isPresentModal: $isPresentModal,
                     )
-                    .position(x: Device.width / 2, y: cardPositionY(at: (index + indexGap) % 6)) /// index 에 따라 세부 조정값 필요
+                    .position(x: Device.width / 2, y: cardPositionY(at: getFinalIndex(from: index))) /// index 에 따라 세부 조정값 필요
                     .offset(y: pulseOffsets[index] ?? 0)
-                    .zIndex(cardTypes[(index + indexGap) % 6].zIndex)
+                    .zIndex(cardTypes[getFinalIndex(from: index)].zIndex)
                     .onAppear {
                         guard !didAnimateIndex.contains(index) else { return }
                         didAnimateIndex.insert(index)
@@ -133,7 +133,7 @@ struct HomeView: View {
                     }
                 }
 //            }
-                .animation(.easeInOut, value: indexGap)
+                .animation(.interpolatingSpring, value: indexGap)
                 .padding(.bottom, -20)
                 .frame(width: Device.width)
                 
@@ -247,6 +247,16 @@ struct HomeView: View {
             return 5
         } else {
             return current - 1
+        }
+    }
+    
+    private func getFinalIndex(from currentIndex: Int) -> Int {
+        if (currentIndex + indexGap) >= 0 {
+            return (currentIndex + indexGap) % 6
+        } else {
+            let ob = abs(currentIndex + indexGap) / 6
+            let result = ((currentIndex + indexGap) + (6 * (ob + 1))) % 6
+            return result
         }
     }
     
