@@ -89,7 +89,7 @@ struct HomeView: View {
                         source: item.newsletterName,
                         /// 477 은 CarouselCard 부터 하단 X 버튼 까지의 높이
                         /// 180 은 조정값
-                        shouldMoveY: ((Device.height - 477) / 2) + 180 - cardPositionY(at: index),
+                        shouldMoveY: ((Device.height - 477) / 2) + 180 - cardPositionY(at: getOffsetIndex(from: index)),
                         onTap: {
                             selectedIndex = index
                             cardTapHandler()
