@@ -44,11 +44,7 @@ struct NotificationPermissionBottomSheet: View {
             .padding(.top, 32)
         }
         .onAppear() {
-            Analytics.logEvent("pageview_bottom_sheet_notification", parameters: [
-                "category": "pageview",
-                "navigation": "bottom_sheet_notification",
-                "object_type": "bottom_sheet",
-            ])
+            GA.pageview_bottom_sheet_notification()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && isCheckingPermission {
@@ -62,12 +58,7 @@ struct NotificationPermissionBottomSheet: View {
             DispatchQueue.main.async {
                 if granted {
                     self.sendTokenToServer()
-
-                    Analytics.logEvent("click_bottom_sheet_notification", parameters: [
-                        "category": "click",
-                        "navigation": "bottom_sheet_notification",
-                        "object_type": "button"
-                    ])
+                    GA.click_bottom_sheet_notification()
                     successHandler()
                     isPresented = false
                 } else {
