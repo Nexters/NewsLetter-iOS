@@ -21,7 +21,7 @@ enum GA {
     }
 
     static func click_newsletter(title: String, listIndex: Int) {
-        let dataString = encodeData(["list_index": listIndex])
+        let dataString = ["list_index": listIndex].toJSONString()
         Analytics.logEvent("click_newsletter", parameters: [
             "category": "click",
             "navigation": "main",
@@ -44,7 +44,7 @@ enum GA {
     }
 
     static func impression_newsletter_carousel(title: String, listIndex: Int) {
-        let dataString = encodeData(["list_index": listIndex])
+        let dataString = ["list_index": listIndex].toJSONString()
         Analytics.logEvent("impression_newsletter_carousel", parameters: [
             "category": "impression",
             "navigation": "newsletter_carousel",
@@ -56,7 +56,7 @@ enum GA {
     }
 
     static func click_newsletter_carousel(title: String, listIndex: Int) {
-        let dataString = encodeData(["list_index": listIndex])
+        let dataString = ["list_index": listIndex].toJSONString()
         Analytics.logEvent("click_newsletter_carousel", parameters: [
             "category": "click",
             "navigation": "newsletter_carousel",
@@ -94,7 +94,7 @@ enum GA {
     }
 
     static func click_bottom_sheet_custom(userData: [String: Any]) {
-        let dataString = encodeData(userData)
+        let dataString = userData.toJSONString()
         Analytics.logEvent("click_bottom_sheet_custom", parameters: [
             "category": "click",
             "navigation": "bottom_sheet_custom",
@@ -102,17 +102,6 @@ enum GA {
             "object_type": "button",
             "user_properties": dataString ?? ""
         ])
-    }
-
-
-    // MARK: - Private Helper
-
-    private static func encodeData(_ dict: [String: Any]) -> String? {
-        guard let data = try? JSONSerialization.data(withJSONObject: dict),
-              let string = String(data: data, encoding: .utf8) else {
-            return nil
-        }
-        return string
     }
 }
 
