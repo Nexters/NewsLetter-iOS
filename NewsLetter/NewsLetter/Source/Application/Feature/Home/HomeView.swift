@@ -24,6 +24,7 @@ struct HomeView: View {
     @State private var pulseOffsets: [Int: CGFloat] = [:]
     @State private var didAnimateIndex: Set<Int> = []
     @State private var indexGap: Int = 0
+    @State private var isCardMoving = false
     
     let colorFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
@@ -110,7 +111,7 @@ struct HomeView: View {
                     )
                     .position(x: Device.width / 2, y: cardPositionY(at: getOffsetIndex(from: index))) /// index 에 따라 세부 조정값 필요
                     .offset(y: pulseOffsets[index] ?? 0)
-                    .zIndex(cardTypes[getOffsetIndex(from: index)].zIndex)
+                    .zIndex((isCardMoving && getOffsetIndex(from: index) == 5) ? 0 : cardTypes[getOffsetIndex(from: index)].zIndex)
                     .gesture(
                         DragGesture()
 //                            .onChanged { gesture in
@@ -125,6 +126,11 @@ struct HomeView: View {
                                     indexGap += 1
                                 } else if gesture.translation.height < -50 {
                                     indexGap -= 1
+                                    isCardMoving = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                        isCardMoving = false
+                                    }
+                                    
                                 }
                             }
                     )
