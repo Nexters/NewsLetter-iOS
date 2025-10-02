@@ -32,11 +32,19 @@ struct CarouselCard: View {
                 .font(.head20_bold)
                 .foregroundStyle(pointColor)
             
-            Text(card.topKeyword)
-                .fontRangeLimited()
-                .font(.body13_medium)
-                .foregroundStyle(pointColor)
-                .padding(.top, 4)
+            HStack(spacing: 6) {
+                Text(card.topKeyword)
+                    .font(.body13_medium)
+                
+                Rectangle()
+                    .frame(width: 1, height: 14)
+                
+                Text(card.newsletterName)
+                    .fontRangeLimited()
+                    .font(.body13_medium)
+            }
+            .foregroundStyle(pointColor)
+            .padding(.top, 4)
             
             Text(card.summary)
                 .fontRangeLimited()
