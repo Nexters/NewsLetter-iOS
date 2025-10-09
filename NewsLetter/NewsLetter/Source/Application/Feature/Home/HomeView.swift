@@ -25,12 +25,14 @@ struct HomeView: View {
     @State private var didAnimateIndex: Set<Int> = []
 
     let colorFlag: String
+    let mainDescFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
+    let flag = true /// A true ,  B false
     
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack(alignment: .bottom) {
-                VStack {
+                VStack(spacing: 0) {
                     HStack {
                         Spacer()
                         Button {
@@ -47,7 +49,7 @@ struct HomeView: View {
                     .padding(.top, UIDevice.isSmallScreen ? 24 : 50)
 
                     VStack(spacing: 8) {
-                        Text("\(store.state.todayDate)\nToday’s Hot News")
+                        Text((mainDescFlag == "T") ? "\(store.state.todayDate)" : "\(store.state.todayDate)\nToday's Hot News")
                             .fontRangeLimited()
                             .font(UIDevice.isSmallScreen ? .jalnanGothicSE : .jalnanGothic)
                             .multilineTextAlignment(.center)
@@ -55,8 +57,20 @@ struct HomeView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, UIDevice.isSmallScreen ? 4 : 12)
                             .fixedSize(horizontal: false, vertical: true)
-
+                        
+                        if (mainDescFlag == "T") {
+                            Text("뉴스레터는 매일 새롭게 업데이트 돼요")
+                                .fontRangeLimited()
+                                .font(.body15_semiBold)
+                                .foregroundColor(.semanticColor.text_strong)
+                        }
+                        
                         HStack(spacing: 0) {
+                            if (mainDescFlag == "T") {
+                                Text("아래 뉴스는 ")
+                                    .font(.body15_medium)
+                                    .foregroundColor(.semanticColor.text_secondary)
+                            }
                             Text(store.state.formattedTime)
                                 .fontRangeLimited()
                                 .font(.body16_semiBold)
@@ -64,6 +78,27 @@ struct HomeView: View {
                             Text(" 동안 볼 수 있어요")
                                 .font(.body15_medium)
                                 .foregroundColor(.semanticColor.text_secondary)
+                        }
+                        
+                        if (mainDescFlag == "T") {
+                            Button {
+                                // TODO: 새로고침 액션
+                            } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .frame(width: 93, height: 28)
+                                        .foregroundColor(.semanticColor.fill_primary)
+                                    HStack(spacing: 4) {
+                                        Image("icon-sync-mono")
+                                            .resizable()
+                                            .frame(width: 16, height: 16)
+                                        Text("새로고침")
+                                            .font(.body14_semiBold)
+                                            .foregroundColor(.semanticColor.text_secondary)
+                                    }
+                                }
+                            }
+                            .padding(.top, 12)
                         }
                     }
 
@@ -268,6 +303,6 @@ extension UIDevice {
     HomeView(store: Store(initialState: HomeReducer.State()) {
         HomeReducer()
     },
-             colorFlag: "A")
+             colorFlag: "A", mainDescFlag: "T")
 }
 
