@@ -27,7 +27,6 @@ struct HomeView: View {
     let colorFlag: String
     let mainDescFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
-    let flag = true /// A true ,  B false
     
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
