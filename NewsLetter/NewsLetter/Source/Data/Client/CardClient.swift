@@ -34,6 +34,7 @@ extension CardClient: DependencyKey {
                     let cardResponse = try response.map(CardResponseDTO.self)
                     let cards = cardResponse.cards.map { cardDTO in
                         Card(
+                            id: cardDTO.id,
                             title: cardDTO.title,
                             topKeyword: cardDTO.topKeyword,
                             summary: cardDTO.summary,
@@ -44,9 +45,9 @@ extension CardClient: DependencyKey {
                     return cards
                 },
                 fetchOGShareURL: { requestDTO in
-                    let response = try await apiClient.request(CardAPI.fetchOGShareURL(requestDTO))
-                    let ogShareURL = try response.map(OGShareURLResponseDTO.self)
-                    return ogShareURL
+                    let textColorEncoded = requestDTO.textColor?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                    let urlString = "https://fairy-band.com/api/share/og?exposureContentId=\(requestDTO.exposureContentId)&textColor=\(textColorEncoded)"
+                    return urlString
                 }
             )
         }()
@@ -55,12 +56,12 @@ extension CardClient: DependencyKey {
         return CardClient(
             fetchCards: { _,_  in
                 return [
-                    Card(title: "Preview Title 1", topKeyword: "Preview Keyword 1", summary: "Preview Summary 1", contentURL: "https://example.com", newsletterName: "Preview Newsletter 1"),
-                    Card(title: "Preview Title 2", topKeyword: "Preview Keyword 2", summary: "Preview Summary 2", contentURL: "https://example.com", newsletterName: "Preview Newsletter 2"),
-                    Card(title: "Preview Title 3", topKeyword: "Preview Keyword 3", summary: "Preview Summary 3", contentURL: "https://example.com", newsletterName: "Preview Newsletter 3"),
-                    Card(title: "Preview Title 4", topKeyword: "Preview Keyword 4", summary: "Preview Summary 4", contentURL: "https://example.com", newsletterName: "Preview Newsletter 4"),
-                    Card(title: "Preview Title 5", topKeyword: "Preview Keyword 5", summary: "Preview Summary 5", contentURL: "https://example.com", newsletterName: "Preview Newsletter 5"),
-                    Card(title: "Preview Title 6", topKeyword: "Preview Keyword 6", summary: "Preview Summary 6", contentURL: "https://example.com", newsletterName: "Preview Newsletter 6")
+                    Card(id: 1192, title: "Preview Title 1", topKeyword: "Preview Keyword 1", summary: "Preview Summary 1", contentURL: "https://example.com", newsletterName: "Preview Newsletter 1"),
+                    Card(id: 1201, title: "Preview Title 2", topKeyword: "Preview Keyword 2", summary: "Preview Summary 2", contentURL: "https://example.com", newsletterName: "Preview Newsletter 2"),
+                    Card(id: 1170, title: "Preview Title 3", topKeyword: "Preview Keyword 3", summary: "Preview Summary 3", contentURL: "https://example.com", newsletterName: "Preview Newsletter 3"),
+                    Card(id: 1123, title: "Preview Title 4", topKeyword: "Preview Keyword 4", summary: "Preview Summary 4", contentURL: "https://example.com", newsletterName: "Preview Newsletter 4"),
+                    Card(id: 1148, title: "Preview Title 5", topKeyword: "Preview Keyword 5", summary: "Preview Summary 5", contentURL: "https://example.com", newsletterName: "Preview Newsletter 5"),
+                    Card(id: 938, title: "Preview Title 6", topKeyword: "Preview Keyword 6", summary: "Preview Summary 6", contentURL: "https://example.com", newsletterName: "Preview Newsletter 6")
                 ]
             },
             fetchOGShareURL: { _ in
