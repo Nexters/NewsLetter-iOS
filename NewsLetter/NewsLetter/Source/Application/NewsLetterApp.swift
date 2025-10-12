@@ -10,6 +10,7 @@ import SwiftUI
 import ComposableArchitecture
 import FirebaseCore
 import FirebaseMessaging
+import KakaoSDKCommon
 
 @main
 struct NewsLetterApp: App {
@@ -39,6 +40,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         application.registerForRemoteNotifications()
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self
+
+        KakaoSDK.initSDK(appKey: "3eb3851f7f6457accc8d6fd4585db5e2")
 
         return true
     }
