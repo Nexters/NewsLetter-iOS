@@ -25,4 +25,19 @@ extension UIColor {
                   blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
                   alpha: alpha)
     }
+
+    var toHexString: String? {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        guard self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return nil
+        }
+        let r = Int(red * 255)
+        let g = Int(green * 255)
+        let b = Int(blue * 255)
+        return String(format: "#%02X%02X%02X", r, g, b)
+    }
 }
