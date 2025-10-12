@@ -5,7 +5,7 @@
 //  Created by 이원빈 on 7/19/25.
 //
 
-import SwiftUICore
+import SwiftUI
 
 enum ColorPalette {
     static let white = Color(hex: 0xFFFFFF)
