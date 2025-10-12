@@ -15,11 +15,13 @@ struct CardResponseDTO: Decodable {
 
 // MARK: - Card
 struct CardDTO: Decodable {
+    let id: Int
     let title, topKeyword, summary: String
     let contentURL: String
     let newsletterName: String
 
     enum CodingKeys: String, CodingKey {
+        case id
         case title, topKeyword, summary
         case contentURL = "contentUrl"
         case newsletterName
