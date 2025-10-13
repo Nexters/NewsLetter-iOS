@@ -50,7 +50,7 @@ struct HomeView: View {
                     VStack(spacing: 8) {
                         Text((mainDescFlag == "T") ? "\(store.state.todayDate)" : "\(store.state.todayDate)\nToday's Hot News")
                             .fontRangeLimited()
-                            .font(UIDevice.isSmallScreen ? .jalnanGothicSE : .jalnanGothic)
+                            .font(UIDevice.isSmallScreen || UIDevice.is13MiniScreen ? .jalnanGothicSE : .jalnanGothic)
                             .multilineTextAlignment(.center)
                             .foregroundColor(.semanticColor.text_strong)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -97,7 +97,6 @@ struct HomeView: View {
                                     }
                                 }
                             }
-                            .padding(.top, 12)
                         }
                     }
 
@@ -243,7 +242,9 @@ struct HomeView: View {
     private func cardPositionY(at index: Int) -> CGFloat {
         if UIDevice.isSmallScreen {
             return Device.height - 430 + CGFloat(index * 80)
-        } else if   UIDevice.isLargeScreen {
+        } else if UIDevice.is13MiniScreen {
+            return Device.height - 455 + CGFloat(index * 83)
+        } else if UIDevice.isLargeScreen {
             return Device.height - 530 + CGFloat(index * 95)
         } else {
             return Device.height - 490 + CGFloat(index * 90)
@@ -290,6 +291,11 @@ extension UIDevice {
     static var isSmallScreen: Bool {
         let screenBounds = UIScreen.main.bounds
         return screenBounds.width <= 320 || screenBounds.height <= 667
+    }
+    
+    static var is13MiniScreen: Bool {
+        let screenBounds = UIScreen.main.bounds
+        return screenBounds.width <= 375 || screenBounds.height <= 736
     }
     
     static var isLargeScreen: Bool {
