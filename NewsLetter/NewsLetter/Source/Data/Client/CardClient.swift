@@ -15,7 +15,7 @@ struct CardClient {
     static let apiClient = MoyaAPIClient()
 
     var fetchCards: (String, String?) async throws -> [Card]
-    var fetchOGShareURL: (OGShareURLRequestDTO) async throws -> OGShareURLResponseDTO
+    var fetchOGShareURL: (OGShareURLRequestDTO) -> String = { _ in "" }
 }
 
 extension DependencyValues {
@@ -65,7 +65,7 @@ extension CardClient: DependencyKey {
                 ]
             },
             fetchOGShareURL: { _ in
-                return "www.example-og-share-url.com"
+                return "https://fairy-band.com/api/share/og?exposureContentId=2&textColor=%23DCFF64"
             }
         )
     }()

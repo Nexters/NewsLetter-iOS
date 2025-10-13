@@ -41,7 +41,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self
 
-        KakaoSDK.initSDK(appKey: "3eb3851f7f6457accc8d6fd4585db5e2")
+        KakaoSDK.initSDK(appKey: Bundle.main.infoDictionary?["APP_KEY"] as? String ?? "")
 
         return true
     }
