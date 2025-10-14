@@ -23,59 +23,53 @@ final class KakaoShareManager: ObservableObject {
     }
 
     func shareToKakao(title: String, id: Int, textColor: Color, contentURL: String) async {
-        do {
+        let dto = OGShareURLRequestDTO(exposureContentId: Int64(id), textColor: textColor.toHexString)
+        let ogImageURLString = cardClient.fetchOGShareURL(dto)
 
-            let dto = OGShareURLRequestDTO(exposureContentId: Int64(id), textColor: textColor.toHexString)
-            let ogImageURLString = try await cardClient.fetchOGShareURL(dto)
+        guard let ogImageURL = URL(string: ogImageURLString) else {
+            errorMessage = "OG 이미지 URL이 잘못되었습니다."
+            return
+        }
 
-            guard let ogImageURL = URL(string: ogImageURLString) else {
-                errorMessage = "OG 이미지 URL이 잘못되었습니다."
-                return
-            }
+        let content = Content(
+            title: title,
+            imageUrl: ogImageURL,
+            imageWidth: 800,
+            imageHeight: 400,
+            description: "쏙 - 매일 뉴스레터 6개를 한눈에",
+            link: Link(iosExecutionParams: [:])
+        )
 
-            let content = Content(
-                title: title,
-                imageUrl: ogImageURL,
-                imageWidth: 800,
-                imageHeight: 400,
-                description: "쏙 - 매일 뉴스레터 6개를 한눈에",
-                link: Link(iosExecutionParams: [:])
-            )
-
-            let buttons = [
-                Button(
-                    title: "앱으로 보기",
-                    link: Link(
-                        iosExecutionParams: [:]
-                    )
+        let buttons = [
+            Button(
+                title: "앱으로 보기",
+                link: Link(
+                    iosExecutionParams: [:]
                 )
-            ]
+            )
+        ]
 
-            let template = FeedTemplate(content: content, buttons: buttons)
+        let template = FeedTemplate(content: content, buttons: buttons)
 
-            if ShareApi.isKakaoTalkSharingAvailable() {
-                ShareApi.shared.shareDefault(templatable: template) { result, error in
-                    if let error = error {
-                        print("❌ 공유 실패: \(error)")
-                        return
-                    }
-
-                    if let url = result {
-                        DispatchQueue.main.async {
-                            UIApplication.shared.open(url.url, options: [:], completionHandler: nil)
-                        }
-                    }
+        if ShareApi.isKakaoTalkSharingAvailable() {
+            ShareApi.shared.shareDefault(templatable: template) { result, error in
+                if let error = error {
+                    print("❌ 공유 실패: \(error)")
+                    return
                 }
-            } else {
-                if let url = ShareApi.shared.makeDefaultUrl(templatable: template) {
-                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                } else {
-                    errorMessage = "❌ 공유 URL 생성에 실패했습니다."
+
+                if let url = result {
+                    DispatchQueue.main.async {
+                        UIApplication.shared.open(url.url, options: [:], completionHandler: nil)
+                    }
                 }
             }
-        } catch {
-            errorMessage = "OG 이미지 생성에 실패했습니다."
-            print("❌ OG 이미지 요청 실패: \(error)")
+        } else {
+            if let url = ShareApi.shared.makeDefaultUrl(templatable: template) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            } else {
+                errorMessage = "❌ 공유 URL 생성에 실패했습니다."
+            }
         }
     }
 }
