@@ -13,7 +13,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>kakao3eb3851f7f6457accc8d6fd4585db5e2</string>
+				<string>$(URL_SCHEMES)</string>
 			</array>
 		</dict>
 	</array>
@@ -42,5 +42,7 @@
 		<string>remote-notification</string>
 		<string>fetch</string>
 	</array>
+	<key>URL_SCHEMES</key>
+	<string>$(URL_SCHEMES)</string>
 </dict>
 </plist>
