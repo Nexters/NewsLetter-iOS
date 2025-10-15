@@ -28,6 +28,11 @@ struct HomeView: View {
     let mainDescFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
     
+    var showRefreshButton: Bool {
+        guard let refreshDate = UserActionHistory.useRefreshDate else { return true }
+        return DateCalculator.isToday(date: refreshDate) == false
+    }
+    
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack(alignment: .bottom) {
@@ -79,9 +84,9 @@ struct HomeView: View {
                                 .foregroundColor(.semanticColor.text_secondary)
                         }
                         
-                        if (mainDescFlag == "T") {
+                        if (mainDescFlag == "T") && showRefreshButton {
                             Button {
-                                // TODO: 새로고침 액션
+                                store.send(.refreshButtonPressed)
                             } label: {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 20)

@@ -77,4 +77,8 @@ struct DateCalculator {
         }
         return Int(midnight.timeIntervalSince(date))
     }
+    
+    static func isToday(date: Date) -> Bool {
+        return Calendar.current.isDateInToday(date)
+    }
 }

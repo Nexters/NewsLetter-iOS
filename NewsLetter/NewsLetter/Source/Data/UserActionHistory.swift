@@ -47,4 +47,8 @@ struct UserActionHistory {
     /// 유저의 연속 방문 일수
     @UserDefaultWrapper(key: "streakCount", defaultValue: 1)
     static var streakCount: Int
+    
+    /// 유저의 새로고침 사용 날짜
+    @UserDefaultWrapper(key: "useRefreshDate", defaultValue: nil)
+    static var useRefreshDate: Date?
 }
