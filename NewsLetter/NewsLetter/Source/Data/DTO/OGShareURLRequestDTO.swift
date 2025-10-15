@@ -9,6 +9,5 @@ import Foundation
 
 struct OGShareURLRequestDTO: Encodable {
     let exposureContentId: Int64
-    let backgroundColor: String?
     let textColor: String?
 }

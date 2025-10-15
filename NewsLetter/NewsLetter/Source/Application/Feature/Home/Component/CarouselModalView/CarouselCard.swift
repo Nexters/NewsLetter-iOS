@@ -19,7 +19,8 @@ struct CarouselCard: View {
         static let nextButtonCornerRadius: CGFloat = 100
         static let nextButtonHeight: CGFloat = 44
     }
-    
+
+    @StateObject private var kakaoShareManager = KakaoShareManager()
     @State private var isWebViewPresented: Bool = false
     let card: Card
     let index: Int
@@ -54,7 +55,16 @@ struct CarouselCard: View {
             Spacer()
             
             HStack(spacing: 8) {
-                ShareLink(item: card.contentURL) { // FIXME: item 에 og share url 이 들어가야함
+                Button {
+                    Task {
+                        await kakaoShareManager.shareToKakao(
+                            title: card.title,
+                            id: card.id,
+                            textColor: pointColor,
+                            contentURL: card.contentURL
+                        )
+                    }
+                } label: {
                     RoundedRectangle(cornerRadius: Metric.shareButtonSize/2)
                         .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
                         .background(ColorPalette.white)
@@ -64,10 +74,11 @@ struct CarouselCard: View {
                                 .resizable()
                                 .frame(width: 24, height: 24)
                                 .foregroundStyle(.semanticColor.text_primary)
-                            
+
                         }
                 }
-                
+                .foregroundStyle(.semanticColor.text_primary)
+
                 Button {
                     isWebViewPresented = true
 

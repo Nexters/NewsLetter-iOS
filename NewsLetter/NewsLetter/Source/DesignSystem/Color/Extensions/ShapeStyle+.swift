@@ -5,7 +5,7 @@
 //  Created by 이원빈 on 7/19/25.
 //
 
-import SwiftUICore
+import SwiftUI
 
 extension ShapeStyle where Self == Color {
     static var accentColor: AccentColor {

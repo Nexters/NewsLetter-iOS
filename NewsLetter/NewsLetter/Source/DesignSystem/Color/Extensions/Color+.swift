@@ -17,4 +17,8 @@ extension Color {
             opacity: opacity
         )
     }
+
+    var toHexString: String? {
+        UIColor(self).toHexString
+    }
 }
