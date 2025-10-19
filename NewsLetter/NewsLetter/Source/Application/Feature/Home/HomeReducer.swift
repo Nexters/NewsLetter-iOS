@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 
 import ComposableArchitecture
+import Moya
 
 @Reducer
 struct HomeReducer {
@@ -127,7 +128,11 @@ struct HomeReducer {
                         UserActionHistory.useRefreshDate = Date()
                     } catch let error {
                         print(error.localizedDescription)
-                        UserActionHistory.useRefreshDate = Date()
+                        guard let error = error as? MoyaError else { return }
+                        
+                        if error.response?.statusCode == 400 {
+                            UserActionHistory.useRefreshDate = Date()
+                        }
                     }
                 }
             case .startTimer:
