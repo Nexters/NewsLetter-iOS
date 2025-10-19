@@ -84,23 +84,25 @@ struct HomeView: View {
                                 .foregroundColor(.semanticColor.text_secondary)
                         }
                         
-                        if (mainDescFlag == "T") && showRefreshButton {
+                        if (mainDescFlag == "T") {
                             Button {
                                 store.send(.refreshButtonPressed)
                             } label: {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .frame(width: 93, height: 28)
-                                        .foregroundColor(.semanticColor.fill_primary)
-                                    HStack(spacing: 4) {
-                                        Image("icon-sync-mono")
-                                            .resizable()
-                                            .frame(width: 16, height: 16)
-                                        Text("새로고침")
-                                            .font(.body14_semiBold)
-                                            .foregroundColor(.semanticColor.text_secondary)
-                                    }
+                                HStack(spacing: 4) {
+                                    Image("icon-sync-mono")
+                                        .resizable()
+                                        .frame(width: 16, height: 16) // FIXME: 아이콘 컬러 disabled 대응 필요
+                                    
+                                    Text("새로고침 (\(showRefreshButton ? 0 : 1)/1)")
+                                        .font(.body14_semiBold)
+                                        .foregroundColor(showRefreshButton ? .semanticColor.text_secondary : .semanticColor.text_disabled)
                                 }
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .foregroundColor(showRefreshButton ? .semanticColor.fill_primary : .clear)
+                                )
                             }
                         }
                     }
