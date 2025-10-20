@@ -90,8 +90,10 @@ struct HomeView: View {
                             } label: {
                                 HStack(spacing: 4) {
                                     Image("icon-sync-mono")
+                                        .renderingMode(.template)
                                         .resizable()
-                                        .frame(width: 16, height: 16) // FIXME: 아이콘 컬러 disabled 대응 필요
+                                        .frame(width: 16, height: 16)
+                                        .foregroundStyle(showRefreshButton ? .semanticColor.text_secondary : .semanticColor.text_disabled)
                                     
                                     Text("새로고침 (\(showRefreshButton ? 0 : 1)/1)")
                                         .font(.body14_semiBold)
@@ -104,6 +106,7 @@ struct HomeView: View {
                                         .foregroundColor(showRefreshButton ? .semanticColor.fill_primary : .clear)
                                 )
                             }
+                            .disabled(!showRefreshButton)
                         }
                     }
 
