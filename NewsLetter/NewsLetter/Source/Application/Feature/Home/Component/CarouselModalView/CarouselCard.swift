@@ -19,7 +19,8 @@ struct CarouselCard: View {
         static let nextButtonCornerRadius: CGFloat = 100
         static let nextButtonHeight: CGFloat = 44
     }
-    
+
+    @StateObject private var kakaoShareManager = KakaoShareManager()
     @State private var isWebViewPresented: Bool = false
     let card: Card
     let index: Int
@@ -32,11 +33,19 @@ struct CarouselCard: View {
                 .font(.head20_bold)
                 .foregroundStyle(pointColor)
             
-            Text(card.topKeyword)
-                .fontRangeLimited()
-                .font(.body13_medium)
-                .foregroundStyle(pointColor)
-                .padding(.top, 4)
+            HStack(spacing: 6) {
+                Text(card.topKeyword)
+                    .font(.body13_medium)
+                
+                Rectangle()
+                    .frame(width: 1, height: 14)
+                
+                Text(card.newsletterName)
+                    .fontRangeLimited()
+                    .font(.body13_medium)
+            }
+            .foregroundStyle(pointColor)
+            .padding(.top, 4)
             
             Text(card.summary)
                 .fontRangeLimited()
@@ -46,7 +55,16 @@ struct CarouselCard: View {
             Spacer()
             
             HStack(spacing: 8) {
-                ShareLink(item: card.contentURL) { // FIXME: item 에 og share url 이 들어가야함
+                Button {
+                    Task {
+                        await kakaoShareManager.shareToKakao(
+                            title: card.title,
+                            id: card.id,
+                            textColor: pointColor,
+                            contentURL: card.contentURL
+                        )
+                    }
+                } label: {
                     RoundedRectangle(cornerRadius: Metric.shareButtonSize/2)
                         .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
                         .background(ColorPalette.white)
@@ -56,24 +74,15 @@ struct CarouselCard: View {
                                 .resizable()
                                 .frame(width: 24, height: 24)
                                 .foregroundStyle(.semanticColor.text_primary)
-                            
+
                         }
                 }
-                
+                .foregroundStyle(.semanticColor.text_primary)
+
                 Button {
                     isWebViewPresented = true
-                    
-                    let dataString = (try? JSONSerialization.data(withJSONObject: ["list_index": index]))
-                        .flatMap { String(data: $0, encoding: .utf8) }
-                    
-                    Analytics.logEvent("click_newsletter_carousel", parameters: [
-                        "category": "click",
-                        "navigation": "newsletter_carousel",
-                        "object_section": "newsletter_card",
-                        "object_type": "button",
-                        "object_id": card.title,
-                        "data": dataString ?? ""
-                    ])
+
+                    GA.click_newsletter_carousel(title: card.title, listIndex: index)
                 } label: {
                     RoundedRectangle(cornerRadius: Metric.nextButtonCornerRadius)
                         .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))

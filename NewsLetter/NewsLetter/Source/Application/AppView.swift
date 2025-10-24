@@ -20,13 +20,15 @@ struct AppView: View {
         } else {
             HomeView(
                 store: store.scope(state: \.home, action: \.home),
-                colorFlag: remoteConfigManager.colorFlag
+                colorFlag: remoteConfigManager.colorFlag,
+                mainDescFlag: remoteConfigManager.mainDescFlag
             )
         }
     }
 }
 
 class RemoteConfigManager: ObservableObject {
+    @Published var mainDescFlag: String = "F"
     @Published var colorFlag: String = "B"
     @Published var isLoading: Bool = true
 
@@ -51,10 +53,13 @@ class RemoteConfigManager: ObservableObject {
             }
 
             let rawFlag = self.remoteConfig["testType"].stringValue
+            let rawFlag2 = self.remoteConfig["main_desc"].stringValue
             let colorFlag = (rawFlag == "A" || rawFlag == "B") ? rawFlag : "B"
+            let mainDescFlag = (rawFlag2 == "T" || rawFlag2 == "F") ? rawFlag2 : "F"
 
             DispatchQueue.main.async {
                 self.colorFlag = colorFlag
+                self.mainDescFlag = mainDescFlag
                 self.isLoading = false
                 print("색상 실험 그룹 - \(colorFlag)")
             }

@@ -101,17 +101,7 @@ struct JobDetailBottomSheet: View {
                     "job_group": preferences,
                     "career_level": workingExperience
                 ]
-
-                let dataString = (try? JSONSerialization.data(withJSONObject: dataDictionary))
-                    .flatMap { String(data: $0, encoding: .utf8) }
-
-                Analytics.logEvent("bottom_sheet_custom_click", parameters: [
-                    "category": "click",
-                    "navigation": "bottom_sheet_custom",
-                    "object_section": "bottom_sheet",
-                    "object_type": "button",
-                    "user_properties": dataString ?? ""
-                ])
+                GA.click_bottom_sheet_custom(userData: dataDictionary)
             } label: {
                 RoundedRectangle(cornerRadius: 100)
                     .frame(height: 56)
@@ -127,11 +117,7 @@ struct JobDetailBottomSheet: View {
             .disabled(!isEnabledButton)
         }
         .onAppear() {
-            Analytics.logEvent("pageview_bottom_sheet_custom", parameters: [
-                "category": "pageview",
-                "navigation": "bottom_sheet_custom",
-                "object_type": "bottom_sheet"
-            ])
+            GA.pageview_bottom_sheet_custom()
         }
     }
 }
