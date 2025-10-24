@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 
 import ComposableArchitecture
+import Moya
 
 @Reducer
 struct HomeReducer {
@@ -42,6 +43,7 @@ struct HomeReducer {
         case onAppear(colorFlag: String)
         case onDisappear
         case settingPressed
+        case refreshButtonPressed
         case tick
         case startTimer
         case setColorPalette([Color])
@@ -117,6 +119,22 @@ struct HomeReducer {
             case .settingPressed:
                 state.path.append(.setting(SettingReducer.State()))
                 return .none
+            case .refreshButtonPressed:
+                return .run { send in
+                    do {
+                        let userId = String(UserInfo.userId ?? 3)
+                        try await cardClient.refreshCards(userId)
+                        await send(.fetchCards)
+                        UserActionHistory.useRefreshDate = Date()
+                    } catch let error {
+                        print(error.localizedDescription)
+                        guard let error = error as? MoyaError else { return }
+                        
+                        if error.response?.statusCode == 400 {
+                            UserActionHistory.useRefreshDate = Date()
+                        }
+                    }
+                }
             case .startTimer:
                 state.timerIsRunning = true
                 state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)

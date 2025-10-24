@@ -25,12 +25,18 @@ struct HomeView: View {
     @State private var didAnimateIndex: Set<Int> = []
 
     let colorFlag: String
+    let mainDescFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
+    
+    var showRefreshButton: Bool {
+        guard let refreshDate = UserActionHistory.useRefreshDate else { return true }
+        return DateCalculator.isToday(date: refreshDate) == false
+    }
     
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             ZStack(alignment: .bottom) {
-                VStack {
+                VStack(spacing: 0) {
                     HStack {
                         Spacer()
                         Button {
@@ -47,16 +53,28 @@ struct HomeView: View {
                     .padding(.top, UIDevice.isSmallScreen ? 24 : 50)
 
                     VStack(spacing: 8) {
-                        Text("\(store.state.todayDate)\nToday’s Hot News")
+                        Text((mainDescFlag == "T") ? "\(store.state.todayDate)" : "\(store.state.todayDate)\nToday's Hot News")
                             .fontRangeLimited()
-                            .font(UIDevice.isSmallScreen ? .jalnanGothicSE : .jalnanGothic)
+                            .font(UIDevice.isSmallScreen || UIDevice.is13MiniScreen ? .jalnanGothicSE : .jalnanGothic)
                             .multilineTextAlignment(.center)
                             .foregroundColor(.semanticColor.text_strong)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, UIDevice.isSmallScreen ? 4 : 12)
                             .fixedSize(horizontal: false, vertical: true)
-
+                        
+                        if (mainDescFlag == "T") {
+                            Text("뉴스레터는 매일 새롭게 업데이트 돼요")
+                                .fontRangeLimited()
+                                .font(.body15_semiBold)
+                                .foregroundColor(.semanticColor.text_strong)
+                        }
+                        
                         HStack(spacing: 0) {
+                            if (mainDescFlag == "T") {
+                                Text("아래 뉴스는 ")
+                                    .font(.body15_medium)
+                                    .foregroundColor(.semanticColor.text_secondary)
+                            }
                             Text(store.state.formattedTime)
                                 .fontRangeLimited()
                                 .font(.body16_semiBold)
@@ -64,6 +82,31 @@ struct HomeView: View {
                             Text(" 동안 볼 수 있어요")
                                 .font(.body15_medium)
                                 .foregroundColor(.semanticColor.text_secondary)
+                        }
+                        
+                        if (mainDescFlag == "T") {
+                            Button {
+                                store.send(.refreshButtonPressed)
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image("icon-sync-mono")
+                                        .renderingMode(.template)
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
+                                        .foregroundStyle(showRefreshButton ? .semanticColor.text_secondary : .semanticColor.text_disabled)
+                                    
+                                    Text("새로고침 (\(showRefreshButton ? 0 : 1)/1)")
+                                        .font(.body14_semiBold)
+                                        .foregroundColor(showRefreshButton ? .semanticColor.text_secondary : .semanticColor.text_disabled)
+                                }
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .foregroundColor(showRefreshButton ? .semanticColor.fill_primary : .clear)
+                                )
+                            }
+                            .disabled(!showRefreshButton)
                         }
                     }
 
@@ -209,7 +252,9 @@ struct HomeView: View {
     private func cardPositionY(at index: Int) -> CGFloat {
         if UIDevice.isSmallScreen {
             return Device.height - 430 + CGFloat(index * 80)
-        } else if   UIDevice.isLargeScreen {
+        } else if UIDevice.is13MiniScreen {
+            return Device.height - 455 + CGFloat(index * 83)
+        } else if UIDevice.isLargeScreen {
             return Device.height - 530 + CGFloat(index * 95)
         } else {
             return Device.height - 490 + CGFloat(index * 90)
@@ -258,6 +303,11 @@ extension UIDevice {
         return screenBounds.width <= 320 || screenBounds.height <= 667
     }
     
+    static var is13MiniScreen: Bool {
+        let screenBounds = UIScreen.main.bounds
+        return screenBounds.width <= 375 || screenBounds.height <= 736
+    }
+    
     static var isLargeScreen: Bool {
         let screenBounds = UIScreen.main.bounds
         return screenBounds.width >= 428
@@ -268,6 +318,6 @@ extension UIDevice {
     HomeView(store: Store(initialState: HomeReducer.State()) {
         HomeReducer()
     },
-             colorFlag: "A")
+             colorFlag: "A", mainDescFlag: "T")
 }
 

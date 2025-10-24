@@ -15,6 +15,7 @@ struct CardClient {
     static let apiClient = MoyaAPIClient()
 
     var fetchCards: (String, String?) async throws -> [Card]
+    var refreshCards: (String) async throws -> Void
     var fetchOGShareURL: (OGShareURLRequestDTO) -> String = { _ in "" }
 }
 
@@ -44,6 +45,9 @@ extension CardClient: DependencyKey {
                     }
                     return cards
                 },
+                refreshCards: { userId in
+                    _ = try await apiClient.request(CardAPI.refreshCards(userId: userId))
+                },
                 fetchOGShareURL: { requestDTO in
                     let textColorEncoded = requestDTO.textColor?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
                     let urlString = "https://fairy-band.com/api/share/og?exposureContentId=\(requestDTO.exposureContentId)&textColor=\(textColorEncoded)"
@@ -64,6 +68,7 @@ extension CardClient: DependencyKey {
                     Card(id: 938, title: "Preview Title 6", topKeyword: "Preview Keyword 6", summary: "Preview Summary 6", contentURL: "https://example.com", newsletterName: "Preview Newsletter 6")
                 ]
             },
+            refreshCards: { _ in },
             fetchOGShareURL: { _ in
                 return "https://fairy-band.com/api/share/og?exposureContentId=2&textColor=%23DCFF64"
             }
