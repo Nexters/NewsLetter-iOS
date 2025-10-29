@@ -13,6 +13,7 @@ import FirebaseAnalytics
 struct CarouselCard: View {
     private enum Metric {
         static let height: CGFloat = 366
+        static let smallCornerRadius: CGFloat = 4
         static let cornerRadius: CGFloat = 16
         static let padding: CGFloat = 20
         static let shareButtonSize: CGFloat = 44
@@ -32,8 +33,18 @@ struct CarouselCard: View {
                 .fontRangeLimited()
                 .font(.head20_bold)
                 .foregroundStyle(pointColor)
-            
+
             HStack(spacing: 6) {
+                Text("한국어")
+                  .font(.caption11_bold)
+                  .padding(.horizontal, 6)
+                  .padding(.vertical, 2)
+                  .foregroundStyle(ColorPalette.white)
+                  .background(
+                    RoundedRectangle(cornerRadius: Metric.smallCornerRadius)
+                      .fill(pointColor)
+                  )
+
                 Text(card.topKeyword)
                     .font(.body13_medium)
                 
