@@ -58,6 +58,17 @@ extension CardAPI: TargetType {
     }
 
     var headers: [String: String]? {
-        return ["Content-Type": "application/json"]
+        var h: [String: String] = ["Content-Type": "application/json"]
+        h["Accept-Language"] = languageTagForHeader()
+        return h
+    }
+
+    private func languageTagForHeader() -> String {
+        let lang = Locale.preferredLanguages.first ?? "en-US"
+        switch lang {
+        case "en-US": return "en-US"
+        case "ko-KR": return "ko-KR"
+        default:   return "en-US"
+        }
     }
 }
