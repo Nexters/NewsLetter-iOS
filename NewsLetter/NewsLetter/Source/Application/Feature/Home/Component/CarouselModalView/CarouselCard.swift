@@ -35,15 +35,15 @@ struct CarouselCard: View {
                 .foregroundStyle(pointColor)
 
             HStack(spacing: 6) {
-//                Text("한국어")
-//                  .font(.caption11_bold)
-//                  .padding(.horizontal, 6)
-//                  .padding(.vertical, 2)
-//                  .foregroundStyle(ColorPalette.white)
-//                  .background(
-//                    RoundedRectangle(cornerRadius: Metric.smallCornerRadius)
-//                      .fill(pointColor)
-//                  )
+                Text(card.displayLanguage)
+                  .font(.caption11_bold)
+                  .padding(.horizontal, 6)
+                  .padding(.vertical, 2)
+                  .foregroundStyle(ColorPalette.white)
+                  .background(
+                    RoundedRectangle(cornerRadius: Metric.smallCornerRadius)
+                      .fill(pointColor)
+                  )
 
                 Text(card.topKeyword)
                     .font(.body13_medium)
