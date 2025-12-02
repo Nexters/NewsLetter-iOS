@@ -14,7 +14,8 @@ struct AppReducer {
     @ObservableState
     struct State {
         var home = HomeReducer.State()
-        var isLoading: Bool = true
+        var isLoading: Bool = false
+        var isFirstAppear: Bool = true
     }
     
     enum Action {
@@ -26,6 +27,7 @@ struct AppReducer {
     @Dependency(\.remoteConfigClient) var remoteConfigClient
     
     var body: some Reducer<State, Action> {
+        
         Scope(state: \.home, action: \.home) {
             HomeReducer()
         }
@@ -33,7 +35,9 @@ struct AppReducer {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                guard state.isLoading else { return .none }
+                guard state.isFirstAppear else { return .none }
+                state.isFirstAppear = false
+                state.isLoading = true
                 return .run { send in
                     await send(.remoteConfigResponse(
                         Result { try await self.remoteConfigClient.fetch() }
@@ -43,9 +47,10 @@ struct AppReducer {
                 state.isLoading = false
                 return .send(.home(.setFlags(config)))
             case .remoteConfigResponse(.failure(let error)):
-                state.isLoading = false
                 print("Remote Config Fetch Error: \(error.localizedDescription)")
-                return .none
+                state.isLoading = false
+                let defaultFlags: Flags = (colorFlag: "B", mainDescFlag: "F")
+                return .send(.home(.setFlags(defaultFlags)))
             default:
                 return .none
             }
