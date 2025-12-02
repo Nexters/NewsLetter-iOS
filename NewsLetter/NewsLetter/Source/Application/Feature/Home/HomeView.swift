@@ -16,7 +16,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             VStack(spacing: 0) {
-                CustomNativationBar(
+                HomeNavigationBar(
                     selectedSegment: $store.selectedSegment,
                     settingButtonTapHandler: {
                         store.send(.settingPressed)

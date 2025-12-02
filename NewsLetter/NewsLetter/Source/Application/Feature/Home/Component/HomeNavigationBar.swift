@@ -1,5 +1,5 @@
 //
-//  CustomNativationBar.swift
+//  HomeNavigationBar.swift
 //  NewsLetter
 //
 //  Created by 이원빈 on 11/22/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CustomNativationBar: View {
+struct HomeNavigationBar: View {
     private enum Metric {
         static let fakeViewWidth: CGFloat = 40
         static let fakeViewHeight: CGFloat = 32
@@ -54,5 +54,5 @@ struct CustomNativationBar: View {
 }
 
 #Preview {
-    CustomNativationBar(selectedSegment: .constant(.recommend), settingButtonTapHandler: {})
+    HomeNavigationBar(selectedSegment: .constant(.recommend), settingButtonTapHandler: {})
 }
