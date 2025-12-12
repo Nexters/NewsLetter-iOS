@@ -51,6 +51,18 @@ struct HomeView: View {
                     .zIndex(Z.carouselModal)
                 }
             }
+            .overlay {
+                if store.isPresentExploreCard, let (card, colorPaletteName) = store.exploreState.selectedCard {
+                    ExploreCardModalView(
+                        isPresented: $store.isPresentExploreCard,
+                        cardData: card,
+                        pointColor: colorPaletteName.color.toChangeColor(),
+                    )
+                    .frame(width: Device.width)
+                    .transition(.opacity)
+                    .zIndex(Z.carouselModal)
+                }
+            }
             .draggableBottomSheet(
                 isShow: $store.isPresentJobDetailBottomSheet,
                 dismissHandler: { UserActionHistory.deniedDateWhenInputJobDetail = Date() }
@@ -81,6 +93,7 @@ struct HomeView: View {
                 bottomPadding: 0
             )
             .animation(.easeInOut, value: store.isPresentModal)
+            .animation(.easeInOut, value: store.isPresentExploreCard)
         } destination: { store in
             switch store.case {
             case .setting(let store):

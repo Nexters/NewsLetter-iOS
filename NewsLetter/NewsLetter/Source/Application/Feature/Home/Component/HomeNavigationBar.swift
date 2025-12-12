@@ -24,7 +24,7 @@ struct HomeNavigationBar: View {
     }
     
     private var backgroundMainColor: Color {
-        selectedSegment == .recommend ? .white : .black
+        selectedSegment == .recommend ? .white : .black // TODO: Figma 디자인 요구사항에 맞게 고도화 필요.
     }
     
     var body: some View {

@@ -29,6 +29,7 @@ struct HomeReducer {
         var colorFlag: String = ""
         var mainDescFlag: String = ""
         var isPresentModal: Bool = false
+        var isPresentExploreCard: Bool = false
         var isPresentNotificationPermissionBottomSheet: Bool = false
         var isPresentJobDetailBottomSheet: Bool = false
         var isPresentToastMessage: Bool = false
@@ -72,7 +73,10 @@ struct HomeReducer {
             case .recommend(.delegate(.presentJobDetailBottomSheet)):
                 state.isPresentJobDetailBottomSheet = true
                 return .none
-                
+            // ExploreReducer의 delegate 액션 처리
+            case .explore(.delegate(.presentExploreCard)):
+                state.isPresentExploreCard = true
+                return .none
             case .settingPressed:
                 state.path.append(.setting(SettingReducer.State()))
                 return .none
