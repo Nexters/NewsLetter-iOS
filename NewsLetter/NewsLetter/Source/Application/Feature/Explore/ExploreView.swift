@@ -15,7 +15,6 @@ struct ExploreView: View {
         static let horizontalPadding: CGFloat = 16
         static let gridSpacing: CGFloat = 8
         static let cardHeight: CGFloat = (Device.width - (horizontalPadding * 2 + gridSpacing)) / 2
-        static let cardCornerRadius: CGFloat = 16
     }
     
     @Bindable var store: StoreOf<ExploreReducer>
@@ -36,9 +35,24 @@ struct ExploreView: View {
             
             ScrollView(showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: Metrics.gridSpacing) {
-                    ForEach(store.state.data, id: \.id) { data in
-                        ExploreCardCell(data: data)
-                            .frame(height: Metrics.cardHeight)
+                    ForEach(store.state.data.indices, id: \.self) { index in
+                        let colorIndex = index % store.state.colorList.count
+                        let data = store.state.data[index]
+                        let colorPallete = store.state.colorList[colorIndex]
+                        
+                        ExploreCardCell(
+                            data: data,
+                            color: colorPallete.color
+                        )
+                        .frame(height: Metrics.cardHeight)
+                        .onTapGesture {
+                            let selectedCard = (data.toCard(), colorPallete)
+                            store.send(.setSelectedCard(selectedCard))
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                store.send(.delegate(.presentExploreCard))
+                            }
+                        }
                     }
                 }
             }

@@ -14,13 +14,26 @@ import ComposableArchitecture
 struct ExploreReducer {
     @ObservableState
     struct State {
+        var colorList: [ColorPaletteName] = [
+            .pointGreen300, .pointPink300,
+            .pointLemonYellow300, .pointBlue300,
+            .pointOrange300, .pointPurple300
+        ]
         var data: [ExploreCard] = []
+        var selectedCard: (Card, ColorPaletteName)? = nil
     }
     
     enum Action {
         case onAppear
         case fetchExploreCards
         case setData([ExploreCard])
+        case setSelectedCard((Card, ColorPaletteName))
+        case delegate(Delegate)
+        
+        @CasePathable
+        enum Delegate {
+            case presentExploreCard
+        }
     }
     
     @Dependency(\.cardClient) var cardClient
@@ -43,6 +56,11 @@ struct ExploreReducer {
                 }
             case .setData(let data):
                 state.data = data
+                return .none
+            case .setSelectedCard(let data):
+                state.selectedCard = data
+                return .none
+            case .delegate:
                 return .none
             }
         }
