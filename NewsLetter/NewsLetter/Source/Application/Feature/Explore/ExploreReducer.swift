@@ -44,10 +44,19 @@ struct ExploreReducer {
             case .onAppear:
                 return .send(.fetchExploreCards)
             case .fetchExploreCards:
+                if let lastExploreCardFetchDate = UserInfo.lastExploreCardFetchDate,
+                   DateCalculator.isToday(date: lastExploreCardFetchDate),
+                   let cachedData = UserInfo.cachedExploreCards {
+                    /// 이미 오늘  API 호출해서 cache 데이터가 존재할 경우
+                    return .send(.setData(cachedData))
+                }
+                
                 return .run { send in
                     do {
                         let requestDTO: ExploreCardRequestDTO = .init(lastSeenOffset: 0, size: 20) // TODO: 페이지네이션 구현 필요
                         let cards = try await cardClient.fetchExploreCards(requestDTO)
+                        UserInfo.lastExploreCardFetchDate = Date()
+                        UserInfo.cachedExploreCards = cards
                         await send(.setData(cards))
                     } catch let error {
                         print("[ExploreReducer] fetchExploreCard 에러발생: \(error.localizedDescription)")
