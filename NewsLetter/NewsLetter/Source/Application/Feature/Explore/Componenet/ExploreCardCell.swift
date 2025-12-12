@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ExploreCardCell: View {
     let data: ExploreCard
+    let color: Color
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -33,11 +34,11 @@ struct ExploreCardCell: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color.gray) // FIXME: 배경색 지정방법 선정필요
+        .background(color)
         .cornerRadius(16, corners: .allCorners)
     }
 }
 
 #Preview {
-    ExploreCardCell(data: .stub())
+    ExploreCardCell(data: .stub(), color: .gray)
 }
