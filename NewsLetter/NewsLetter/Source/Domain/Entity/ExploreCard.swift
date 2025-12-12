@@ -9,6 +9,7 @@ struct ExploreCard: Codable {
     let id: Int
     let title: String
     let topKeyword: String
+    let summary: String
     let newsletterName: String
     let contentURL: String
 
@@ -24,8 +25,21 @@ struct ExploreCard: Codable {
             id: id,
             title: title,
             topKeyword: topKeyword,
+            summary: summary,
             newsletterName: newsletterName,
             contentURL: contentURL,
+        )
+    }
+    
+    func toCard() -> Card {
+        .init(
+            id: id,
+            title: title,
+            topKeyword: topKeyword,
+            summary: summary,
+            contentURL: contentURL,
+            newsletterName: newsletterName,
+            language: "stub" // FIXME: 현재 API Response에서 언어 정보가 넘어오지 않아서 표현 못해줌 백엔드와 의논필요
         )
     }
 }

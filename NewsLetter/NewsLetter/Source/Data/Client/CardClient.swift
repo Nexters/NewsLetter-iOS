@@ -55,6 +55,7 @@ extension CardClient: DependencyKey {
                             id: cardDTO.contentId,
                             title: cardDTO.provocativeHeadline,
                             topKeyword: cardDTO.provocativeKeyword,
+                            summary: cardDTO.summaryContent,
                             newsletterName: cardDTO.newsletterName,
                             contentURL: cardDTO.contentURL
                         )
