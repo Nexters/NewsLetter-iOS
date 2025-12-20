@@ -14,8 +14,9 @@ import Moya
 struct CardClient {
     static let apiClient = MoyaAPIClient()
 
-    var fetchCards: (String, String?) async throws -> [Card]
-    var refreshCards: (String) async throws -> Void
+    var fetchCards: (String, String?) async throws -> [Card] // FIXME: RequestDTO 모델로 분리
+    var fetchExploreCards: (ExploreCardRequestDTO) async throws -> [ExploreCard]
+    var refreshCards: (String) async throws -> Void // FIXME: RequestDTO 모델로 분리
     var fetchOGShareURL: (OGShareURLRequestDTO) -> String = { _ in "" }
 }
 
@@ -46,6 +47,21 @@ extension CardClient: DependencyKey {
                     }
                     return cards
                 },
+                fetchExploreCards: { requestDTO in
+                    let response = try await apiClient.request(CardAPI.fetchExploreCard(requestDTO))
+                        .map(ExploreCardResponseDTO.self)
+                    let cards = response.contents.map { cardDTO in
+                        ExploreCard(
+                            id: cardDTO.contentId,
+                            title: cardDTO.provocativeHeadline,
+                            topKeyword: cardDTO.provocativeKeyword,
+                            summary: cardDTO.summaryContent,
+                            newsletterName: cardDTO.newsletterName,
+                            contentURL: cardDTO.contentURL
+                        )
+                    }
+                    return cards
+                },
                 refreshCards: { userId in
                     _ = try await apiClient.request(CardAPI.refreshCards(userId: userId))
                 },
@@ -67,6 +83,13 @@ extension CardClient: DependencyKey {
                     Card(id: 1123, title: "Preview Title 4", topKeyword: "Preview Keyword 4", summary: "Preview Summary 4", contentURL: "https://example.com", newsletterName: "Preview Newsletter 4", language: "ENGLISH"),
                     Card(id: 1148, title: "Preview Title 5", topKeyword: "Preview Keyword 5", summary: "Preview Summary 5", contentURL: "https://example.com", newsletterName: "Preview Newsletter 5", language: "ENGLISH"),
                     Card(id: 938, title: "Preview Title 6", topKeyword: "Preview Keyword 6", summary: "Preview Summary 6", contentURL: "https://example.com", newsletterName: "Preview Newsletter 6", language: "ENGLISH")
+                ]
+            },
+            fetchExploreCards: { _ in
+                return [
+                    .stub(id: 1), .stub(id: 2), .stub(id: 3),
+                    .stub(id: 4), .stub(id: 5), .stub(id: 6),
+                    .stub(id: 7), .stub(id: 8), .stub(id: 9)
                 ]
             },
             refreshCards: { _ in },

@@ -13,6 +13,7 @@ struct SemanticColor {
     let background_onElevated = ColorPalette.gray30
     let background_surfaceInversion = ColorPalette.gray900
     let background_dimmed = ColorPalette.black.opacity(0.7)
+    let background_dimmed2 = ColorPalette.black.opacity(0.9)
     
     let fill_primary = ColorPalette.gray100
     let fill_secondary = ColorPalette.gray50

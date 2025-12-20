@@ -26,6 +26,7 @@ struct CarouselCard: View {
     let card: Card
     let index: Int
     let pointColor: Color
+    let isShareEnabled: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -35,15 +36,17 @@ struct CarouselCard: View {
                 .foregroundStyle(pointColor)
 
             HStack(spacing: 6) {
-                Text(card.displayLanguage)
-                  .font(.caption11_bold)
-                  .padding(.horizontal, 6)
-                  .padding(.vertical, 2)
-                  .foregroundStyle(ColorPalette.white)
-                  .background(
-                    RoundedRectangle(cornerRadius: Metric.smallCornerRadius)
-                      .fill(pointColor)
-                  )
+                if isShareEnabled {
+                    Text(card.displayLanguage)
+                        .font(.caption11_bold)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .foregroundStyle(ColorPalette.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: Metric.smallCornerRadius)
+                                .fill(pointColor)
+                        )
+                }
 
                 Text(card.topKeyword)
                     .font(.body13_medium)
@@ -66,34 +69,40 @@ struct CarouselCard: View {
             Spacer()
             
             HStack(spacing: 8) {
-                Button {
-                    Task {
-                        await kakaoShareManager.shareToKakao(
-                            title: card.title,
-                            id: card.id,
-                            textColor: pointColor,
-                            contentURL: card.contentURL
-                        )
-                    }
-                } label: {
-                    RoundedRectangle(cornerRadius: Metric.shareButtonSize/2)
-                        .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
-                        .background(ColorPalette.white)
-                        .frame(width: Metric.shareButtonSize, height: Metric.shareButtonSize)
-                        .overlay {
-                            Image("share_icon")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .foregroundStyle(.semanticColor.text_primary)
-
+                if isShareEnabled {
+                    Button {
+                        Task {
+                            await kakaoShareManager.shareToKakao(
+                                title: card.title,
+                                id: card.id,
+                                textColor: pointColor,
+                                contentURL: card.contentURL
+                            )
                         }
+                    } label: {
+                        RoundedRectangle(cornerRadius: Metric.shareButtonSize/2)
+                            .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
+                            .background(ColorPalette.white)
+                            .frame(width: Metric.shareButtonSize, height: Metric.shareButtonSize)
+                            .overlay {
+                                Image("share_icon")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundStyle(.semanticColor.text_primary)
+                                
+                            }
+                    }
+                    .foregroundStyle(.semanticColor.text_primary)
                 }
-                .foregroundStyle(.semanticColor.text_primary)
 
                 Button {
                     isWebViewPresented = true
-
-                    GA.click_newsletter_carousel(title: card.title, listIndex: index)
+                    if isShareEnabled {
+                        /// 여긴 CarouselModalView 영역
+                        GA.click_newsletter_carousel(title: card.title, listIndex: index)
+                    } else {
+                        /// 여긴 ExploreCardModalView 영역
+                    }
                 } label: {
                     RoundedRectangle(cornerRadius: Metric.nextButtonCornerRadius)
                         .stroke(.semanticColor.border_secondary, style: .init(lineWidth: 1))
@@ -123,5 +132,5 @@ struct CarouselCard: View {
 }
 
 #Preview {
-    CarouselCard(card: .stub(), index: 0, pointColor: ColorPalette.pointPink500)
+    CarouselCard(card: .stub(), index: 0, pointColor: ColorPalette.pointPink500, isShareEnabled: true)
 }

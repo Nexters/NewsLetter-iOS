@@ -11,6 +11,7 @@ import Moya
 
 enum CardAPI {
     case fetchCards(userId: String, publishedDate: String?)
+    case fetchExploreCard(ExploreCardRequestDTO)
     case refreshCards(userId: String)
     case fetchOGShareURL(OGShareURLRequestDTO)
 }
@@ -28,6 +29,8 @@ extension CardAPI: TargetType {
                 urlPath += "?publishedDate=\(date)"
             }
             return urlPath
+        case .fetchExploreCard:
+            return "api/newsletters/explore/contents"
         case .refreshCards(let userId):
             return "/api/newsletters/contents/\(userId)/refresh"
         case .fetchOGShareURL:
@@ -46,6 +49,14 @@ extension CardAPI: TargetType {
         switch self {
         case .fetchCards, .refreshCards:
             return .requestPlain
+        case .fetchExploreCard(let dto):
+            guard let parameters = dto.toDictionary() else {
+                return .requestPlain
+            }
+            return .requestParameters(
+                parameters: parameters,
+                encoding: URLEncoding.queryString
+            )
         case .fetchOGShareURL(let dto):
             guard let parameters = dto.toDictionary() else {
                 return .requestPlain
