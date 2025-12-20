@@ -9,18 +9,51 @@ import ComposableArchitecture
 
 @Reducer
 struct AppReducer {
+    typealias Flags = (colorFlag: String, mainDescFlag: String)
+    
     @ObservableState
     struct State {
         var home = HomeReducer.State()
+        var isLoading: Bool = false
+        var isFirstAppear: Bool = true
     }
     
     enum Action {
         case home(HomeReducer.Action)
+        case onAppear
+        case remoteConfigResponse(Result<Flags, Error>)
     }
     
+    @Dependency(\.remoteConfigClient) var remoteConfigClient
+    
     var body: some Reducer<State, Action> {
+        
         Scope(state: \.home, action: \.home) {
             HomeReducer()
+        }
+        
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                guard state.isFirstAppear else { return .none }
+                state.isFirstAppear = false
+                state.isLoading = true
+                return .run { send in
+                    await send(.remoteConfigResponse(
+                        Result { try await self.remoteConfigClient.fetch() }
+                    ))
+                }
+            case .remoteConfigResponse(.success(let config)):
+                state.isLoading = false
+                return .send(.home(.setFlags(config)))
+            case .remoteConfigResponse(.failure(let error)):
+                print("Remote Config Fetch Error: \(error.localizedDescription)")
+                state.isLoading = false
+                let defaultFlags: Flags = (colorFlag: "B", mainDescFlag: "F")
+                return .send(.home(.setFlags(defaultFlags)))
+            default:
+                return .none
+            }
         }
     }
 }

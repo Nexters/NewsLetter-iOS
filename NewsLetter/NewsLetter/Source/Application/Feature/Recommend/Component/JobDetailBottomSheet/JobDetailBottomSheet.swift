@@ -49,12 +49,16 @@ struct JobDetailBottomSheet: View {
                         CellTypeData.init(
                             text: "BE",
                             imageURL: "be_icon"
+                        ),
+                        CellTypeData.init(
+                            text: "DevOps",
+                            imageURL: "devops_icon"
                         )
                     ]),
                     selectedIndex: .constant(nil),
                     selectedIndices: $selectedJobCategory
                 )
-                .frame(height: 38)
+                .frame(height: 84)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 20)

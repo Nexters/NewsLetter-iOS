@@ -20,6 +20,7 @@ enum Preference: String, Codable, CaseIterable {
     case iOS = "IOS"
     case frontend = "FRONTEND"
     case backend = "BACKEND"
+    case devops = "DEVOPS"
 }
 
 // 연차 정보 (workingExperience)를 나타내는 열거형

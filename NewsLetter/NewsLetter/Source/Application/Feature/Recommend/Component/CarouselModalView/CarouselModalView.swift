@@ -46,7 +46,7 @@ struct CarouselModalView: View {
                         ForEach(cardData.indices, id: \.self) { index in
                             let card = cardData[index]
                             let pointColor = pointColors[index]
-                            CarouselCard(card: card, index: index, pointColor: pointColor)
+                            CarouselCard(card: card, index: index, pointColor: pointColor, isShareEnabled: true)
                                 .frame(width: Metric.cardWidth)
                         }
                     }
