@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 
+import FirebaseInstallations
+
 import ComposableArchitecture
 
 @Reducer
@@ -24,8 +26,12 @@ struct SettingReducer {
         var isPresentNotificationPermissionBottomSheet = false
         var isPresentToastMessage = false
         var isPresentNotiToastMessage = false
+        var isPresentTokenToast = false
         var navigateToPrivacyPolicy = false
         var navigateToTermsOfService = false
+        var versionTapCount = 0
+        var tokenToastText = ""
+        var isTokenCopyable = false
     }
     
     enum Action: BindableAction {
@@ -38,8 +44,11 @@ struct SettingReducer {
         case setIsPresentNotificationPermissionBottomSheet(Bool)
         case setIsPresentToastMessage(Bool)
         case setIsPresentNotiToastMessage(Bool)
+        case setIsPresentTokenToast(Bool)
         case setNavigateToPrivacyPolicy(Bool)
         case setNavigateToTermsOfService(Bool)
+        case versionRowTapped
+        case didReceiveInstallationToken(String?)
     }
     
     @Dependency(\.userClient) var userClient
@@ -79,11 +88,41 @@ struct SettingReducer {
             case .setIsPresentNotiToastMessage(let bool):
                 state.isPresentNotiToastMessage = bool
                 return .none
+            case .setIsPresentTokenToast(let bool):
+                state.isPresentTokenToast = bool
+                return .none
             case .setNavigateToPrivacyPolicy(let bool):
                 state.navigateToPrivacyPolicy = bool
                 return .none
             case .setNavigateToTermsOfService(let bool):
                 state.navigateToTermsOfService = bool
+                return .none
+            case .versionRowTapped:
+                state.versionTapCount += 1
+
+                guard state.versionTapCount >= 10 else {
+                    return .none
+                }
+
+                state.versionTapCount = 0
+                return .run { send in
+                    do {
+                        let authTokenResult = try await Installations.installations()
+                            .authTokenForcingRefresh(true)
+                        await send(.didReceiveInstallationToken(authTokenResult.authToken))
+                    } catch {
+                        await send(.didReceiveInstallationToken(nil))
+                    }
+                }
+            case .didReceiveInstallationToken(let token):
+                if let token, token.isEmpty == false {
+                    state.tokenToastText = token
+                    state.isTokenCopyable = true
+                } else {
+                    state.tokenToastText = "설치 토큰을 받지 못했어요."
+                    state.isTokenCopyable = false
+                }
+                state.isPresentTokenToast = true
                 return .none
             }
         }

@@ -25,7 +25,11 @@ struct SettingView: View {
                 Divider()
                 
                 sectionTitle(title: "버전정보")
-                normalRow(title: "현재버전", value: "\(AppInfo.appVersion)(\(AppInfo.buildNumber))")
+                normalRow(
+                    title: "현재버전",
+                    value: "\(AppInfo.appVersion)(\(AppInfo.buildNumber))",
+                    tapHandler: { store.send(.versionRowTapped) }
+                )
                 
                 Divider()
                 
@@ -78,6 +82,15 @@ struct SettingView: View {
             text: "뉴스레터 알림이 신청되었어요",
             bottomPadding: 0
         )
+        .toastMessageWithButton(
+            isPresented: $store.isPresentTokenToast,
+            text: store.tokenToastText,
+            buttonTitle: "복사하기",
+            bottomPadding: 0
+        ) {
+            guard store.isTokenCopyable else { return }
+            UIPasteboard.general.string = store.tokenToastText
+        }
         .toolbar(.hidden)
         .navigationDestination(isPresented: $store.navigateToPrivacyPolicy) {
             PrivacyPolicyView()
@@ -126,8 +139,12 @@ struct SettingView: View {
     }
     
     @ViewBuilder
-    private func normalRow(title: String, value: String) -> some View {
-        HStack {
+    private func normalRow(
+        title: String,
+        value: String,
+        tapHandler: (() -> Void)? = nil
+    ) -> some View {
+        let content = HStack {
             Text(title)
                 .font(.body18_medium)
                 .foregroundColor(Color(hex: 0x404249))
@@ -143,6 +160,14 @@ struct SettingView: View {
                     .font(.body16_regular)
                     .foregroundColor(Color(hex: 0x404249))
             }
+        }
+        
+        if let tapHandler = tapHandler {
+            content
+                .contentShape(Rectangle())
+                .onTapGesture(perform: tapHandler)
+        } else {
+            content
         }
     }
 }
