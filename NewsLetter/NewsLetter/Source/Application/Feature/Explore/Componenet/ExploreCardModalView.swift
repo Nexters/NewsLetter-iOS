@@ -25,6 +25,9 @@ struct ExploreCardModalView: View {
         ZStack {
             Color.semanticColor.background_dimmed2
                 .ignoresSafeArea()
+                .onTapGesture {
+                    isPresented = false
+                }
 
             VStack {
                 HStack {
