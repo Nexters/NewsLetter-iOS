@@ -11,6 +11,16 @@ struct ExploreCardResponseDTO: Decodable {
     let contents: [ExploreCardDTO]
     let hasMore: Bool
     let nextOffset: Int
+    let totalCount: Int
+    
+    func toDomain() -> ExploreCardResponse {
+        return ExploreCardResponse(
+            contents: contents.map { $0.toDomain() },
+            totalCount: totalCount,
+            hasMore: hasMore,
+            nextOffset: nextOffset
+        )
+    }
 }
 struct ExploreCardDTO: Decodable {
     let id: Int
@@ -20,6 +30,7 @@ struct ExploreCardDTO: Decodable {
     let summaryContent: String
     let contentURL: String
     let newsletterName: String
+    let language: String
     let createdAt: String
     let updatedAt: String
 
@@ -28,7 +39,20 @@ struct ExploreCardDTO: Decodable {
         case provocativeKeyword, provocativeHeadline, summaryContent
         case contentURL = "contentUrl"
         case newsletterName
+        case language
         case createdAt, updatedAt
+    }
+    
+    func toDomain() -> ExploreCard {
+        .init(
+            id: contentId,
+            title: provocativeHeadline,
+            topKeyword: provocativeKeyword,
+            summary: summaryContent,
+            newsletterName: newsletterName,
+            language: language,
+            contentURL: contentURL
+        )
     }
 }
 /*
