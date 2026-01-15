@@ -21,13 +21,19 @@ struct ExploreReducer {
         ]
         var data: [ExploreCard] = []
         var selectedCard: (Card, ColorPaletteName)? = nil
+        var hasMore: Bool = false
+        var nextOffset: Int = 0
     }
     
     enum Action {
         case onAppear
-        case fetchExploreCards
+        case fetchFirstPage
+        case fetchNextPage
+        case fetchExploreCards(Int)
         case setData([ExploreCard])
         case setSelectedCard((Card, ColorPaletteName))
+        case setHasMore(Bool)
+        case setNextOffset(Int)
         case delegate(Delegate)
         
         @CasePathable
@@ -42,22 +48,26 @@ struct ExploreReducer {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.fetchExploreCards)
-            case .fetchExploreCards:
-                if let lastExploreCardFetchDate = UserInfo.lastExploreCardFetchDate,
-                   DateCalculator.isToday(date: lastExploreCardFetchDate),
-                   let cachedData = UserInfo.cachedExploreCards {
-                    /// 이미 오늘  API 호출해서 cache 데이터가 존재할 경우
-                    return .send(.setData(cachedData))
-                }
-                
-                return .run { send in
+                return .send(.fetchFirstPage)
+            case .fetchFirstPage:
+                return .send(.fetchExploreCards(0))
+            case .fetchNextPage:
+                return .send(.fetchExploreCards(state.nextOffset))
+            case .fetchExploreCards(let lastSeenOffset):
+                return .run { [state] send in
                     do {
-                        let requestDTO: ExploreCardRequestDTO = .init(lastSeenOffset: 0, size: 20) // TODO: 페이지네이션 구현 필요
-                        let cards = try await cardClient.fetchExploreCards(requestDTO)
-                        UserInfo.lastExploreCardFetchDate = Date()
-                        UserInfo.cachedExploreCards = cards
-                        await send(.setData(cards))
+                        let requestDTO: ExploreCardRequestDTO = .init(
+                            lastSeenOffset: Int64(lastSeenOffset),
+                            size: 20
+                        )
+                        let response = try await cardClient.fetchExploreCards(requestDTO)
+                        await send(.setHasMore(response.hasMore))
+                        await send(.setNextOffset(response.nextOffset))
+                        if lastSeenOffset == 0 {
+                            await send(.setData(response.contents))
+                        } else {
+                            await send(.setData(state.data + response.contents))
+                        }
                     } catch let error {
                         print("[ExploreReducer] fetchExploreCard 에러발생: \(error.localizedDescription)")
                         await send(.setData([]))
@@ -68,6 +78,12 @@ struct ExploreReducer {
                 return .none
             case .setSelectedCard(let data):
                 state.selectedCard = data
+                return .none
+            case .setHasMore(let bool):
+                state.hasMore = bool
+                return .none
+            case .setNextOffset(let offset):
+                state.nextOffset = offset
                 return .none
             case .delegate:
                 return .none

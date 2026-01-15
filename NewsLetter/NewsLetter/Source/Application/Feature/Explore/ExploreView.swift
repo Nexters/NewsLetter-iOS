@@ -32,13 +32,15 @@ struct ExploreView: View {
                     .foregroundStyle(.semanticColor.text_strongInverse)
                 Spacer()
             }
+            .padding(Metrics.horizontalPadding)
             
-            ScrollView(showsIndicators: false) {
+            ScrollView(showsIndicators: true) {
                 LazyVGrid(columns: columns, spacing: Metrics.gridSpacing) {
                     ForEach(store.state.data.indices, id: \.self) { index in
                         let colorIndex = index % store.state.colorList.count
                         let data = store.state.data[index]
                         let colorPallete = store.state.colorList[colorIndex]
+                        let isLastItem = index == store.state.data.count - 1
                         
                         ExploreCardCell(
                             data: data,
@@ -53,14 +55,25 @@ struct ExploreView: View {
                                 store.send(.delegate(.presentExploreCard))
                             }
                         }
+                        .onAppear {
+                            if isLastItem {
+                                store.send(.fetchNextPage)
+                            }
+                        }
                     }
                 }
+                .padding(Metrics.horizontalPadding)
+            }
+            .refreshable {
+                try? await Task.sleep(nanoseconds: 1000_000_000)
+                await store.send(.fetchFirstPage).finish()
             }
         }
-        .padding(Metrics.horizontalPadding)
         .ignoresSafeArea()
         .background(Color.black)
         .onAppear {
+            UIScrollView.appearance().indicatorStyle = .white
+            UIRefreshControl.appearance().tintColor = .white
             store.send(.onAppear)
         }
     }
