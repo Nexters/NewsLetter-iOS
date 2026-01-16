@@ -23,6 +23,8 @@ struct ExploreReducer {
         var selectedCard: (Card, ColorPaletteName)? = nil
         var hasMore: Bool = false
         var nextOffset: Int = 0
+        var isLoading: Bool = false
+        var isPresentToast: Bool = false
     }
     
     enum Action {
@@ -34,6 +36,8 @@ struct ExploreReducer {
         case setSelectedCard((Card, ColorPaletteName))
         case setHasMore(Bool)
         case setNextOffset(Int)
+        case setIsLoading(Bool)
+        case setIsPresentToast(Bool)
         case delegate(Delegate)
         
         @CasePathable
@@ -52,8 +56,10 @@ struct ExploreReducer {
             case .fetchFirstPage:
                 return .send(.fetchExploreCards(0))
             case .fetchNextPage:
+                guard state.hasMore, !state.isLoading else { return .none }
                 return .send(.fetchExploreCards(state.nextOffset))
             case .fetchExploreCards(let lastSeenOffset):
+                state.isLoading = true
                 return .run { [state] send in
                     do {
                         let requestDTO: ExploreCardRequestDTO = .init(
@@ -63,6 +69,7 @@ struct ExploreReducer {
                         let response = try await cardClient.fetchExploreCards(requestDTO)
                         await send(.setHasMore(response.hasMore))
                         await send(.setNextOffset(response.nextOffset))
+                        
                         if lastSeenOffset == 0 {
                             await send(.setData(response.contents))
                         } else {
@@ -70,8 +77,9 @@ struct ExploreReducer {
                         }
                     } catch let error {
                         print("[ExploreReducer] fetchExploreCard 에러발생: \(error.localizedDescription)")
-                        await send(.setData([]))
+                        await send(.setIsPresentToast(true))
                     }
+                    await send(.setIsLoading(false))
                 }
             case .setData(let data):
                 state.data = data
@@ -84,6 +92,12 @@ struct ExploreReducer {
                 return .none
             case .setNextOffset(let offset):
                 state.nextOffset = offset
+                return .none
+            case .setIsLoading(let bool):
+                state.isLoading = bool
+                return .none
+            case .setIsPresentToast(let bool):
+                state.isPresentToast = bool
                 return .none
             case .delegate:
                 return .none

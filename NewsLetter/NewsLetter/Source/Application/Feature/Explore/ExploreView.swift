@@ -68,6 +68,14 @@ struct ExploreView: View {
                 try? await Task.sleep(nanoseconds: 1000_000_000)
                 await store.send(.fetchFirstPage).finish()
             }
+            .toastMessage(
+                isPresented: Binding(
+                    get: { store.state.isPresentToast },
+                    set: { store.send(.setIsPresentToast($0)) }
+                ),
+                text: "마지막 페이지에요! 😊",
+                bottomPadding: Device.safeAreaInsets.bottom
+            )
         }
         .ignoresSafeArea()
         .background(Color.black)
