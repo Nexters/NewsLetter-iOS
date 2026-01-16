@@ -10,8 +10,8 @@ import ComposableArchitecture
 @DependencyClient
 struct RemoteConfigClient {
     static let manager = RemoteConfigManager()
-    
-    var fetch: () async throws -> (colorFlag: String, mainDescFlag: String)
+
+    var fetch: @Sendable () async throws -> FirebaseConfig
 }
 
 extension RemoteConfigClient: DependencyKey {
