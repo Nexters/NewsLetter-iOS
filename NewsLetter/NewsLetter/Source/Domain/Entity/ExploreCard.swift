@@ -11,6 +11,7 @@ struct ExploreCard: Codable {
     let topKeyword: String
     let summary: String
     let newsletterName: String
+    let language: String
     let contentURL: String
 
     static func stub(
@@ -19,6 +20,7 @@ struct ExploreCard: Codable {
         topKeyword: String = "Kotlin",
         summary: String = "summary",
         newsletterName: String = "안드로이드 위클리",
+        language: String = "ENGLISH",
         contentURL: String = "https://www.youtube.com/watch?v=RNfwJLjkd3c"
     ) -> Self {
         .init(
@@ -27,6 +29,7 @@ struct ExploreCard: Codable {
             topKeyword: topKeyword,
             summary: summary,
             newsletterName: newsletterName,
+            language: language,
             contentURL: contentURL,
         )
     }
@@ -39,7 +42,7 @@ struct ExploreCard: Codable {
             summary: summary,
             contentURL: contentURL,
             newsletterName: newsletterName,
-            language: "stub" // FIXME: 현재 API Response에서 언어 정보가 넘어오지 않아서 표현 못해줌 백엔드와 의논필요
+            language: language
         )
     }
 }
