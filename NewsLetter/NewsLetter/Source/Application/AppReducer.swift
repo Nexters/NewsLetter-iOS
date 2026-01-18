@@ -57,7 +57,7 @@ struct AppReducer {
             case .remoteConfigResponse(.success(let config)):
                 state.isLoading = false
 
-                let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+                let currentVersion = AppInfo.appVersion
                 if currentVersion.compare(config.minVersion, options: .numeric) == .orderedAscending {
                     state.updateStatus = .forced(storeURL: config.storeURL, message: config.updateMessage)
                 } else if currentVersion.compare(config.latestVersion, options: .numeric) == .orderedAscending {
