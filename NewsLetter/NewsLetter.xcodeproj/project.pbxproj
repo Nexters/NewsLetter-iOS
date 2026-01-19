@@ -324,7 +324,7 @@
 				CODE_SIGN_ENTITLEMENTS = NewsLetter/NewsLetter.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SWPBG3YXG5;
 				ENABLE_PREVIEWS = YES;
@@ -366,7 +366,7 @@
 				CODE_SIGN_ENTITLEMENTS = NewsLetter/NewsLetter.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SWPBG3YXG5;
 				ENABLE_PREVIEWS = YES;
