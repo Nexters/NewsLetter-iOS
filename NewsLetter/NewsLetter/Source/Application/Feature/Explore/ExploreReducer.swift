@@ -21,13 +21,23 @@ struct ExploreReducer {
         ]
         var data: [ExploreCard] = []
         var selectedCard: (Card, ColorPaletteName)? = nil
+        var hasMore: Bool = false
+        var nextOffset: Int = 0
+        var isLoading: Bool = false
+        var isPresentToast: Bool = false
     }
     
     enum Action {
         case onAppear
-        case fetchExploreCards
+        case fetchFirstPage
+        case fetchNextPage
+        case fetchExploreCards(Int)
         case setData([ExploreCard])
         case setSelectedCard((Card, ColorPaletteName))
+        case setHasMore(Bool)
+        case setNextOffset(Int)
+        case setIsLoading(Bool)
+        case setIsPresentToast(Bool)
         case delegate(Delegate)
         
         @CasePathable
@@ -42,32 +52,52 @@ struct ExploreReducer {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.fetchExploreCards)
-            case .fetchExploreCards:
-                if let lastExploreCardFetchDate = UserInfo.lastExploreCardFetchDate,
-                   DateCalculator.isToday(date: lastExploreCardFetchDate),
-                   let cachedData = UserInfo.cachedExploreCards {
-                    /// 이미 오늘  API 호출해서 cache 데이터가 존재할 경우
-                    return .send(.setData(cachedData))
-                }
-                
-                return .run { send in
+                return .send(.fetchFirstPage)
+            case .fetchFirstPage:
+                return .send(.fetchExploreCards(0))
+            case .fetchNextPage:
+                guard state.hasMore, !state.isLoading else { return .none }
+                return .send(.fetchExploreCards(state.nextOffset))
+            case .fetchExploreCards(let lastSeenOffset):
+                state.isLoading = true
+                return .run { [state] send in
                     do {
-                        let requestDTO: ExploreCardRequestDTO = .init(lastSeenOffset: 0, size: 20) // TODO: 페이지네이션 구현 필요
-                        let cards = try await cardClient.fetchExploreCards(requestDTO)
-                        UserInfo.lastExploreCardFetchDate = Date()
-                        UserInfo.cachedExploreCards = cards
-                        await send(.setData(cards))
+                        let requestDTO: ExploreCardRequestDTO = .init(
+                            lastSeenOffset: Int64(lastSeenOffset),
+                            size: 20
+                        )
+                        let response = try await cardClient.fetchExploreCards(requestDTO)
+                        await send(.setHasMore(response.hasMore))
+                        await send(.setNextOffset(response.nextOffset))
+                        
+                        if lastSeenOffset == 0 {
+                            await send(.setData(response.contents))
+                        } else {
+                            await send(.setData(state.data + response.contents))
+                        }
                     } catch let error {
                         print("[ExploreReducer] fetchExploreCard 에러발생: \(error.localizedDescription)")
-                        await send(.setData([]))
+                        await send(.setIsPresentToast(true))
                     }
+                    await send(.setIsLoading(false))
                 }
             case .setData(let data):
                 state.data = data
                 return .none
             case .setSelectedCard(let data):
                 state.selectedCard = data
+                return .none
+            case .setHasMore(let bool):
+                state.hasMore = bool
+                return .none
+            case .setNextOffset(let offset):
+                state.nextOffset = offset
+                return .none
+            case .setIsLoading(let bool):
+                state.isLoading = bool
+                return .none
+            case .setIsPresentToast(let bool):
+                state.isPresentToast = bool
                 return .none
             case .delegate:
                 return .none

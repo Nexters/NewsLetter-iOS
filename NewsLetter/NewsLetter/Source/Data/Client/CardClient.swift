@@ -15,7 +15,7 @@ struct CardClient {
     static let apiClient = MoyaAPIClient()
 
     var fetchCards: (String, String?) async throws -> [Card] // FIXME: RequestDTO 모델로 분리
-    var fetchExploreCards: (ExploreCardRequestDTO) async throws -> [ExploreCard]
+    var fetchExploreCards: (ExploreCardRequestDTO) async throws -> ExploreCardResponse
     var refreshCards: (String) async throws -> Void // FIXME: RequestDTO 모델로 분리
     var fetchOGShareURL: (OGShareURLRequestDTO) -> String = { _ in "" }
 }
@@ -50,17 +50,7 @@ extension CardClient: DependencyKey {
                 fetchExploreCards: { requestDTO in
                     let response = try await apiClient.request(CardAPI.fetchExploreCard(requestDTO))
                         .map(ExploreCardResponseDTO.self)
-                    let cards = response.contents.map { cardDTO in
-                        ExploreCard(
-                            id: cardDTO.contentId,
-                            title: cardDTO.provocativeHeadline,
-                            topKeyword: cardDTO.provocativeKeyword,
-                            summary: cardDTO.summaryContent,
-                            newsletterName: cardDTO.newsletterName,
-                            contentURL: cardDTO.contentURL
-                        )
-                    }
-                    return cards
+                    return response.toDomain()
                 },
                 refreshCards: { userId in
                     _ = try await apiClient.request(CardAPI.refreshCards(userId: userId))
@@ -86,11 +76,7 @@ extension CardClient: DependencyKey {
                 ]
             },
             fetchExploreCards: { _ in
-                return [
-                    .stub(id: 1), .stub(id: 2), .stub(id: 3),
-                    .stub(id: 4), .stub(id: 5), .stub(id: 6),
-                    .stub(id: 7), .stub(id: 8), .stub(id: 9)
-                ]
+                return .stub()
             },
             refreshCards: { _ in },
             fetchOGShareURL: { _ in
