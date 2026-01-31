@@ -18,7 +18,7 @@ enum CardAPI {
 
 extension CardAPI: TargetType {
     var baseURL: URL {
-        return URL(string: "https://\(AppInfo.baseURL)/api")!
+        return URL(string: "\(AppInfo.baseURL)")!
     }
 
     var path: String {
