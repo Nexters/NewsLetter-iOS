@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CardView: View {
-    let cardType: CardType
+    let style: CardTypeStyle
     let color: Color
     let title: String
     let category: String
@@ -20,8 +20,8 @@ struct CardView: View {
     var trimmedTitle: String {
         String(title.prefix(28))
     }
-    
-    @Binding var isPresentModal: Bool /// false 가 되면 카드가 원위치 되도록 설정
+
+    @Binding var isPresentModal: Bool
 
     @State private var titleHeight: CGFloat = 0
     @State private var hideCategoryAndSource: Bool = false
@@ -29,90 +29,97 @@ struct CardView: View {
     @State private var titleBottomSpacing: CGFloat = 0
     @State private var categoryBottomSpacing: CGFloat = 0
     @State private var cardScale: CGFloat = 1.0
-    /// 카드 뽑기 애니메이션에 사용되는 변수들
     @State private var cardWidth: CGFloat? = nil
     @State private var cardHeight: CGFloat? = nil
     @State private var cardOffsetY: CGFloat = 0
     @State private var cardZIndex: Double = Z.cardDefault
     @State private var isTapped: Bool = false
-    
+
+    init(
+        style: CardTypeStyle,
+        color: Color,
+        title: String,
+        category: String,
+        source: String,
+        shouldMoveY: CGFloat,
+        onTap: (() -> Void)? = nil,
+        isPresentModal: Binding<Bool>
+    ) {
+        self.style = style
+        self.color = color
+        self.title = title
+        self.category = category
+        self.source = source
+        self.shouldMoveY = shouldMoveY
+        self.onTap = onTap
+        self._isPresentModal = isPresentModal
+    }
+
+    init(
+        cardType: CardType,
+        color: Color,
+        title: String,
+        category: String,
+        source: String,
+        shouldMoveY: CGFloat,
+        onTap: (() -> Void)? = nil,
+        isPresentModal: Binding<Bool>
+    ) {
+        self.init(
+            style: cardType.style,
+            color: color,
+            title: title,
+            category: category,
+            source: source,
+            shouldMoveY: shouldMoveY,
+            onTap: onTap,
+            isPresentModal: isPresentModal
+        )
+    }
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 24)
                 .foregroundStyle(color)
-            
+
             VStack(alignment: .leading, spacing: 0) {
                 Text(trimmedTitle)
                     .fontRangeLimited()
-                    .font(UIDevice.isSmallScreen ? cardType.fontNameSE : cardType.fontName)
+                    .font(style.fontName)
                     .foregroundStyle(.semanticColor.text_strong)
-                    .padding(.top, hideCategoryAndSource ? 16 : cardType.topPadding)
+                    .padding(.top, hideCategoryAndSource ? 16 : style.topPadding)
                     .padding(.bottom, titleBottomSpacing)
                     .background(
                         GeometryReader { proxy in
                             Color.clear
                                 .onAppear {
-                                    let newHeight = proxy.size.height
-                                    let calculatedTitleHeight = newHeight - (hideCategoryAndSource ? 16 : cardType.topPadding) - titleBottomSpacing
-                                    self.titleHeight = calculatedTitleHeight
-                                    
-                                    if cardType == .one || cardType == .two || cardType == .three {
-                                        let shouldHide = calculatedTitleHeight >= CGFloat(cardType.oneLineHeight)
-                                        if hideCategoryAndSource != shouldHide {
-                                            hideCategoryAndSource = shouldHide
-                                            titleBottomSpacing = shouldHide
-                                            ? (cardType == .two ? 12 : cardType.bottomPadding)
-                                            : 4
-                                        }
-                                    } else {
-                                        hideCategoryAndSource = false
-                                        titleBottomSpacing = 4
-                                        let shouldHide = calculatedTitleHeight >= CGFloat(cardType.oneLineHeight)
-                                        if !shouldHide {
-                                            categoryBottomSpacing = UIDevice.isSmallScreen ? CGFloat(4) :  CGFloat(cardType.oneLineHeight)
-                                        }
-                                    }
+                                    updateTitleLayout(height: proxy.size.height)
                                 }
                                 .onChange(of: proxy.size.height) { _, newValue in
-                                    let calculatedTitleHeight = newValue - (hideCategoryAndSource ? 16 : cardType.topPadding) - titleBottomSpacing
-                                    
-                                    if abs(titleHeight - calculatedTitleHeight) > 0.5 {
-                                        titleHeight = calculatedTitleHeight
-                                        
-                                        if cardType == .one || cardType == .two || cardType == .three {
-                                            let shouldHide = calculatedTitleHeight >= CGFloat(cardType.oneLineHeight)
-                                            if hideCategoryAndSource != shouldHide {
-                                                hideCategoryAndSource = shouldHide
-                                                titleBottomSpacing = shouldHide
-                                                ? (cardType == .two ? 12 : cardType.bottomPadding)
-                                                : 4
-                                            }
-                                        } else {
-                                            hideCategoryAndSource = false
-                                            titleBottomSpacing = 4
-                                        }
+                                    DispatchQueue.main.async {
+                                        updateTitleLayout(height: newValue)
                                     }
                                 }
                         }
                     )
-                
+
                 if !hideCategoryAndSource {
                     HStack(spacing: 6) {
                         Text(category)
                             .fontRangeLimited()
                             .font(UIDevice.isSmallScreen ? .caption12_medium : .body13_medium)
                             .foregroundStyle(.semanticColor.text_strong.opacity(0.5))
-                        
+
                         Rectangle()
                             .frame(width: 1, height: 14)
                             .foregroundStyle(ColorPalette.black.opacity(0.1))
-                        
+
                         Text(source)
                             .fontRangeLimited()
                             .font(UIDevice.isSmallScreen ? .caption12_medium : .body13_medium)
                             .foregroundStyle(.semanticColor.text_strong.opacity(0.5))
                     }
-                    .padding(.bottom, UIDevice.isSmallScreen ? 4 : cardType.bottomPadding)
+                    .padding(.bottom, UIDevice.isSmallScreen ? 4 : style.bottomPadding)
                 }
             }
             .padding(.horizontal, 20)
@@ -129,7 +136,7 @@ struct CardView: View {
                 }
             )
         }
-        .padding([.leading, .trailing], isTapped ? 0 : cardType.sidePadding)
+        .padding([.leading, .trailing], isTapped ? 0 : style.sidePadding)
         .frame(width: cardWidth, height: cardHeight)
         .offset(y: cardOffsetY)
         .scaleEffect(cardScale)
@@ -137,10 +144,10 @@ struct CardView: View {
         .onTapGesture {
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
-            
+
             withAnimation(.spring(duration: 0.5)) {
-                cardOffsetY = shouldMoveY /// carousel y offset 각각 지정해주어야함.
-                cardZIndex = Z.cardElevated /// carousel ModalView는 zindex 20 임
+                cardOffsetY = shouldMoveY
+                cardZIndex = Z.cardElevated
                 cardHeight = 300
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -153,7 +160,6 @@ struct CardView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
                 onTap?()
             }
-            
         }
         .onChange(of: isPresentModal) { _, newValue in
             if newValue == false {
@@ -170,11 +176,36 @@ struct CardView: View {
             cardHeight = vStackHeight == 0 ? nil : vStackHeight + 35
         }
     }
+
+    private func updateTitleLayout(height: CGFloat) {
+        let calculatedTitleHeight = height - (hideCategoryAndSource ? 16 : style.topPadding) - titleBottomSpacing
+
+        if abs(titleHeight - calculatedTitleHeight) > 0.5 || titleHeight == 0 {
+            titleHeight = calculatedTitleHeight
+
+            if style.depth < 3 {
+                let shouldHide = calculatedTitleHeight >= style.oneLineHeight
+                if hideCategoryAndSource != shouldHide {
+                    hideCategoryAndSource = shouldHide
+                    titleBottomSpacing = shouldHide
+                        ? (style.depth >= 1 && style.depth < 2 ? 12 : style.bottomPadding)
+                        : 4
+                }
+            } else {
+                hideCategoryAndSource = false
+                titleBottomSpacing = 4
+                let shouldHide = calculatedTitleHeight >= style.oneLineHeight
+                if !shouldHide {
+                    categoryBottomSpacing = UIDevice.isSmallScreen ? CGFloat(4) : style.oneLineHeight
+                }
+            }
+        }
+    }
 }
 
 #Preview {
-    VStack(spacing:-35) {
-        CardView(cardType: .one, color: .accentColor.purple, title: "사이드 프로젝트, AI로 출시까지? 지금 바로", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0,onTap: {print("===")}, isPresentModal: .constant(false))
+    VStack(spacing: -35) {
+        CardView(cardType: .one, color: .accentColor.purple, title: "사이드 프로젝트, AI로 출시까지? 지금 바로", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, onTap: { print("===") }, isPresentModal: .constant(false))
         CardView(cardType: .two, color: .accentColor.orange, title: "SwiftUI 한 줄 코드로 번역? 믿기지 않죠!", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
         CardView(cardType: .three, color: .accentColor.skyblue, title: "일이삼사오육칠팔구십일이삼사오육칠", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
         CardView(cardType: .four, color: .accentColor.lemonyellow, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
