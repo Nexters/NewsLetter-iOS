@@ -13,23 +13,30 @@ import FirebaseAnalytics
 struct RecommendView: View {
     @Bindable var store: StoreOf<RecommendReducer>
     @Binding var selectedIndex: Int?
-    
+
     @Environment(\.scenePhase) private var scenePhase
-    
+
     @State private var cardTapCount: Int = 0
     @State private var pulseOffsets: [Int: CGFloat] = [:]
-    @State private var didAnimateIndex: Set<Int> = []
+    @State private var didAnimateSlot: Set<Int> = []
     @State private var selectedSegment: SegmentView.SegmentType = .recommend
-    
+
+    @State private var start: Int = 0
+    @State private var scrollAccum: CGFloat = 0
+    @State private var progress: CGFloat = 0
+    @State private var lastDragTranslation: CGFloat = 0
+    @State private var isDragging: Bool = false
+    @State private var cardHeights: [CGFloat] = []
+
     let colorFlag: String
     let mainDescFlag: String
     let cardTypes: [CardType] = [.one, .two, .three, .four, .five, .six]
-    
+
     var showRefreshButton: Bool {
         guard let refreshDate = UserActionHistory.useRefreshDate else { return true }
         return DateCalculator.isToday(date: refreshDate) == false
     }
-    
+
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
@@ -42,14 +49,14 @@ struct RecommendView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, UIDevice.isSmallScreen ? 4 : 12)
                         .fixedSize(horizontal: false, vertical: true)
-                    
+
                     if (mainDescFlag == "T") {
                         Text("뉴스레터는 매일 새롭게 업데이트 돼요")
                             .fontRangeLimited()
                             .font(.body15_semiBold)
                             .foregroundColor(.semanticColor.text_strong)
                     }
-                    
+
                     HStack(spacing: 0) {
                         if (mainDescFlag == "T") {
                             Text("아래 뉴스는 ")
@@ -64,7 +71,7 @@ struct RecommendView: View {
                             .font(.body15_medium)
                             .foregroundColor(.semanticColor.text_secondary)
                     }
-                    
+
                     if (mainDescFlag == "T") {
                         Button {
                             store.send(.refreshButtonPressed)
@@ -75,7 +82,7 @@ struct RecommendView: View {
                                     .resizable()
                                     .frame(width: 16, height: 16)
                                     .foregroundStyle(showRefreshButton ? .semanticColor.text_secondary : .semanticColor.text_disabled)
-                                
+
                                 Text("새로고침 (\(showRefreshButton ? 0 : 1)/1)")
                                     .font(.body14_semiBold)
                                     .foregroundColor(showRefreshButton ? .semanticColor.text_secondary : .semanticColor.text_disabled)
@@ -90,84 +97,48 @@ struct RecommendView: View {
                         .disabled(!showRefreshButton)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 if store.state.cardData.count > 0 {
                     Image("bg_drawers")
                         .resizable()
-                        .frame(width: 600, height: UIDevice.isSmallScreen ? Device.height*0.75 : Device.height*0.65)
+                        .frame(width: 600, height: UIDevice.isSmallScreen ? Device.height * 0.75 : Device.height * 0.65)
                         .padding(.bottom, Device.safeAreaInsets.bottom)
                 }
             }
-            
-            Group {
-                ForEach(Array(store.state.cardData.enumerated()), id: \.offset) { index, item in
-                    CardView(
-                        cardType: cardTypes[index],
-                        color: store.cardColors[index],
-                        title: item.title,
-                        category: item.topKeyword,
-                        source: item.newsletterName,
-                        /// 477 은 CarouselCard 부터 하단 X 버튼 까지의 높이
-                        /// 180 은 조정값
-                        shouldMoveY: ((Device.height - 477) / 2) + 180 - cardPositionY(at: index) - 90,
-                        onTap: {
-                            selectedIndex = index
-                            cardTapHandler()
-                            
-                            GA.click_newsletter(title: item.title, listIndex: store.state.cardData.count-1-index)
-                        },
-                        isPresentModal: $store.isPresentModal,
-                    )
-                    .position(x: Device.width / 2, y: cardPositionY(at: index)) /// index 에 따라 세부 조정값 필요
-                    .offset(y: pulseOffsets[index] ?? 0)
-                    .onAppear {
-                        guard !didAnimateIndex.contains(index) else { return }
-                        didAnimateIndex.insert(index)
-                        
-                        let playOrder = (store.state.cardData.count - 1) - index
-                        let delayMs = playOrder * 150
-                        
-                        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                pulseOffsets[index] = -5
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
-                                withAnimation(.easeInOut(duration: 0.1)) {
-                                    pulseOffsets[index] = 0
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.bottom, -20)
-            .frame(width: Device.width)
+
+            cardsStack
+                .padding(.bottom, -20)
+                .frame(width: Device.width)
+                .contentShape(Rectangle())
+                .simultaneousGesture(cardScrollGesture)
         }
         .animation(.easeInOut, value: store.isPresentModal)
         .ignoresSafeArea(edges: .all)
         .transition(.opacity)
         .onAppear {
             GA.pageview_main()
-            
+
             store.send(.onAppear(colorFlag: self.colorFlag))
-            
+
             if UserActionHistory.isFirstAppLaunch {
                 UserActionHistory.isFirstAppLaunch = false
-                
+
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     store.send(.delegate(.presentJobDetailBottomSheet(true)))
                 }
             }
-            
+
             DateCalculator.checkAndIncrementVisitStreak()
-            
+
             guard UserActionHistory.streakCount >= 2 &&
                     UserActionHistory.isAlreadySetNotification == false &&
                     DateCalculator.isCanShowNotificationPermissionBottomSheet()
             else { return }
             store.send(.delegate(.presentNotificationPermissionBottomSheet(true)))
+
+            initializeCardHeights()
         }
         .onDisappear {
             store.send(.onDisappear)
@@ -177,10 +148,199 @@ struct RecommendView: View {
                 store.send(.onAppear(colorFlag: self.colorFlag))
             }
         }
-        
     }
-    
-    // MARK: - Methods
+
+    @ViewBuilder
+    private var cardsStack: some View {
+        let count = min(cardTypes.count, store.state.cardData.count)
+        if count == 0 {
+            EmptyView()
+        } else {
+            GeometryReader { geometry in
+                ZStack {
+                    if progress > 0, count > 0 {
+                        let dataIndex = feedIndex(for: count - 1, count: count)
+                        phantomCardView(
+                            dataIndex: dataIndex,
+                            targetSlot: 0,
+                            positionY: cardPositionY(at: 1) - progress * cardStep - 10,
+                            zIndex: -1
+                        )
+                    }
+
+                    ForEach(0..<count, id: \.self) { slot in
+                        let dataIndex = feedIndex(for: slot, count: count)
+                        let item = store.state.cardData[dataIndex]
+
+                        let currentDepth = CGFloat(slot) + progress
+                        let style = interpolatedStyle(depth: currentDepth)
+
+                        let translationY = calculateTranslationY(for: slot, count: count)
+
+                        CardView(
+                            style: style,
+                            color: store.cardColors[dataIndex],
+                            title: item.title,
+                            category: item.topKeyword,
+                            source: item.newsletterName,
+                            shouldMoveY: ((Device.height - 477) / 2) + 180 - cardPositionY(at: slot) - 90,
+                            onTap: {
+                                guard !isDragging else { return }
+                                selectedIndex = dataIndex
+                                cardTapHandler()
+                                GA.click_newsletter(title: item.title, listIndex: count - 1 - dataIndex)
+                            },
+                            isPresentModal: $store.isPresentModal
+                        )
+                        .position(
+                            x: Device.width / 2,
+                            y: cardPositionY(at: slot) + translationY
+                        )
+                        .offset(y: pulseOffsets[slot] ?? 0)
+                        .zIndex(Double(slot))
+                        .onAppear {
+                            guard !didAnimateSlot.contains(slot) else { return }
+                            didAnimateSlot.insert(slot)
+
+                            let playOrder = (count - 1) - slot
+                            let delayMs = playOrder * 150
+
+                            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    pulseOffsets[slot] = -5
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
+                                    withAnimation(.easeInOut(duration: 0.1)) {
+                                        pulseOffsets[slot] = 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if progress < 0, count > 0 {
+                        let lastSlot = count - 1
+                        let dataIndex = feedIndex(for: 0, count: count)
+                        phantomCardView(
+                            dataIndex: dataIndex,
+                            targetSlot: lastSlot,
+                            positionY: cardPositionY(at: lastSlot) + cardStep + progress * cardStep + 10,
+                            zIndex: 5
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private var cardScrollGesture: some Gesture {
+        DragGesture(minimumDistance: 5)
+            .onChanged { value in
+                isDragging = true
+                let delta = value.translation.height - lastDragTranslation
+                lastDragTranslation = value.translation.height
+                scrollAccum += delta
+
+                let step = cardStep
+                let count = min(cardTypes.count, store.state.cardData.count)
+                guard count > 0 else { return }
+
+                while scrollAccum >= step {
+                    start = (start + 1) % count
+                    scrollAccum -= step
+                }
+
+                while scrollAccum <= -step {
+                    start = (start - 1 + count) % count
+                    scrollAccum += step
+                }
+
+                progress = scrollAccum / step
+            }
+            .onEnded { _ in
+                lastDragTranslation = 0
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    scrollAccum = 0
+                    progress = 0
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    isDragging = false
+                }
+            }
+    }
+
+    @ViewBuilder
+    private func phantomCardView(
+        dataIndex: Int,
+        targetSlot: Int,
+        positionY: CGFloat,
+        zIndex: Double
+    ) -> some View {
+        let item = store.state.cardData[dataIndex]
+        let style = interpolatedStyle(depth: CGFloat(targetSlot))
+
+        CardView(
+            style: style,
+            color: store.cardColors[dataIndex],
+            title: item.title,
+            category: item.topKeyword,
+            source: item.newsletterName,
+            shouldMoveY: ((Device.height - 477) / 2) + 180 - cardPositionY(at: targetSlot) - 90,
+            onTap: {
+                guard !isDragging else { return }
+                selectedIndex = dataIndex
+                cardTapHandler()
+            },
+            isPresentModal: $store.isPresentModal
+        )
+        .position(x: Device.width / 2, y: positionY)
+        .zIndex(zIndex)
+    }
+
+    private func initializeCardHeights() {
+        let count = min(cardTypes.count, store.state.cardData.count)
+        guard count > 0 else { return }
+
+        cardHeights = (0..<count).map { index in
+            if index == 0 { return 0 }
+            return cardPositionY(at: index) - cardPositionY(at: index - 1)
+        }
+    }
+
+    private func getCardHeightDiff(at index: Int) -> CGFloat {
+        guard index >= 0 && index < cardHeights.count else { return cardStep }
+        return cardHeights[index]
+    }
+
+    private func calculateTranslationY(for slot: Int, count: Int) -> CGFloat {
+        if progress < 0 {
+            if slot == 0 {
+                return -progress * 20
+            } else {
+                return progress * cardStep
+            }
+        } else {
+            if slot == count - 1 {
+                return progress * cardStep
+            } else {
+                let dataIndex = feedIndex(for: slot, count: count)
+                let nextIndex = min(dataIndex + 1, count - 1)
+                return getCardHeightDiff(at: nextIndex) * progress
+            }
+        }
+    }
+
+    private func feedIndex(for slot: Int, count: Int) -> Int {
+        (slot - start + count) % count
+    }
+
+    private var cardStep: CGFloat {
+        if UIDevice.isSmallScreen { return 80 }
+        if UIDevice.is13MiniScreen { return 83 }
+        if UIDevice.isLargeScreen { return 95 }
+        return 90
+    }
+
     private func cardPositionY(at index: Int) -> CGFloat {
         if UIDevice.isSmallScreen {
             return Device.height - 430 + CGFloat(index * 80) - 100
@@ -192,7 +352,7 @@ struct RecommendView: View {
             return Device.height - 490 + CGFloat(index * 90) - 100
         }
     }
-    
+
     private func cardTapHandler() {
         if cardTapCount >= 3 {
             guard UserActionHistory.isAlreadyInputJobDetail == false &&
@@ -240,4 +400,3 @@ extension UIDevice {
         mainDescFlag: "T"
     )
 }
-
