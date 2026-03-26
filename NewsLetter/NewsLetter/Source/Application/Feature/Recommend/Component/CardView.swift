@@ -55,28 +55,6 @@ struct CardView: View {
         self._isPresentModal = isPresentModal
     }
 
-    init(
-        cardType: CardType,
-        color: Color,
-        title: String,
-        category: String,
-        source: String,
-        shouldMoveY: CGFloat,
-        onTap: (() -> Void)? = nil,
-        isPresentModal: Binding<Bool>
-    ) {
-        self.init(
-            style: cardType.style,
-            color: color,
-            title: title,
-            category: category,
-            source: source,
-            shouldMoveY: shouldMoveY,
-            onTap: onTap,
-            isPresentModal: isPresentModal
-        )
-    }
-
     var body: some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 24)
@@ -205,11 +183,11 @@ struct CardView: View {
 
 #Preview {
     VStack(spacing: -35) {
-        CardView(cardType: .one, color: .accentColor.purple, title: "사이드 프로젝트, AI로 출시까지? 지금 바로", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, onTap: { print("===") }, isPresentModal: .constant(false))
-        CardView(cardType: .two, color: .accentColor.orange, title: "SwiftUI 한 줄 코드로 번역? 믿기지 않죠!", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
-        CardView(cardType: .three, color: .accentColor.skyblue, title: "일이삼사오육칠팔구십일이삼사오육칠", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
-        CardView(cardType: .four, color: .accentColor.lemonyellow, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
-        CardView(cardType: .five, color: .accentColor.pink, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
-        CardView(cardType: .six, color: .accentColor.green, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
+        CardView(style: CardType.one.style, color: .accentColor.purple, title: "사이드 프로젝트, AI로 출시까지? 지금 바로", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, onTap: { print("===") }, isPresentModal: .constant(false))
+        CardView(style: CardType.two.style, color: .accentColor.orange, title: "SwiftUI 한 줄 코드로 번역? 믿기지 않죠!", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
+        CardView(style: CardType.three.style, color: .accentColor.skyblue, title: "일이삼사오육칠팔구십일이삼사오육칠", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
+        CardView(style: CardType.four.style, color: .accentColor.lemonyellow, title: "직장인이라면 알아야 할 주 4일제의 모든 것", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
+        CardView(style: CardType.five.style, color: .accentColor.pink, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
+        CardView(style: CardType.six.style, color: .accentColor.green, title: "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼사오육칠팔", category: "Kotlin", source: "안드로이드 위클리", shouldMoveY: 0, isPresentModal: .constant(false))
     }
 }
