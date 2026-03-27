@@ -15,6 +15,7 @@ struct CardView: View {
     let source: String
     let shouldMoveY: CGFloat
     var onTap: (() -> Void)? = nil
+    var onTapBegan: (() -> Void)? = nil
 
     // 제목 최대 28글자까지
     var trimmedTitle: String {
@@ -35,6 +36,15 @@ struct CardView: View {
     @State private var cardZIndex: Double = Z.cardDefault
     @State private var isTapped: Bool = false
 
+    private enum TapAnimation {
+        static let springDuration: TimeInterval = 0.5
+        static let expandDelay: TimeInterval = 0.5
+        static let expandDuration: TimeInterval = 0.5
+        static let totalDuration: TimeInterval = expandDelay + expandDuration
+    }
+
+    static let tapAnimationTotalDuration: TimeInterval = TapAnimation.totalDuration
+
     init(
         style: CardTypeStyle,
         color: Color,
@@ -43,6 +53,7 @@ struct CardView: View {
         source: String,
         shouldMoveY: CGFloat,
         onTap: (() -> Void)? = nil,
+        onTapBegan: (() -> Void)? = nil,
         isPresentModal: Binding<Bool>
     ) {
         self.style = style
@@ -52,6 +63,7 @@ struct CardView: View {
         self.source = source
         self.shouldMoveY = shouldMoveY
         self.onTap = onTap
+        self.onTapBegan = onTapBegan
         self._isPresentModal = isPresentModal
     }
 
@@ -123,25 +135,26 @@ struct CardView: View {
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
 
-            withAnimation(.spring(duration: 0.5)) {
+            onTapBegan?()
+            withAnimation(.spring(duration: TapAnimation.springDuration)) {
                 cardOffsetY = shouldMoveY
                 cardZIndex = Z.cardElevated
                 cardHeight = 300
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                withAnimation(.easeInOut(duration: 0.5)) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + TapAnimation.expandDelay) {
+                withAnimation(.easeInOut(duration: TapAnimation.expandDuration)) {
                     isTapped = true
                     cardWidth = Device.width * 0.8
                     cardHeight = 366
                 }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + TapAnimation.totalDuration) {
                 onTap?()
             }
         }
         .onChange(of: isPresentModal) { _, newValue in
             if newValue == false {
-                withAnimation(.spring(duration: 0.5)) {
+                withAnimation(.spring(duration: TapAnimation.springDuration)) {
                     cardOffsetY = 0
                     isTapped = false
                     cardWidth = nil

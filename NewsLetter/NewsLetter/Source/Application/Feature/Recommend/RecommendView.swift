@@ -27,6 +27,7 @@ struct RecommendView: View {
     @State private var lastDragTranslation: CGFloat = 0
     @State private var isDragging: Bool = false
     @State private var cardHeights: [CGFloat] = []
+    @State private var isCardAnimating: Bool = false
 
     let colorFlag: String
     let mainDescFlag: String
@@ -190,6 +191,9 @@ struct RecommendView: View {
                                 cardTapHandler()
                                 GA.click_newsletter(title: item.title, listIndex: count - 1 - dataIndex)
                             },
+                            onTapBegan: {
+                                lockCardScrollForTapAnimation()
+                            },
                             isPresentModal: $store.isPresentModal
                         )
                         .position(
@@ -233,40 +237,59 @@ struct RecommendView: View {
         }
     }
 
-    private var cardScrollGesture: some Gesture {
-        DragGesture(minimumDistance: 5)
-            .onChanged { value in
-                isDragging = true
-                let delta = value.translation.height - lastDragTranslation
-                lastDragTranslation = value.translation.height
-                scrollAccum += delta
+    private var cardScrollGesture: AnyGesture<DragGesture.Value> {
+        if isScrollLocked {
+            return AnyGesture(DragGesture(minimumDistance: .infinity))
+        }
 
-                let step = cardStep
-                let count = min(cardTypes.count, store.state.cardData.count)
-                guard count > 0 else { return }
+        return AnyGesture(
+            DragGesture(minimumDistance: 5)
+                .onChanged { value in
+                    isDragging = true
+                    let delta = value.translation.height - lastDragTranslation
+                    lastDragTranslation = value.translation.height
+                    scrollAccum += delta
 
-                while scrollAccum >= step {
-                    start = (start + 1) % count
-                    scrollAccum -= step
-                }
+                    let step = cardStep
+                    let count = min(cardTypes.count, store.state.cardData.count)
+                    guard count > 0 else { return }
 
-                while scrollAccum <= -step {
-                    start = (start - 1 + count) % count
-                    scrollAccum += step
-                }
+                    while scrollAccum >= step {
+                        start = (start + 1) % count
+                        scrollAccum -= step
+                    }
 
-                progress = scrollAccum / step
-            }
-            .onEnded { _ in
-                lastDragTranslation = 0
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    scrollAccum = 0
-                    progress = 0
+                    while scrollAccum <= -step {
+                        start = (start - 1 + count) % count
+                        scrollAccum += step
+                    }
+
+                    progress = scrollAccum / step
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    isDragging = false
+                .onEnded { _ in
+                    lastDragTranslation = 0
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        scrollAccum = 0
+                        progress = 0
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        isDragging = false
+                    }
                 }
-            }
+        )
+    }
+
+    private var isScrollLocked: Bool {
+        isCardAnimating || store.isPresentModal
+    }
+
+    private func lockCardScrollForTapAnimation() {
+        guard isCardAnimating == false else { return }
+        isCardAnimating = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + CardView.tapAnimationTotalDuration) {
+            isCardAnimating = false
+        }
     }
 
     @ViewBuilder
@@ -290,6 +313,9 @@ struct RecommendView: View {
                 guard !isDragging else { return }
                 selectedIndex = dataIndex
                 cardTapHandler()
+            },
+            onTapBegan: {
+                lockCardScrollForTapAnimation()
             },
             isPresentModal: $store.isPresentModal
         )
