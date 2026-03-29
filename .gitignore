@@ -121,3 +121,4 @@ iOSInjectionProject/
 # End of https://www.toptal.com/developers/gitignore/api/macos,swift
 NewsLetter/NewsLetter/Resource/GoogleService-Info.plist
 secret.xcconfig
+CLAUDE.md
