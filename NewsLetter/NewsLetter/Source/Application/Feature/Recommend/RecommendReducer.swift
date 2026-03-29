@@ -120,7 +120,7 @@ struct RecommendReducer {
                 return .run { send in
                     do {
                         let userId = String(UserInfo.userId ?? 3)
-                        try await cardClient.refreshCards(userId)
+                        try await cardClient.refreshCards(RefreshCardsRequestDTO(userId: userId))
                         await send(.fetchCards)
                         UserActionHistory.useRefreshDate = Date()
                     } catch let error {
@@ -164,7 +164,7 @@ struct RecommendReducer {
                         let userId = String(UserInfo.userId ?? 3)
                         let publishedDate: String? = nil
                         
-                        let cards = try await cardClient.fetchCards(userId, publishedDate)
+                        let cards = try await cardClient.fetchCards(FetchCardsRequestDTO(userId: userId, publishedDate: publishedDate))
                         await send(.setCards(cards))
                     } catch {
                         await send(.setCards([]))
