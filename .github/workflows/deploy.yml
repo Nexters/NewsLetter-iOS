@@ -1,0 +1,70 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - release  # release 브랜치 PR 머지 시 자동 트리거
+
+  # App Store 제출 또는 수동 배포용
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: "실행할 Fastlane 레인"
+        required: true
+        default: "beta"
+        type: choice
+        options:
+          - beta
+          - release
+
+# 동일 브랜치에서 여러 워크플로우가 동시에 실행되지 않도록
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: macos-26  # Xcode 26 지원
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Xcode 26.3 선택
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+
+      - name: Ruby 설정
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Fastlane 설치
+        run: bundle install
+
+      # match 인증서 저장소(wongbingg/team-auth) 접근을 위한 SSH 키 설정
+      # MATCH_SSH_PRIVATE_KEY: team-auth 레포 Deploy Key의 개인키
+      - name: SSH 키 등록 (match 인증서 저장소용)
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MATCH_SSH_PRIVATE_KEY }}
+
+      - name: Fastlane 실행
+        env:
+          # match 인증서 암호화 패스프레이즈
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          # App Store Connect API Key (Apple ID + 2FA 대신 사용)
+          APP_STORE_CONNECT_API_KEY_ID:        ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT:   ${{ secrets.ASC_PRIVATE_KEY }}
+          # 앱 빌드에 필요한 시크릿 (gitignore된 secret.xcconfig 재생성에 사용)
+          SECRET_BASE_URL:    ${{ secrets.SECRET_BASE_URL }}
+          SECRET_APP_KEY:     ${{ secrets.SECRET_APP_KEY }}
+          SECRET_URL_SCHEMES: ${{ secrets.SECRET_URL_SCHEMES }}
+          # Firebase 설정 (gitignore된 GoogleService-Info.plist 재생성에 사용)
+          # 로컬에서 생성: base64 -i GoogleService-Info.plist | pbcopy
+          GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          LANE="${{ github.event.inputs.lane || 'beta' }}"
+          bundle exec fastlane $LANE

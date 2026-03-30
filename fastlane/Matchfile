@@ -1,0 +1,11 @@
+git_url("git@github.com:wongbingg/team-auth.git")
+
+storage_mode("git")
+
+type("appstore")
+
+app_identifier(["com.nexters.newsletter"])
+username("leewonbeen@gmail.com")
+
+# CI에서는 인증서 저장소에 쓰기 금지 (readonly)
+readonly(true) if ENV["CI"]

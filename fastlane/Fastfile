@@ -1,0 +1,119 @@
+require 'base64'
+
+default_platform(:ios)
+
+BUNDLE_ID     = "com.nexters.newsletter"
+SCHEME        = "NewsLetter"
+PROJECT       = "NewsLetter/NewsLetter.xcodeproj"
+TARGET        = "NewsLetter"
+XCCONFIG_PATH = "NewsLetter/NewsLetter/Resource/secret.xcconfig"
+PLIST_PATH    = "NewsLetter/NewsLetter/Resource/GoogleService-Info.plist"
+
+platform :ios do
+
+  # CI에서 secret.xcconfig 재생성
+  # 필요 ENV: SECRET_BASE_URL, SECRET_APP_KEY, SECRET_URL_SCHEMES
+  private_lane :write_xcconfig do
+    content = [
+      "BASE_URL=#{ENV.fetch('SECRET_BASE_URL')}",
+      "APP_KEY=#{ENV.fetch('SECRET_APP_KEY')}",
+      "URL_SCHEMES=#{ENV.fetch('SECRET_URL_SCHEMES')}"
+    ].join("\n")
+    File.write("../#{XCCONFIG_PATH}", content)
+    UI.success "secret.xcconfig 작성 완료"
+  end
+
+  # CI에서 GoogleService-Info.plist 재생성
+  # 필요 ENV: GOOGLE_SERVICE_INFO_PLIST_BASE64 (base64 인코딩된 plist)
+  private_lane :write_google_service_plist do
+    encoded = ENV.fetch("GOOGLE_SERVICE_INFO_PLIST_BASE64")
+    File.write("../#{PLIST_PATH}", Base64.decode64(encoded))
+    UI.success "GoogleService-Info.plist 작성 완료"
+  end
+
+  # ─── Public Lanes ────────────────────────────────────────────────────────
+
+  desc "인증서/프로비저닝 프로파일 동기화"
+  desc "Usage: bundle exec fastlane sync_certs"
+  desc "       bundle exec fastlane sync_certs type:development"
+  lane :sync_certs do |options|
+    match(
+      type:           options[:type] || "appstore",
+      readonly:       is_ci,
+      app_identifier: BUNDLE_ID
+    )
+  end
+
+  desc "빌드 번호 증가 (현재 마케팅 버전 기준 TestFlight 최신 빌드 + 1)"
+  lane :bump_version do
+    version = get_version_number(xcodeproj: PROJECT, target: TARGET)
+    UI.message "현재 마케팅 버전: #{version}"
+
+    latest = latest_testflight_build_number(
+      app_identifier: BUNDLE_ID,
+      version:        version
+    )
+    next_build = latest + 1
+    increment_build_number(build_number: next_build, xcodeproj: PROJECT)
+    UI.success "빌드 번호: #{version}(#{next_build})"
+  end
+
+  desc "Release IPA 빌드 (업로드 없음)"
+  lane :build_app do
+    match(
+      type:           "appstore",
+      readonly:       true,
+      app_identifier: BUNDLE_ID
+    )
+    gym(
+      scheme:            SCHEME,
+      project:           PROJECT,
+      configuration:     "Release",
+      export_method:     "app-store",
+      clean:             true,
+      output_directory:  "./build",
+      output_name:       "NewsLetter.ipa",
+      # pbxproj의 Release 설정에 'match Development' 프로파일이 지정되어 있으므로
+      # export 시점에 AppStore 프로파일로 오버라이드
+      export_options: {
+        method:               "app-store",
+        signingStyle:         "manual",
+        teamID:               "SWPBG3YXG5",
+        provisioningProfiles: {
+          BUNDLE_ID => "match AppStore #{BUNDLE_ID}"
+        }
+      }
+    )
+  end
+
+  desc "TestFlight 업로드 (release 브랜치 머지 시 자동 실행)"
+  lane :beta do
+    write_xcconfig if is_ci
+    write_google_service_plist if is_ci
+    bump_version
+    build_app
+    upload_to_testflight(
+      app_identifier:                    BUNDLE_ID,
+      skip_waiting_for_build_processing: true,
+      changelog:                         last_git_commit[:message]
+    )
+    clean_build_artifacts
+  end
+
+  desc "App Store 제출 (GitHub Actions workflow_dispatch로 수동 실행)"
+  lane :release do
+    write_xcconfig if is_ci
+    write_google_service_plist if is_ci
+    bump_version
+    build_app
+    upload_to_app_store(
+      app_identifier:     BUNDLE_ID,
+      submit_for_review:  false,
+      automatic_release:  false,
+      skip_screenshots:   true,
+      force:              true
+    )
+    clean_build_artifacts
+  end
+
+end
