@@ -1,33 +1,47 @@
 require 'base64'
+require 'fileutils'
 
 default_platform(:ios)
 
 BUNDLE_ID     = "com.nexters.newsletter"
 SCHEME        = "NewsLetter"
+# CI 환경을 위해 프로젝트 루트 기준 절대 경로를 잡습니다.
+PROJECT_ROOT = File.expand_path('..', Dir.pwd)
 PROJECT       = "NewsLetter/NewsLetter.xcodeproj"
 TARGET        = "NewsLetter"
-XCCONFIG_PATH = "NewsLetter/NewsLetter/Resource/secret.xcconfig"
-PLIST_PATH    = "NewsLetter/NewsLetter/Resource/GoogleService-Info.plist"
+# 파일 생성 경로 (절대 경로로 생성하여 어긋남을 방지)
+XCCONFIG_PATH = File.join(PROJECT_ROOT, "NewsLetter/NewsLetter/Resource/secret.xcconfig")
+PLIST_PATH    = File.join(PROJECT_ROOT, "NewsLetter/NewsLetter/Resource/GoogleService-Info.plist")
 
 platform :ios do
+  # 모든 레인 실행 전 API Key 생성
+  before_all do
+    $api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], 
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      is_key_content_base64: false
+    )
+  end
 
   # CI에서 secret.xcconfig 재생성
-  # 필요 ENV: SECRET_BASE_URL, SECRET_APP_KEY, SECRET_URL_SCHEMES
   private_lane :write_xcconfig do
+    UI.message "Writing xcconfig to: #{XCCONFIG_PATH}"
     content = [
       "BASE_URL=#{ENV.fetch('SECRET_BASE_URL')}",
       "APP_KEY=#{ENV.fetch('SECRET_APP_KEY')}",
       "URL_SCHEMES=#{ENV.fetch('SECRET_URL_SCHEMES')}"
     ].join("\n")
-    File.write("../#{XCCONFIG_PATH}", content)
+
+    File.write(XCCONFIG_PATH, content)
     UI.success "secret.xcconfig 작성 완료"
   end
 
   # CI에서 GoogleService-Info.plist 재생성
-  # 필요 ENV: GOOGLE_SERVICE_INFO_PLIST_BASE64 (base64 인코딩된 plist)
   private_lane :write_google_service_plist do
+    UI.message "Writing GoogleService-Info.plist to: #{PLIST_PATH}"
     encoded = ENV.fetch("GOOGLE_SERVICE_INFO_PLIST_BASE64")
-    File.write("../#{PLIST_PATH}", Base64.decode64(encoded))
+    File.write(PLIST_PATH, Base64.decode64(encoded))
     UI.success "GoogleService-Info.plist 작성 완료"
   end
 
@@ -45,15 +59,14 @@ platform :ios do
   end
 
   desc "빌드 번호 증가 (현재 마케팅 버전 기준 TestFlight 최신 빌드 + 1)"
-  lane :bump_version do |options|
-    api_key = options[:api_key]
+  lane :bump_version do
     version = get_version_number(xcodeproj: PROJECT, target: TARGET)
     UI.message "현재 마케팅 버전: #{version}"
     
     # rescue를 사용하여 해당 버전의 빌드가 없는 경우 0으로 초기화
     begin
       latest = latest_testflight_build_number(
-        api_key:        api_key,
+        api_key:        $api_key,
         app_identifier: BUNDLE_ID,
         version:        version
       )
@@ -101,18 +114,12 @@ platform :ios do
 
   desc "TestFlight 업로드 (release 브랜치 머지 시 자동 실행)"
   lane :beta do
-    api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], 
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
-      is_key_content_base64: false
-    )
     write_xcconfig if is_ci
     write_google_service_plist if is_ci
-    bump_version(api_key)
+    bump_version
     build_app
     upload_to_testflight(
-      api_key:                           api_key,
+      api_key:                           $api_key,
       app_identifier:                    BUNDLE_ID,
       skip_waiting_for_build_processing: true,
       changelog:                         last_git_commit[:message]
@@ -122,15 +129,9 @@ platform :ios do
 
   desc "App Store 제출 (GitHub Actions workflow_dispatch로 수동 실행)"
   lane :release do
-    api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], 
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
-      is_key_content_base64: false
-    )
     write_xcconfig if is_ci
     write_google_service_plist if is_ci
-    bump_version(api_key)
+    bump_version
     build_app
     upload_to_app_store(
       api_key:            api_key,
