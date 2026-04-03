@@ -14,9 +14,9 @@ import Moya
 struct CardClient {
     static let apiClient = MoyaAPIClient()
 
-    var fetchCards: (String, String?) async throws -> [Card] // FIXME: RequestDTO 모델로 분리
+    var fetchCards: (FetchCardsRequestDTO) async throws -> [Card]
     var fetchExploreCards: (ExploreCardRequestDTO) async throws -> ExploreCardResponse
-    var refreshCards: (String) async throws -> Void // FIXME: RequestDTO 모델로 분리
+    var refreshCards: (RefreshCardsRequestDTO) async throws -> Void
     var fetchOGShareURL: (OGShareURLRequestDTO) -> String = { _ in "" }
 }
 
@@ -30,8 +30,8 @@ extension DependencyValues {
 extension CardClient: DependencyKey {
     static var liveValue: CardClient = {
             return CardClient(
-                fetchCards: { userId, publishedDate in
-                    let response = try await apiClient.request(CardAPI.fetchCards(userId: userId, publishedDate: publishedDate))
+                fetchCards: { requestDTO in
+                    let response = try await apiClient.request(CardAPI.fetchCards(requestDTO))
 
                     let cardResponse = try response.map(CardResponseDTO.self)
                     let cards = cardResponse.cards.map { cardDTO in
@@ -52,8 +52,8 @@ extension CardClient: DependencyKey {
                         .map(ExploreCardResponseDTO.self)
                     return response.toDomain()
                 },
-                refreshCards: { userId in
-                    _ = try await apiClient.request(CardAPI.refreshCards(userId: userId))
+                refreshCards: { requestDTO in
+                    _ = try await apiClient.request(CardAPI.refreshCards(requestDTO))
                 },
                 fetchOGShareURL: { requestDTO in
                     let textColorEncoded = requestDTO.textColor?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
@@ -65,7 +65,7 @@ extension CardClient: DependencyKey {
 
     static var previewValue: CardClient = {
         return CardClient(
-            fetchCards: { _,_  in
+            fetchCards: { _ in
                 return [
                     Card(id: 1192, title: "Preview Title 1", topKeyword: "Preview Keyword 1", summary: "Preview Summary 1", contentURL: "https://example.com", newsletterName: "Preview Newsletter 1", language: "ENGLISH"),
                     Card(id: 1201, title: "Preview Title 2", topKeyword: "Preview Keyword 2", summary: "Preview Summary 2", contentURL: "https://example.com", newsletterName: "Preview Newsletter 2", language: "ENGLISH"),
