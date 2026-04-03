@@ -81,7 +81,7 @@ platform :ios do
       output_directory:  "./build",
       output_name:       "NewsLetter.ipa",
       # 상세 로그
-      xcpretty_report_html: true, # HTML 리포트 생성 (Artifact로 확인 가능)
+      xcpretty_report_html: "build/report.html", # HTML 리포트 생성 (Artifact로 확인 가능)
       silent: false,
       suppress_xcode_output: false,
       # pbxproj의 Release 설정에 'match Development' 프로파일이 지정되어 있으므로
