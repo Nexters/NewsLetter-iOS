@@ -10,9 +10,9 @@ import Foundation
 import Moya
 
 enum CardAPI {
-    case fetchCards(userId: String, publishedDate: String?)
+    case fetchCards(FetchCardsRequestDTO)
     case fetchExploreCard(ExploreCardRequestDTO)
-    case refreshCards(userId: String)
+    case refreshCards(RefreshCardsRequestDTO)
     case fetchOGShareURL(OGShareURLRequestDTO)
 }
 
@@ -23,16 +23,16 @@ extension CardAPI: TargetType {
 
     var path: String {
         switch self {
-        case .fetchCards(let userId, let publishedDate):
-            var urlPath = "/api/newsletters/contents/\(userId)"
-            if let date = publishedDate {
+        case .fetchCards(let dto):
+            var urlPath = "/api/newsletters/contents/\(dto.userId)"
+            if let date = dto.publishedDate {
                 urlPath += "?publishedDate=\(date)"
             }
             return urlPath
         case .fetchExploreCard:
             return "api/newsletters/explore/contents"
-        case .refreshCards(let userId):
-            return "/api/newsletters/contents/\(userId)/refresh"
+        case .refreshCards(let dto):
+            return "/api/newsletters/contents/\(dto.userId)/refresh"
         case .fetchOGShareURL:
             return "/share/og"
         }

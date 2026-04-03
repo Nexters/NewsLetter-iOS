@@ -27,7 +27,7 @@ struct ExploreView: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("전체 (\(store.state.data.count))")
+                Text("전체 (\(store.state.totalCount))")
                     .font(.body14_bold)
                     .foregroundStyle(.semanticColor.text_strongInverse)
                 Spacer()

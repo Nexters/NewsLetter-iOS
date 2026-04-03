@@ -23,6 +23,7 @@ struct ExploreReducer {
         var selectedCard: (Card, ColorPaletteName)? = nil
         var hasMore: Bool = false
         var nextOffset: Int = 0
+        var totalCount: Int = 0
         var isLoading: Bool = false
         var isPresentToast: Bool = false
     }
@@ -32,10 +33,8 @@ struct ExploreReducer {
         case fetchFirstPage
         case fetchNextPage
         case fetchExploreCards(Int)
-        case setData([ExploreCard])
+        case setResponse(ExploreCardResponse, isFirstPage: Bool, prevData: [ExploreCard])
         case setSelectedCard((Card, ColorPaletteName))
-        case setHasMore(Bool)
-        case setNextOffset(Int)
         case setIsLoading(Bool)
         case setIsPresentToast(Bool)
         case delegate(Delegate)
@@ -67,31 +66,21 @@ struct ExploreReducer {
                             size: 20
                         )
                         let response = try await cardClient.fetchExploreCards(requestDTO)
-                        await send(.setHasMore(response.hasMore))
-                        await send(.setNextOffset(response.nextOffset))
-                        
-                        if lastSeenOffset == 0 {
-                            await send(.setData(response.contents))
-                        } else {
-                            await send(.setData(state.data + response.contents))
-                        }
+                        await send(.setResponse(response, isFirstPage: lastSeenOffset == 0, prevData: state.data))
                     } catch let error {
                         print("[ExploreReducer] fetchExploreCard 에러발생: \(error.localizedDescription)")
                         await send(.setIsPresentToast(true))
                     }
                     await send(.setIsLoading(false))
                 }
-            case .setData(let data):
-                state.data = data
+            case .setResponse(let response, let isFirstPage, let prevData):
+                state.totalCount = response.totalCount
+                state.hasMore = response.hasMore
+                state.nextOffset = response.nextOffset
+                state.data = isFirstPage ? response.contents : prevData + response.contents
                 return .none
             case .setSelectedCard(let data):
                 state.selectedCard = data
-                return .none
-            case .setHasMore(let bool):
-                state.hasMore = bool
-                return .none
-            case .setNextOffset(let offset):
-                state.nextOffset = offset
                 return .none
             case .setIsLoading(let bool):
                 state.isLoading = bool
