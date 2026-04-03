@@ -45,13 +45,15 @@ platform :ios do
   end
 
   desc "빌드 번호 증가 (현재 마케팅 버전 기준 TestFlight 최신 빌드 + 1)"
-  lane :bump_version do
+  lane :bump_version do |options|
+    api_key = options[:api_key]
     version = get_version_number(xcodeproj: PROJECT, target: TARGET)
     UI.message "현재 마케팅 버전: #{version}"
     
     # rescue를 사용하여 해당 버전의 빌드가 없는 경우 0으로 초기화
     begin
       latest = latest_testflight_build_number(
+        api_key:        api_key,
         app_identifier: BUNDLE_ID,
         version:        version
       )
@@ -99,11 +101,18 @@ platform :ios do
 
   desc "TestFlight 업로드 (release 브랜치 머지 시 자동 실행)"
   lane :beta do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], 
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      is_key_content_base64: false
+    )
     write_xcconfig if is_ci
     write_google_service_plist if is_ci
-    bump_version
+    bump_version(api_key)
     build_app
     upload_to_testflight(
+      api_key:                           api_key,
       app_identifier:                    BUNDLE_ID,
       skip_waiting_for_build_processing: true,
       changelog:                         last_git_commit[:message]
@@ -113,11 +122,18 @@ platform :ios do
 
   desc "App Store 제출 (GitHub Actions workflow_dispatch로 수동 실행)"
   lane :release do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], 
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      is_key_content_base64: false
+    )
     write_xcconfig if is_ci
     write_google_service_plist if is_ci
-    bump_version
+    bump_version(api_key)
     build_app
     upload_to_app_store(
+      api_key:            api_key,
       app_identifier:     BUNDLE_ID,
       submit_for_review:  false,
       automatic_release:  false,
