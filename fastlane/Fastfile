@@ -85,6 +85,7 @@ platform :ios do
 
   desc "Release IPA 빌드 (업로드 없음)"
   lane :build_app do
+    setup_ci
     match(
       type:           "appstore",
       readonly:       true,
