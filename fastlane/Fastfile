@@ -6,7 +6,7 @@ default_platform(:ios)
 BUNDLE_ID     = "com.nexters.newsletter"
 SCHEME        = "NewsLetter"
 # CI 환경을 위해 프로젝트 루트 기준 절대 경로를 잡습니다.
-PROJECT_ROOT = File.expand_path('..', Dir.pwd)
+PROJECT_ROOT = Dir.pwd
 PROJECT       = "NewsLetter/NewsLetter.xcodeproj"
 TARGET        = "NewsLetter"
 # 파일 생성 경로 (절대 경로로 생성하여 어긋남을 방지)
@@ -33,6 +33,7 @@ platform :ios do
       "URL_SCHEMES=#{ENV.fetch('SECRET_URL_SCHEMES')}"
     ].join("\n")
 
+    FileUtils.mkdir_p(File.dirname(XCCONFIG_PATH))
     File.write(XCCONFIG_PATH, content)
     UI.success "secret.xcconfig 작성 완료"
   end
@@ -41,6 +42,7 @@ platform :ios do
   private_lane :write_google_service_plist do
     UI.message "Writing GoogleService-Info.plist to: #{PLIST_PATH}"
     encoded = ENV.fetch("GOOGLE_SERVICE_INFO_PLIST_BASE64")
+    FileUtils.mkdir_p(File.dirname(PLIST_PATH))
     File.write(PLIST_PATH, Base64.decode64(encoded))
     UI.success "GoogleService-Info.plist 작성 완료"
   end
@@ -96,7 +98,7 @@ platform :ios do
       output_directory:  "./build",
       output_name:       "NewsLetter.ipa",
       # 상세 로그
-      xcpretty_report_html: "build/report.html", # HTML 리포트 생성 (Artifact로 확인 가능)
+      xcpretty_report_html: true, # HTML 리포트 생성 (Artifact로 확인 가능)
       silent: false,
       suppress_xcode_output: false,
       # pbxproj의 Release 설정에 'match Development' 프로파일이 지정되어 있으므로
@@ -134,7 +136,7 @@ platform :ios do
     bump_version
     build_app
     upload_to_app_store(
-      api_key:            api_key,
+      api_key:            $api_key,
       app_identifier:     BUNDLE_ID,
       submit_for_review:  false,
       automatic_release:  false,
