@@ -6,7 +6,8 @@ default_platform(:ios)
 BUNDLE_ID     = "com.nexters.newsletter"
 SCHEME        = "NewsLetter"
 # CI 환경을 위해 프로젝트 루트 기준 절대 경로를 잡습니다.
-PROJECT_ROOT = Dir.pwd
+# __dir__ = fastlane/ 디렉토리, 상위(..) = repo root
+PROJECT_ROOT = File.expand_path('..', __dir__)
 PROJECT       = "NewsLetter/NewsLetter.xcodeproj"
 TARGET        = "NewsLetter"
 # 파일 생성 경로 (절대 경로로 생성하여 어긋남을 방지)
@@ -98,7 +99,7 @@ platform :ios do
       output_directory:  "./build",
       output_name:       "NewsLetter.ipa",
       # 상세 로그
-      xcpretty_report_html: true, # HTML 리포트 생성 (Artifact로 확인 가능)
+      xcpretty_report_html: "build/report.html", # HTML 리포트 생성 (Artifact로 확인 가능)
       silent: false,
       suppress_xcode_output: false,
       # pbxproj의 Release 설정에 'match Development' 프로파일이 지정되어 있으므로
