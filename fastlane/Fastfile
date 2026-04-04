@@ -95,7 +95,8 @@ platform :ios do
       project:           PROJECT,
       configuration:     "Release",
       export_method:     "app-store",
-      clean:             true,
+      clean:             false,
+      xcargs:            "-skipPackagePluginValidation -disablePackageRepositoryCache -skipMacroValidation",
       output_directory:  "./build",
       output_name:       "NewsLetter.ipa",
       # 상세 로그
