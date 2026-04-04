@@ -96,7 +96,7 @@ platform :ios do
       configuration:     "Release",
       export_method:     "app-store",
       clean:             false,
-      xcargs:            "-skipPackagePluginValidation -disablePackageRepositoryCache -skipMacroValidation PROVISIONING_PROFILE_SPECIFIER='match AppStore #{BUNDLE_ID}' CODE_SIGN_IDENTITY='Apple Distribution' DEVELOPMENT_TEAM=SWPBG3YXG5",
+      xcargs:            "-skipPackagePluginValidation -disablePackageRepositoryCache -skipMacroValidation DEVELOPMENT_TEAM=SWPBG3YXG5",
       output_directory:  "./build",
       output_name:       "NewsLetter.ipa",
       # 상세 로그
