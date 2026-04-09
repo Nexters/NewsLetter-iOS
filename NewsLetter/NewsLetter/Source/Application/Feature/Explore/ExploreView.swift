@@ -25,6 +25,7 @@ struct ExploreView: View {
     ]
     
     var body: some View {
+        ZStack(alignment: .bottomLeading) {
         VStack(spacing: 12) {
             HStack {
                 Text("전체 (\(store.state.totalCount))")
@@ -83,6 +84,30 @@ struct ExploreView: View {
             UIScrollView.appearance().indicatorStyle = .white
             UIRefreshControl.appearance().tintColor = .white
             store.send(.onAppear)
+        }
+
+        Button {
+            store.send(.delegate(.reportNewsletterButtonTapped))
+        } label: {
+            HStack(spacing: 6) {
+                Image("pencil")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
+                Text("뉴스레터 제보")
+                    .font(.body14_semiBold)
+                    .foregroundStyle(.semanticColor.text_secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.white)
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 0)
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, 16)
+        .padding(.bottom, Device.safeAreaInsets.bottom + 16)
+
         }
     }
 }

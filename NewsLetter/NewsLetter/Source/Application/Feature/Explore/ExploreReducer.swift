@@ -42,6 +42,7 @@ struct ExploreReducer {
         @CasePathable
         enum Delegate {
             case presentExploreCard
+            case reportNewsletterButtonTapped
         }
     }
     
