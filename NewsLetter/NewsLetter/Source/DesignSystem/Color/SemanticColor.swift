@@ -53,4 +53,6 @@ struct SemanticColor {
     let state_negative_primary = ColorPalette.red500
     let state_negative_border = ColorPalette.red150
     let state_negative_background = ColorPalette.red50
+
+    let button_primary = ColorPalette.gray950
 }
