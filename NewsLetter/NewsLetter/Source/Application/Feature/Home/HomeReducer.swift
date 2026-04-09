@@ -32,6 +32,7 @@ struct HomeReducer {
         var isPresentExploreCard: Bool = false
         var isPresentNotificationPermissionBottomSheet: Bool = false
         var isPresentJobDetailBottomSheet: Bool = false
+        var isPresentNewsletterReportBottomSheet: Bool = false
         var isPresentToastMessage: Bool = false
         var selectedIndex: Int?
     }
@@ -76,6 +77,9 @@ struct HomeReducer {
             // ExploreReducer의 delegate 액션 처리
             case .explore(.delegate(.presentExploreCard)):
                 state.isPresentExploreCard = true
+                return .none
+            case .explore(.delegate(.reportNewsletterButtonTapped)):
+                state.isPresentNewsletterReportBottomSheet = true
                 return .none
             case .settingPressed:
                 state.path.append(.setting(SettingReducer.State()))

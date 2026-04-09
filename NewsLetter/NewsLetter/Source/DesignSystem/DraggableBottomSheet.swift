@@ -11,12 +11,16 @@ extension View {
     func draggableBottomSheet<DialogContent: View>(
         isShow: Binding<Bool>,
         dismissHandler: @escaping () -> Void,
+        cornerRadius: CGFloat = 12,
+        showHandleBar: Bool = true,
         @ViewBuilder dialogContent: @escaping () -> DialogContent
     ) -> some View {
         modifier(
             DraggableBottomSheetInfo(
                 isShowModal: isShow,
                 dismissHandler: dismissHandler,
+                cornerRadius: cornerRadius,
+                showHandleBar: showHandleBar,
                 dialogContent: dialogContent
             )
         )
@@ -28,26 +32,37 @@ struct DraggableBottomSheetInfo<DialogContent: View>: ViewModifier {
     @State private var offsetY: CGFloat = 0.0
     @State private var accumulatedOffset: CGFloat = 0.0
     @State private var currentHeight: CGFloat = .zero
-    
+
     let dismissHandler: () -> Void
     let injectedView: DialogContent
-    
+    let cornerRadius: CGFloat
+    let showHandleBar: Bool
+
     init(
         isShowModal: Binding<Bool>,
         dismissHandler: @escaping () -> Void,
+        cornerRadius: CGFloat = 12,
+        showHandleBar: Bool = true,
         @ViewBuilder dialogContent: () -> DialogContent
     ) {
         _isShowModal = isShowModal
         self.dismissHandler = dismissHandler
+        self.cornerRadius = cornerRadius
+        self.showHandleBar = showHandleBar
         injectedView = dialogContent()
     }
-    
+
     func body(content: Content) -> some View {
         ZStack(alignment: .bottom) {
             content
-            
+
             if isShowModal {
-                DraggableBottomSheet(height: $currentHeight, dragGesture: drag) {
+                DraggableBottomSheet(
+                    height: $currentHeight,
+                    dragGesture: drag,
+                    cornerRadius: cornerRadius,
+                    showHandleBar: showHandleBar
+                ) {
                     injectedView
                 }
                 .frame(width: Device.width)
@@ -59,7 +74,7 @@ struct DraggableBottomSheetInfo<DialogContent: View>: ViewModifier {
                 .zIndex(Z.bottomSheet)
                 .ignoresSafeArea(edges: .bottom)
                 .animation(.default, value: isShowModal)
-                
+
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
                     .transition(.opacity)
@@ -151,25 +166,33 @@ struct DraggableBottomSheet_TestView_Previews: PreviewProvider {
 // MARK: - BottomSheet View
 
 struct DraggableBottomSheet<DragGesture: Gesture, InjectedView: View>: View {
-    
+
     @Binding var height: CGFloat
-    
+
     let dragGesture: DragGesture
     let injectedView: InjectedView
-    
+    let cornerRadius: CGFloat
+    let showHandleBar: Bool
+
     init(
         height: Binding<CGFloat>,
         dragGesture: DragGesture,
+        cornerRadius: CGFloat = 12,
+        showHandleBar: Bool = true,
         @ViewBuilder injectedView: @escaping () -> InjectedView
     ) {
         _height = height
         self.dragGesture = dragGesture
+        self.cornerRadius = cornerRadius
+        self.showHandleBar = showHandleBar
         self.injectedView = injectedView()
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            handleBar.gesture(dragGesture)
+            if showHandleBar {
+                handleBar.gesture(dragGesture)
+            }
             injectedView
             Rectangle()
                 .frame(
@@ -183,9 +206,9 @@ struct DraggableBottomSheet<DragGesture: Gesture, InjectedView: View>: View {
                 height = proxy.frame(in: .local).height
             }
         })
-        .cornerRadius(12, corners: [.topLeft, .topRight])
+        .cornerRadius(cornerRadius, corners: [.topLeft, .topRight])
     }
-    
+
     var handleBar: some View {
         ZStack(alignment: .top) {
             Rectangle()
@@ -194,7 +217,7 @@ struct DraggableBottomSheet<DragGesture: Gesture, InjectedView: View>: View {
                     height: 24
                 )
                 .foregroundColor(Color(.white))
-            
+
             Capsule()
                 .frame(width: 40, height: 4)
                 .foregroundColor(Color(hex: 0xE2E5E6))

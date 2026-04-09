@@ -86,6 +86,16 @@ struct HomeView: View {
                     }
                 )
             }
+            .draggableBottomSheet(
+                isShow: $store.isPresentNewsletterReportBottomSheet,
+                dismissHandler: {},
+                cornerRadius: 24,
+                showHandleBar: false
+            ) {
+                NewsletterReportBottomSheet(
+                    isPresented: $store.isPresentNewsletterReportBottomSheet
+                )
+            }
             .ignoresSafeArea(edges: .bottom)
             .toastMessage(
                 isPresented: $store.isPresentToastMessage,
