@@ -8,6 +8,7 @@ import SwiftUI
 struct NewsletterReportBottomSheet: View {
 
     @Binding var isPresented:  Bool
+    let submitHandler: (NewsletterReportRequestDTO) -> Void
 
     @State private var newsletterURL: String = ""
     @State private var blogURL: String = ""
@@ -85,6 +86,18 @@ struct NewsletterReportBottomSheet: View {
             Spacer()
 
             Button {
+                let categoryNames = categories.indices
+                    .filter { selectedCategories.contains($0) }
+                    .map { categories[$0].label }
+                    .joined(separator: ", ")
+                let dto = NewsletterReportRequestDTO(
+                    contentProviderName: newsletterURL,
+                    channel: blogURL,
+                    requestCategory: categoryNames,
+                    relatedTo: "",
+                    reason: memo
+                )
+                submitHandler(dto)
                 isPresented = false
             } label: {
                 RoundedRectangle(cornerRadius: 16)
@@ -149,10 +162,12 @@ struct NewsletterReportBottomSheet: View {
                     let category = categories[index]
                     let isSelected = selectedCategories.contains(index)
 
+                    let isDisabled = !isSelected && selectedCategories.count >= 4
+
                     Button {
                         if isSelected {
                             selectedCategories.remove(index)
-                        } else {
+                        } else if selectedCategories.count < 4 {
                             selectedCategories.insert(index)
                         }
                     } label: {
@@ -178,7 +193,9 @@ struct NewsletterReportBottomSheet: View {
                                     lineWidth: 1
                                 )
                         )
+                        .opacity(isDisabled ? 0.4 : 1.0)
                     }
+                    .disabled(isDisabled)
                 }
             }
         }
@@ -243,5 +260,5 @@ extension View {
 }
 
 #Preview {
-    NewsletterReportBottomSheet(isPresented: .constant(true))
+    NewsletterReportBottomSheet(isPresented: .constant(true), submitHandler: { _ in })
 }

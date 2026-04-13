@@ -34,6 +34,7 @@ struct HomeReducer {
         var isPresentJobDetailBottomSheet: Bool = false
         var isPresentNewsletterReportBottomSheet: Bool = false
         var isPresentToastMessage: Bool = false
+        var isPresentReportSuccessToast: Bool = false
         var selectedIndex: Int?
     }
     
@@ -44,8 +45,12 @@ struct HomeReducer {
         case explore(ExploreReducer.Action)
         case settingPressed
         case setFlags(Flags)
+        case submitNewsletterReport(NewsletterReportRequestDTO)
+        case setIsPresentReportSuccessToast(Bool)
     }
     
+    @Dependency(\.newsletterReportClient) var newsletterReportClient
+
     var body: some ReducerOf<Self> {
         BindingReducer()
         
@@ -87,6 +92,18 @@ struct HomeReducer {
             case .setFlags(let flags):
                 state.colorFlag = flags.colorFlag
                 state.mainDescFlag = flags.mainDescFlag
+                return .none
+            case .submitNewsletterReport(let dto):
+                return .run { send in
+                    do {
+                        try await newsletterReportClient.submitReport(dto)
+                        await send(.setIsPresentReportSuccessToast(true))
+                    } catch {
+                        print("[HomeReducer] submitNewsletterReport 에러발생: \(error.localizedDescription)")
+                    }
+                }
+            case .setIsPresentReportSuccessToast(let value):
+                state.isPresentReportSuccessToast = value
                 return .none
             default:
                 return .none

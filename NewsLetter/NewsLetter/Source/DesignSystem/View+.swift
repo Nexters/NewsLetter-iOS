@@ -34,6 +34,10 @@ extension View {
         )
     }
     
+    func reportSuccessToast(isPresented: Binding<Bool>, topPadding: CGFloat) -> some View {
+        self.modifier(ReportSuccessToastMessage(isPresented: isPresented, topPadding: topPadding))
+    }
+
     func fontRangeLimited() -> some View {
         self.dynamicTypeSize(.small ... .xxxLarge)
     }
@@ -82,6 +86,47 @@ struct ToastMessage: ViewModifier {
                 .offset(y: isPresented ? 0 : 20)
                 .animation(.bouncy, value: isPresented)
                 .padding(.bottom, bottomPadding)
+        }
+        .onChange(of: isPresented) { _, newValue in
+            if newValue == true {
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(3)) {
+                    isPresented = false
+                }
+            }
+        }
+    }
+}
+
+struct ReportSuccessToastMessage: ViewModifier {
+    @Binding var isPresented: Bool
+    let topPadding: CGFloat
+
+    func body(content: Content) -> some View {
+        ZStack(alignment: .top) {
+            content
+
+            HStack(spacing: 8) {
+                Image("checkmark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+
+                Text("제보가 완료되었어요")
+                    .font(.body15_regular)
+                    .foregroundColor(.semanticColor.text_primary)
+            }
+            .padding(.leading, 12)
+            .padding(.trailing, 16)
+            .padding(.vertical, 12)
+            .background(
+                Capsule()
+                    .fill(Color.white)
+                    .shadow(color: Color(red: 34/255, green: 62/255, blue: 119/255).opacity(0.12), radius: 8, x: 0, y: 0)
+            )
+            .opacity(isPresented ? 1 : 0)
+            .offset(y: isPresented ? 0 : -20)
+            .animation(.bouncy, value: isPresented)
+            .padding(.top, topPadding)
         }
         .onChange(of: isPresented) { _, newValue in
             if newValue == true {

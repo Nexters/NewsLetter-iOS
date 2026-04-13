@@ -93,7 +93,10 @@ struct HomeView: View {
                 showHandleBar: false
             ) {
                 NewsletterReportBottomSheet(
-                    isPresented: $store.isPresentNewsletterReportBottomSheet
+                    isPresented: $store.isPresentNewsletterReportBottomSheet,
+                    submitHandler: { dto in
+                        store.send(.submitNewsletterReport(dto))
+                    }
                 )
             }
             .ignoresSafeArea(edges: .bottom)
@@ -101,6 +104,10 @@ struct HomeView: View {
                 isPresented: $store.isPresentToastMessage,
                 text: "뉴스레터 알림이 신청되었어요",
                 bottomPadding: 0
+            )
+            .reportSuccessToast(
+                isPresented: $store.isPresentReportSuccessToast,
+                topPadding: (UIDevice.isSmallScreen ? 24 : 50) + (UIDevice.isSmallScreen ? 36 : 48) + 8
             )
             .animation(.easeInOut, value: store.isPresentModal)
             .animation(.easeInOut, value: store.isPresentExploreCard)
