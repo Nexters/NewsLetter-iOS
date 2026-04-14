@@ -8,7 +8,7 @@ import Foundation
 struct NewsletterReportRequestDTO: Encodable {
     let contentProviderName: String
     let channel: String
-    let requestCategory: String
+    let requestCategories: [String]
     let relatedTo: String
     let reason: String
 }

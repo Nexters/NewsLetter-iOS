@@ -89,11 +89,10 @@ struct NewsletterReportBottomSheet: View {
                 let categoryNames = categories.indices
                     .filter { selectedCategories.contains($0) }
                     .map { categories[$0].label }
-                    .joined(separator: ", ")
                 let dto = NewsletterReportRequestDTO(
                     contentProviderName: newsletterURL,
                     channel: blogURL,
-                    requestCategory: categoryNames,
+                    requestCategories: categoryNames,
                     relatedTo: "",
                     reason: memo
                 )
@@ -162,12 +161,10 @@ struct NewsletterReportBottomSheet: View {
                     let category = categories[index]
                     let isSelected = selectedCategories.contains(index)
 
-                    let isDisabled = !isSelected && selectedCategories.count >= 4
-
                     Button {
                         if isSelected {
                             selectedCategories.remove(index)
-                        } else if selectedCategories.count < 4 {
+                        } else {
                             selectedCategories.insert(index)
                         }
                     } label: {
@@ -193,9 +190,7 @@ struct NewsletterReportBottomSheet: View {
                                     lineWidth: 1
                                 )
                         )
-                        .opacity(isDisabled ? 0.4 : 1.0)
                     }
-                    .disabled(isDisabled)
                 }
             }
         }
