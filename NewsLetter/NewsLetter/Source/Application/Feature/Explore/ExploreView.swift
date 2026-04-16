@@ -26,88 +26,87 @@ struct ExploreView: View {
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-        VStack(spacing: 12) {
-            HStack {
-                Text("전체 (\(store.state.totalCount))")
-                    .font(.body14_bold)
-                    .foregroundStyle(.semanticColor.text_strongInverse)
-                Spacer()
-            }
-            .padding(Metrics.horizontalPadding)
-            
-            ScrollView(showsIndicators: true) {
-                LazyVGrid(columns: columns, spacing: Metrics.gridSpacing) {
-                    ForEach(store.state.data.indices, id: \.self) { index in
-                        let colorIndex = index % store.state.colorList.count
-                        let data = store.state.data[index]
-                        let colorPallete = store.state.colorList[colorIndex]
-                        let isLastItem = index == store.state.data.count - 1
-                        
-                        ExploreCardCell(
-                            data: data,
-                            color: colorPallete.color
-                        )
-                        .frame(height: Metrics.cardHeight)
-                        .onTapGesture {
-                            let selectedCard = (data.toCard(), colorPallete)
-                            store.send(.setSelectedCard(selectedCard))
+            VStack(spacing: 12) {
+                HStack {
+                    Text("전체 (\(store.state.totalCount))")
+                        .font(.body14_bold)
+                        .foregroundStyle(.semanticColor.text_strongInverse)
+                    Spacer()
+                }
+                .padding(Metrics.horizontalPadding)
+                
+                ScrollView(showsIndicators: true) {
+                    LazyVGrid(columns: columns, spacing: Metrics.gridSpacing) {
+                        ForEach(store.state.data.indices, id: \.self) { index in
+                            let colorIndex = index % store.state.colorList.count
+                            let data = store.state.data[index]
+                            let colorPallete = store.state.colorList[colorIndex]
+                            let isLastItem = index == store.state.data.count - 1
                             
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                store.send(.delegate(.presentExploreCard))
+                            ExploreCardCell(
+                                data: data,
+                                color: colorPallete.color
+                            )
+                            .frame(height: Metrics.cardHeight)
+                            .onTapGesture {
+                                let selectedCard = (data.toCard(), colorPallete)
+                                store.send(.setSelectedCard(selectedCard))
+                                
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    store.send(.delegate(.presentExploreCard))
+                                }
                             }
-                        }
-                        .onAppear {
-                            if isLastItem {
-                                store.send(.fetchNextPage)
+                            .onAppear {
+                                if isLastItem {
+                                    store.send(.fetchNextPage)
+                                }
                             }
                         }
                     }
+                    .padding(Metrics.horizontalPadding)
                 }
-                .padding(Metrics.horizontalPadding)
+                .refreshable {
+                    try? await Task.sleep(nanoseconds: 1000_000_000)
+                    await store.send(.fetchFirstPage).finish()
+                }
+                .toastMessage(
+                    isPresented: Binding(
+                        get: { store.state.isPresentToast },
+                        set: { store.send(.setIsPresentToast($0)) }
+                    ),
+                    text: "마지막 페이지에요! 😊",
+                    bottomPadding: Device.safeAreaInsets.bottom
+                )
             }
-            .refreshable {
-                try? await Task.sleep(nanoseconds: 1000_000_000)
-                await store.send(.fetchFirstPage).finish()
+            .ignoresSafeArea()
+            .background(Color.black)
+            .onAppear {
+                UIScrollView.appearance().indicatorStyle = .white
+                UIRefreshControl.appearance().tintColor = .white
+                store.send(.onAppear)
             }
-            .toastMessage(
-                isPresented: Binding(
-                    get: { store.state.isPresentToast },
-                    set: { store.send(.setIsPresentToast($0)) }
-                ),
-                text: "마지막 페이지에요! 😊",
-                bottomPadding: Device.safeAreaInsets.bottom
-            )
-        }
-        .ignoresSafeArea()
-        .background(Color.black)
-        .onAppear {
-            UIScrollView.appearance().indicatorStyle = .white
-            UIRefreshControl.appearance().tintColor = .white
-            store.send(.onAppear)
-        }
-
-        Button {
-            store.send(.delegate(.reportNewsletterButtonTapped))
-        } label: {
-            HStack(spacing: 6) {
-                Image("pencil")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 16, height: 16)
-                Text("뉴스레터 제보")
-                    .font(.body14_semiBold)
-                    .foregroundStyle(.semanticColor.text_secondary)
+            
+            Button {
+                store.send(.delegate(.reportNewsletterButtonTapped))
+            } label: {
+                HStack(spacing: 6) {
+                    Image("pencil")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16)
+                    Text("뉴스레터 제보")
+                        .font(.body14_semiBold)
+                        .foregroundStyle(.semanticColor.text_secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.white)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 0)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color.white)
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 0)
-        }
-        .buttonStyle(.plain)
-        .padding(.leading, 16)
-        .padding(.bottom, Device.safeAreaInsets.bottom + 16)
-
+            .buttonStyle(.plain)
+            .padding(.leading, 16)
+            .padding(.bottom, Device.safeAreaInsets.bottom + 16)
         }
     }
 }
