@@ -15,6 +15,13 @@ struct NewsletterReportBottomSheet: View {
     @State private var memo: String = ""
     @State private var selectedCategories: Set<Int> = []
 
+    private var isSubmitEnabled: Bool {
+        !newsletterURL.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !blogURL.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !memo.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !selectedCategories.isEmpty
+    }
+
     private let categories: [(label: String, icon: String)] = [
         ("AND",    "android_icon"),
         ("iOS",    "ios_icon"),
@@ -100,15 +107,16 @@ struct NewsletterReportBottomSheet: View {
                 isPresented = false
             } label: {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(.semanticColor.button_primary)
+                    .fill(isSubmitEnabled ? .semanticColor.button_primary : .semanticColor.fill_secondary)
                     .frame(height: 56)
                     .overlay {
                         Text("제출")
                             .font(.body16_bold)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(isSubmitEnabled ? .white : .semanticColor.text_tertiary)
                     }
                     .padding(.horizontal, 16)
             }
+            .disabled(!isSubmitEnabled)
             .padding(.bottom, 8)
         }
         .padding(.top, 4)
