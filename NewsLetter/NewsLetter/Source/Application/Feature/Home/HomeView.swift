@@ -26,9 +26,7 @@ struct HomeView: View {
                 case .recommend:
                     RecommendView(
                         store: store.scope(state: \.recommendState, action: \.recommend),
-                        selectedIndex: $store.selectedIndex,
-                        colorFlag: store.colorFlag,
-                        mainDescFlag: store.mainDescFlag
+                        selectedIndex: $store.selectedIndex
                     )
                 case .explore:
                     ExploreView(
@@ -130,7 +128,7 @@ struct HomeView: View {
             workingExperience: workingExperience
         )
         store.send(.recommend(.updateUser(requestDTO)))
-        store.send(.recommend(.onAppear(colorFlag: store.recommendState.colorFlag)))
+        store.send(.recommend(.onAppear))
         store.isPresentJobDetailBottomSheet = false
     }
 }
