@@ -10,8 +10,7 @@ import Foundation
 
 @Reducer
 struct AppReducer {
-    typealias Flags = (colorFlag: String, mainDescFlag: String)
-
+    
     enum UpdateStatus: Equatable {
         case none
         case optional(storeURL: String, message: String)
@@ -65,16 +64,13 @@ struct AppReducer {
                 } else {
                     state.updateStatus = .none
                 }
-                let flags = (colorFlag: config.colorFlag, mainDescFlag: config.mainDescFlag)
-                return .send(.home(.setFlags(flags)))
+                return .none
 
             case .remoteConfigResponse(.failure(let error)):
                 print("Remote Config Fetch Error: \(error.localizedDescription)")
                 state.isLoading = false
                 state.updateStatus = .none
-                let defaultFlags = (colorFlag: "B", mainDescFlag: "F")
-                return .send(.home(.setFlags(defaultFlags)))
-
+                return .none
             case let .setUpdateStatus(status):
                 state.updateStatus = status
                 return .none

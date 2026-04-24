@@ -12,8 +12,6 @@ import ComposableArchitecture
 
 @Reducer
 struct HomeReducer {
-    typealias Flags = (colorFlag: String, mainDescFlag: String)
-    
     @Reducer
     enum Path {
         case setting(SettingReducer)
@@ -24,10 +22,7 @@ struct HomeReducer {
         var path = StackState<Path.State>()
         var recommendState = RecommendReducer.State()
         var exploreState = ExploreReducer.State()
-        
         var selectedSegment: SegmentView.SegmentType = .recommend
-        var colorFlag: String = ""
-        var mainDescFlag: String = ""
         var isPresentModal: Bool = false
         var isPresentExploreCard: Bool = false
         var isPresentNotificationPermissionBottomSheet: Bool = false
@@ -44,7 +39,6 @@ struct HomeReducer {
         case recommend(RecommendReducer.Action)
         case explore(ExploreReducer.Action)
         case settingPressed
-        case setFlags(Flags)
         case submitNewsletterReport(NewsletterReportRequestDTO)
         case setIsPresentReportSuccessToast(Bool)
     }
@@ -88,10 +82,6 @@ struct HomeReducer {
                 return .none
             case .settingPressed:
                 state.path.append(.setting(SettingReducer.State()))
-                return .none
-            case .setFlags(let flags):
-                state.colorFlag = flags.colorFlag
-                state.mainDescFlag = flags.mainDescFlag
                 return .none
             case .submitNewsletterReport(let dto):
                 return .run { send in
