@@ -19,7 +19,6 @@ struct RecommendView: View {
     @State private var cardTapCount: Int = 0
     @State private var pulseOffsets: [Int: CGFloat] = [:]
     @State private var didAnimateSlot: Set<Int> = []
-    @State private var selectedSegment: SegmentView.SegmentType = .recommend
     
     @State private var start: Int = 0
     @State private var scrollAccum: CGFloat = 0
