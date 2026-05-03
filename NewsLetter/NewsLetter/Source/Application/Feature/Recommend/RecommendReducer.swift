@@ -27,8 +27,9 @@ struct RecommendReducer {
         }
         
         var cardData: [Card] = []
-        var cardColors: [Color] = []
+        var cardColors: [COLORSET] = []
         var isPresentModal: Bool = false
+        var isRefreshLoading: Bool = false
     }
     
     enum Action: BindableAction {
@@ -38,7 +39,7 @@ struct RecommendReducer {
         case refreshButtonPressed
         case tick
         case startTimer
-        case setColorPalette([Color])
+        case setColorPalette([COLORSET])
         case fetchCards
         case loginUser
         case registerUser
@@ -46,6 +47,7 @@ struct RecommendReducer {
         case setCards([Card])
         case delegate(Delegate)
         case setIsPresentModal(Bool)
+        case setIsRefreshLoading(Bool)
         
         @CasePathable
         enum Delegate {
@@ -80,16 +82,14 @@ struct RecommendReducer {
                 
                 if todayString == lastVisitString ,
                    let cachedCards = UserInfo.cachedDailyCards,
-                   !cachedCards.isEmpty,
-                   let cachedColors = UserInfo.cachedDailyColors?.map({ $0.color }),
-                   !cachedColors.isEmpty {
+                   !cachedCards.isEmpty {
                     
                     if UserActionHistory.isChangedCareer == true {
                         effects.append(.send(.fetchCards))
                         UserActionHistory.isChangedCareer = false
                     } else {
                         state.cardData = cachedCards
-                        state.cardColors = cachedColors
+                        state.cardColors = COLORSET_LIST
                     }
                     
                 } else {
@@ -116,11 +116,15 @@ struct RecommendReducer {
             case .refreshButtonPressed:
                 return .run { send in
                     do {
+                        await send(.setIsRefreshLoading(true))
                         let userId = String(UserInfo.userId ?? 3)
                         try await cardClient.refreshCards(RefreshCardsRequestDTO(userId: userId))
+                        try await clock.sleep(for: .seconds(1))  // ← 서버 처리 대기
                         await send(.fetchCards)
+                        await send(.setIsRefreshLoading(false))
                         UserActionHistory.useRefreshDate = Date()
                     } catch let error {
+                        await send(.setIsRefreshLoading(false))
                         print(error.localizedDescription)
                         guard let error = error as? MoyaError else { return }
                         
@@ -149,7 +153,6 @@ struct RecommendReducer {
                     
                     UserInfo.lastCardFetchDate = nil
                     UserInfo.cachedDailyCards = nil
-                    UserInfo.cachedDailyColors = nil
                     
                     return .send(.fetchCards)
                 }
@@ -213,24 +216,14 @@ struct RecommendReducer {
                 if cards.isEmpty {
                     return .none
                 }
-                
+
                 UserInfo.lastCardFetchDate = Date()
-                
-                let fixedColors: [Color] = [
-                    ColorPalette.pointPurple200,
-                    ColorPalette.pointOrange400,
-                    ColorPalette.pointBlue300,
-                    ColorPalette.pointLemonYellow300,
-                    ColorPalette.pointPink300,
-                    ColorPalette.pointGreen300
-                ]
-                
-                let colorNames = fixedColors.compactMap { ColorPaletteName.from(color: $0) }
-                UserInfo.cachedDailyColors = colorNames
-                
-                return .send(.setColorPalette(fixedColors))
+                return .send(.setColorPalette(COLORSET_LIST))
             case .setIsPresentModal(let bool):
                 state.isPresentModal = bool
+                return .none
+            case .setIsRefreshLoading(let bool):
+                state.isRefreshLoading = bool
                 return .none
             case .delegate:
                 return .none
