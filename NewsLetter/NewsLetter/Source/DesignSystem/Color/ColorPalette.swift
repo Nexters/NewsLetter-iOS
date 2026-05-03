@@ -121,4 +121,12 @@ enum ColorPalette {
     static let pointLemonYellow700 = Color(hex: 0x8CA70B)
     static let pointLemonYellow800 = Color(hex: 0x728808)
     static let pointLemonYellow900 = Color(hex: 0x586908)
+    
+    // Text Primary
+    static let pointBlueTextPrimary = Color(hex: 0x68A4E7)
+    static let pointOrangeTextPrimary = Color(hex: 0xF38338)
+    static let pointPinkTextPrimary = Color(hex: 0xFC98DB)
+    static let pointPurpleTextPrimary = Color(hex: 0xA888C7)
+    static let pointGreenTextPrimary = Color(hex: 0x41D17F)
+    static let pointLemonYellowTextPrimary = Color(hex: 0xCBE064)
 }

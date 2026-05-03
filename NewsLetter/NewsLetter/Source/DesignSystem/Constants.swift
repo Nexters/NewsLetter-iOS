@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// ZIndex 상수 정의
 enum Z {
@@ -14,3 +15,13 @@ enum Z {
     static let carouselModal: Double = 20
     static let bottomSheet: Double = 50
 }
+
+typealias COLORSET = (main: Color, sub: Color)
+let COLORSET_LIST: [COLORSET] = [
+    (ColorPalette.pointPurple200, ColorPalette.pointPurpleTextPrimary),
+    (ColorPalette.pointOrange400, ColorPalette.pointOrangeTextPrimary),
+    (ColorPalette.pointBlue300, ColorPalette.pointBlueTextPrimary),
+    (ColorPalette.pointLemonYellow300, ColorPalette.pointLemonYellowTextPrimary),
+    (ColorPalette.pointPink300, ColorPalette.pointPinkTextPrimary),
+    (ColorPalette.pointGreen300, ColorPalette.pointGreenTextPrimary),
+]
