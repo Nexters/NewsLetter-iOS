@@ -41,6 +41,7 @@ struct ExploreCard: Codable {
             topKeyword: topKeyword,
             summary: summary,
             contentURL: contentURL,
+            imageURL: nil,
             newsletterName: newsletterName,
             language: language
         )

@@ -125,6 +125,7 @@ struct RecommendView: View {
                         title: data.title,
                         job: data.topKeyword,
                         source: data.newsletterName,
+                        imageURL: data.imageURL,
                         kind: .blog,
                         colorSet: store.cardColors[cardIndex]
                     )
