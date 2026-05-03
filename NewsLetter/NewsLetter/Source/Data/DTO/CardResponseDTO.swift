@@ -18,6 +18,7 @@ struct CardDTO: Decodable {
     let id: Int
     let title, topKeyword, summary: String
     let contentURL: String
+    let imageURL: String?
     let newsletterName: String
     let language: String
 
@@ -25,6 +26,7 @@ struct CardDTO: Decodable {
         case id
         case title, topKeyword, summary
         case contentURL = "contentUrl"
+        case imageURL = "imageUrl"
         case newsletterName
         case language
     }

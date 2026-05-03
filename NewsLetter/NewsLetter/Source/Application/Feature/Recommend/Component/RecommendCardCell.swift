@@ -12,6 +12,7 @@ struct RecommendCardCellProps {
     let title: String
     let job: String
     let source: String
+    let imageURL: String?
     let kind: Kind
     let colorSet: COLORSET
     
@@ -26,11 +27,13 @@ extension RecommendCardCellProps {
     static func stub(title: String = "가나다라마바사아자차카타파하가나다라마바사아자차카타파하",
                      job: String = "직군",
                      source: String = "출처",
+                     imageURL: String? = nil,
                      kind: Kind = .blog,
                      colorSet: COLORSET = COLORSET_LIST.first!) -> Self {
         .init(title: title,
               job: job,
               source: source,
+              imageURL: imageURL,
               kind: kind,
               colorSet: colorSet)
     }
@@ -69,7 +72,7 @@ struct RecommendCardCell: View {
             
             VStack(spacing: 0) {
                 // testURL: https://picsum.photos/400/300
-                CachedAsyncImage(url: "") {
+                CachedAsyncImage(url: props.imageURL ?? "") {
                     placeHolder(kind: .news)
                 }
                 .aspectRatio(contentMode: .fill)
