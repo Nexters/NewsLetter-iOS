@@ -73,7 +73,7 @@ struct RecommendCardCell: View {
             VStack(spacing: 0) {
                 // testURL: https://picsum.photos/400/300
                 CachedAsyncImage(url: props.imageURL ?? "") {
-                    placeHolder(kind: .news)
+                    placeHolder(kind: props.kind)
                 }
                 .aspectRatio(contentMode: .fill)
                 .frame(maxWidth: .infinity, maxHeight: 150)
