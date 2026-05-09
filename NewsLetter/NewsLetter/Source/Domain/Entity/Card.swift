@@ -14,6 +14,7 @@ struct Card: Codable {
     let imageURL: String?
     let newsletterName: String
     let language: String
+    let cardType: CardType
 
     var displayLanguage: String {
         switch language.uppercased() {
@@ -32,7 +33,8 @@ struct Card: Codable {
         contentURL: String = "https://substack.com/redirect/3966a1cb-5964-4e4c-a46c-67fd93586b71?j=eyJ1IjoiNjBoYXcyIn0.sgwjhuRgLj2i1p7EiKYAd1HGVttvTH1zz-7ivhBT090",
         imageURL: String = "https://picsum.photos/400/300",
         newsletterName: String = "안드로이드 위클리",
-        language: String = "ENGLISH"
+        language: String = "ENGLISH",
+        cardType: CardType = .newsletter
     ) -> Self {
         return .init(
             id: id,
@@ -42,7 +44,8 @@ struct Card: Codable {
             contentURL: contentURL,
             imageURL: imageURL,
             newsletterName: newsletterName,
-            language: language
+            language: language,
+            cardType: cardType
         )
     }
 }
