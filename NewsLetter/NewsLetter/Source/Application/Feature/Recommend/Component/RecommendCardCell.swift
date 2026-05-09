@@ -71,7 +71,6 @@ struct RecommendCardCell: View {
             .padding(.leading, Metric.commonPadding)
             
             VStack(spacing: 0) {
-                // testURL: https://picsum.photos/400/300
                 CachedAsyncImage(url: props.imageURL ?? "") {
                     placeHolder(kind: props.kind)
                 }
