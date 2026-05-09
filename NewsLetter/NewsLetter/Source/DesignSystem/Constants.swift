@@ -18,6 +18,7 @@ enum Z {
 
 typealias COLORSET = (main: Color, sub: Color)
 let COLORSET_LIST: [COLORSET] = [
+    (ColorPalette.gray400, ColorPalette.gray100), // FIXME: TrandingCard 색상지정 필요
     (ColorPalette.pointPurple200, ColorPalette.pointPurpleTextPrimary),
     (ColorPalette.pointOrange400, ColorPalette.pointOrangeTextPrimary),
     (ColorPalette.pointBlue300, ColorPalette.pointBlueTextPrimary),
