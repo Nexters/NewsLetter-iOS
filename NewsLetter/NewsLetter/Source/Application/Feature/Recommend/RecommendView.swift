@@ -25,15 +25,6 @@ struct RecommendView: View {
     
     @State private var cardTapCount: Int = 0
     @State private var scrolledID: Int?
-    @State private var isJumping = false // 무한 스크롤을 위해 position 점프를 하고있는 중인지 여부
-    
-    // 배열 인덱스 → 실제 카드 인덱스 매핑
-    // loopedCards: [3, 0, 1, 2, 3, 0] (stubCards 기준 인덱스)
-    private var loopedCardIndices: [Int] {
-        let count = store.cardData.count
-        guard count > 0 else { return [] }
-        return [count - 1] + Array(0..<count) + [0]
-    }
     
     var showRefreshButton: Bool {
         guard let refreshDate = UserActionHistory.useRefreshDate else { return true }
@@ -119,30 +110,33 @@ struct RecommendView: View {
     private var cardCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: -80) {
-                ForEach(Array(loopedCardIndices.enumerated()), id: \.offset) { position, cardIndex in
-                    let data = store.cardData[cardIndex]
+                ForEach(Array(store.cardData.enumerated()), id: \.offset) { index, data in
                     let props = RecommendCardCellProps(
                         title: data.title,
                         job: data.topKeyword,
                         source: data.newsletterName,
                         imageURL: data.imageURL,
-                        kind: .blog,
-                        colorSet: store.cardColors[cardIndex]
+                        kind: data.cardType.toDomain(),
+                        colorSet: store.cardColors[index]
                     )
                     RecommendCardCell(props: props)
                         .frame(width: Metric.cardWidth)
-                        .scaleEffect(scrolledID == position ? 1 : 0.7)
-                        .blur(radius: scrolledID == position ? 0 : 2)
+                        .scaleEffect(scrolledID == index ? 1 : 0.7)
+                        .blur(radius: scrolledID == index ? 0 : 2)
                         .rotation3DEffect(
-                            .degrees(cardRotationDegree(for: position)),
+                            .degrees(cardRotationDegree(for: index)),
                             axis: (x: 0, y: 1, z: 0),
                             perspective: 0.5
                         )
-                        .zIndex(position == scrolledID ? 2 : 1)
-                        .id(position)
+                        .zIndex(index == scrolledID ? 2 : 1)
+                        .id(index)
                         .onTapGesture {
-                            GA.click_newsletter(title: data.title, listIndex: position)
-                            selectedIndex = cardIndex
+                            guard scrolledID == index else {
+                                scrolledID = index
+                                return
+                            }
+                            GA.click_newsletter(title: data.title, listIndex: index)
+                            selectedIndex = index
                             cardTapHandler()
                         }
                 }
@@ -152,30 +146,9 @@ struct RecommendView: View {
         .contentMargins(.horizontal, Metric.scrollHorizontalMargin, for: .scrollContent)
         .scrollPosition(id: $scrolledID, anchor: .center)
         .scrollTargetBehavior(.viewAligned)
-        .transaction { t in
-            if isJumping {
-                t.disablesAnimations = true
-            }
-        }
         .onAppear {
             if scrolledID == nil {
-                scrolledID = 1
-            }
-        }
-        .onChange(of: scrolledID) { _, newValue in
-            guard let newValue else { return }
-            let count = store.cardData.count
-            guard count > 0 else { return }
-            let lastIndex = count + 1
-            
-            if newValue == 0 {
-                isJumping = true
-                scrolledID = count
-                DispatchQueue.main.async { isJumping = false }
-            } else if newValue == lastIndex {
-                isJumping = true
-                scrolledID = 1
-                DispatchQueue.main.async { isJumping = false }
+                scrolledID = 0
             }
         }
     }
@@ -183,7 +156,7 @@ struct RecommendView: View {
     private var indicator: some View {
         HStack(spacing: Metric.indicatorSize) {
             ForEach(0..<store.cardData.count, id: \.self) { index in
-                let isFocused = index + 1 == scrolledID
+                let isFocused = index == scrolledID
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isFocused ? Color.black : Color.gray.opacity(0.5))
                     .frame(
@@ -192,7 +165,7 @@ struct RecommendView: View {
                     )
                     .animation(.easeInOut, value: scrolledID)
                     .onTapGesture {
-                        scrolledID = index + 1
+                        scrolledID = index
                     }
             }
         }
