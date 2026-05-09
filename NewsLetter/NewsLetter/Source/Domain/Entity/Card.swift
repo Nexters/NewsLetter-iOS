@@ -14,7 +14,13 @@ struct Card: Codable {
     let imageURL: String?
     let newsletterName: String
     let language: String
-    let cardType: CardType
+    let kind: Kind
+    
+    enum Kind: String, Codable {
+        case news
+        case blog
+        case book
+    }
 
     var displayLanguage: String {
         switch language.uppercased() {
@@ -34,7 +40,7 @@ struct Card: Codable {
         imageURL: String = "https://picsum.photos/400/300",
         newsletterName: String = "안드로이드 위클리",
         language: String = "ENGLISH",
-        cardType: CardType = .newsletter
+        kind: Kind = .news
     ) -> Self {
         return .init(
             id: id,
@@ -45,7 +51,7 @@ struct Card: Codable {
             imageURL: imageURL,
             newsletterName: newsletterName,
             language: language,
-            cardType: cardType
+            kind: kind
         )
     }
 }

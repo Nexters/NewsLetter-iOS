@@ -13,14 +13,8 @@ struct RecommendCardCellProps {
     let job: String
     let source: String
     let imageURL: String?
-    let kind: Kind
+    let kind: Card.Kind
     let colorSet: COLORSET
-    
-    enum Kind: String {
-        case news
-        case blog
-        case book
-    }
 }
 
 extension RecommendCardCellProps {
@@ -28,7 +22,7 @@ extension RecommendCardCellProps {
                      job: String = "직군",
                      source: String = "출처",
                      imageURL: String? = nil,
-                     kind: Kind = .blog,
+                     kind: Card.Kind = .blog,
                      colorSet: COLORSET = COLORSET_LIST.first!) -> Self {
         .init(title: title,
               job: job,
@@ -88,7 +82,7 @@ struct RecommendCardCell: View {
     }
     
     @ViewBuilder
-    private func placeHolder(kind: RecommendCardCellProps.Kind) -> some View {
+    private func placeHolder(kind: Card.Kind) -> some View {
         VStack(spacing: 0) {
             Text(kind.rawValue.uppercased())
                 .font(.system(size: 48, weight: .black))

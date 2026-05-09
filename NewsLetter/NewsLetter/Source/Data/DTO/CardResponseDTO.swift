@@ -51,7 +51,7 @@ struct CardDTO: Decodable {
             imageURL: imageURL,
             newsletterName: newsletterName,
             language: language,
-            cardType: cardType
+            kind: cardType.toDomain()
         )
     }
 }
@@ -68,7 +68,7 @@ enum CardType: String, Codable {
         self = CardType(rawValue: raw) ?? .unknown
     }
     
-    func toDomain() -> RecommendCardCellProps.Kind {
+    func toDomain() -> Card.Kind {
         switch self {
         case .blog:               return .blog
         case .book:               return .book

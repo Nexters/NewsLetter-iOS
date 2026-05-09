@@ -116,7 +116,7 @@ struct RecommendView: View {
                         job: data.topKeyword,
                         source: data.newsletterName,
                         imageURL: data.imageURL,
-                        kind: data.cardType.toDomain(),
+                        kind: data.kind,
                         colorSet: store.cardColors[index]
                     )
                     RecommendCardCell(props: props)
