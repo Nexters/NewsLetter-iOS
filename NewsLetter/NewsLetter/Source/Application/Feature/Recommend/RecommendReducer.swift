@@ -27,7 +27,7 @@ struct RecommendReducer {
         }
         
         var cardData: [Card] = []
-        var cardColors: [COLORSET] = []
+        var cardColors: [ColorSet] = []
         var isPresentModal: Bool = false
         var isRefreshLoading: Bool = false
     }
@@ -39,7 +39,7 @@ struct RecommendReducer {
         case refreshButtonPressed
         case tick
         case startTimer
-        case setColorPalette([COLORSET])
+        case setColorPalette([ColorSet])
         case fetchCards
         case loginUser
         case registerUser
@@ -89,7 +89,7 @@ struct RecommendReducer {
                         UserActionHistory.isChangedCareer = false
                     } else {
                         state.cardData = cachedCards
-                        state.cardColors = COLORSET_LIST
+                        state.cardColors = cachedCards.colorSet
                     }
                     
                 } else {
@@ -218,7 +218,7 @@ struct RecommendReducer {
                 }
 
                 UserInfo.lastCardFetchDate = Date()
-                return .send(.setColorPalette(COLORSET_LIST))
+                return .send(.setColorPalette(cards.colorSet))
             case .setIsPresentModal(let bool):
                 state.isPresentModal = bool
                 return .none

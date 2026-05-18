@@ -14,7 +14,7 @@ struct RecommendCardCellProps {
     let source: String
     let imageURL: String?
     let kind: Card.Kind
-    let colorSet: COLORSET
+    let colorSet: ColorSet
 }
 
 extension RecommendCardCellProps {
@@ -23,7 +23,7 @@ extension RecommendCardCellProps {
                      source: String = "출처",
                      imageURL: String? = nil,
                      kind: Card.Kind = .blog,
-                     colorSet: COLORSET = COLORSET_LIST.first!) -> Self {
+                     colorSet: ColorSet = defaultColorSet.first!) -> Self {
         .init(title: title,
               job: job,
               source: source,

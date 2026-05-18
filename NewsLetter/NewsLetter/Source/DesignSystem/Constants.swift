@@ -16,8 +16,9 @@ enum Z {
     static let bottomSheet: Double = 50
 }
 
-typealias COLORSET = (main: Color, sub: Color)
-let COLORSET_LIST: [COLORSET] = [
+typealias ColorSet = (main: Color, sub: Color)
+
+let defaultColorSet: [ColorSet] = [
     (ColorPalette.pointBlue300, ColorPalette.pointBlueTextPrimary),
     (ColorPalette.pointLemonYellow300, ColorPalette.pointLemonYellowTextPrimary),
     (ColorPalette.pointPurple200, ColorPalette.pointPurpleTextPrimary),
@@ -26,3 +27,10 @@ let COLORSET_LIST: [COLORSET] = [
     (ColorPalette.pointGreen300, ColorPalette.pointGreenTextPrimary),
     (ColorPalette.pointOrange400, ColorPalette.pointOrangeTextPrimary),
 ]
+
+extension [Card] {
+    var colorSet: [ColorSet] {
+        let dropCount = Swift.max(defaultColorSet.count - self.count, 0)
+        return defaultColorSet.suffix(from: dropCount).map { $0 }
+    }
+}

@@ -10,13 +10,14 @@ import Foundation
 // MARK: - CardClient
 struct CardResponseDTO: Decodable {
     let publishedDate: String
-    let trendingCard: CardDTO
+    let trendingCard: CardDTO?
     let cards: [CardDTO]
     
     func toDomain() -> [Card] {
-        let trendingCard = trendingCard.toDomain()
         var cardList = cards.map { $0.toDomain() }
-        cardList.insert(trendingCard, at: 0)
+        if let trendingCard = trendingCard?.toDomain() {
+            cardList.insert(trendingCard, at: 0)
+        }
         return cardList
     }
 }
