@@ -118,9 +118,8 @@ struct RecommendReducer {
                     do {
                         await send(.setIsRefreshLoading(true))
                         let userId = String(UserInfo.userId ?? 3)
-                        try await cardClient.refreshCards(RefreshCardsRequestDTO(userId: userId))
-                        try await clock.sleep(for: .seconds(1))  // ← 서버 처리 대기
-                        await send(.fetchCards)
+                        let newCards = try await cardClient.refreshCards(RefreshCardsRequestDTO(userId: userId))
+                        await send(.setCards(newCards))
                         await send(.setIsRefreshLoading(false))
                         UserActionHistory.useRefreshDate = Date()
                     } catch let error {
