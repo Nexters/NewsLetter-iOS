@@ -34,11 +34,12 @@ struct RecommendView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerSection
-            refreshButton
-                .padding(.top, 12)
+           
             cardCarousel
                 .padding(.top, 80)
             indicator
+                .padding(.top, 40)
+            refreshButton
                 .padding(.top, 40)
             Spacer()
         }
