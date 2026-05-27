@@ -16,7 +16,7 @@ struct CardClient {
 
     var fetchCards: (FetchCardsRequestDTO) async throws -> [Card]
     var fetchExploreCards: (ExploreCardRequestDTO) async throws -> ExploreCardResponse
-    var refreshCards: (RefreshCardsRequestDTO) async throws -> Void
+    var refreshCards: (RefreshCardsRequestDTO) async throws -> [Card]
     var fetchOGShareURL: (OGShareURLRequestDTO) -> String = { _ in "" }
 }
 
@@ -41,7 +41,9 @@ extension CardClient: DependencyKey {
                     return response.toDomain()
                 },
                 refreshCards: { requestDTO in
-                    _ = try await apiClient.request(CardAPI.refreshCards(requestDTO))
+                    let response = try await apiClient.request(CardAPI.refreshCards(requestDTO))
+                    let cardResponseDTO = try response.map(CardResponseDTO.self)
+                    return cardResponseDTO.toDomain()
                 },
                 fetchOGShareURL: { requestDTO in
                     let textColorEncoded = requestDTO.textColor?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
@@ -66,7 +68,16 @@ extension CardClient: DependencyKey {
             fetchExploreCards: { _ in
                 return .stub()
             },
-            refreshCards: { _ in },
+            refreshCards: { _ in
+                return [
+                    Card(id: 1192, title: "Preview Title 1", topKeyword: "Preview Keyword 1", summary: "Preview Summary 1", contentURL: "https://example.com", imageURL: nil, newsletterName: "Preview Newsletter 1", language: "ENGLISH", kind: .blog),
+                    Card(id: 1201, title: "Preview Title 2", topKeyword: "Preview Keyword 2", summary: "Preview Summary 2", contentURL: "https://example.com", imageURL: nil, newsletterName: "Preview Newsletter 2", language: "ENGLISH", kind: .book),
+                    Card(id: 1170, title: "Preview Title 3", topKeyword: "Preview Keyword 3", summary: "Preview Summary 3", contentURL: "https://example.com", imageURL: nil, newsletterName: "Preview Newsletter 3", language: "ENGLISH", kind: .book),
+                    Card(id: 1123, title: "Preview Title 4", topKeyword: "Preview Keyword 4", summary: "Preview Summary 4", contentURL: "https://example.com", imageURL: nil, newsletterName: "Preview Newsletter 4", language: "ENGLISH", kind: .book),
+                    Card(id: 1148, title: "Preview Title 5", topKeyword: "Preview Keyword 5", summary: "Preview Summary 5", contentURL: "https://example.com", imageURL: nil, newsletterName: "Preview Newsletter 5", language: "ENGLISH", kind: .book),
+                    Card(id: 938, title: "Preview Title 6", topKeyword: "Preview Keyword 6", summary: "Preview Summary 6", contentURL: "https://example.com", imageURL: nil, newsletterName: "Preview Newsletter 6", language: "ENGLISH", kind: .blog)
+                ]
+            },
             fetchOGShareURL: { _ in
                 return "https://fairy-band.com/api/share/og?exposureContentId=2&textColor=%23DCFF64"
             }
