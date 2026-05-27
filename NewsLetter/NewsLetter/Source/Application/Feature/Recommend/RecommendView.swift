@@ -78,7 +78,7 @@ struct RecommendView: View {
     }
     
     private var headerSection: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 0) {
             Text(store.state.todayDate)
                 .fontRangeLimited()
                 .font(UIDevice.isSmallScreen || UIDevice.is13MiniScreen ? .jalnanGothicSE : .jalnanGothic)
@@ -90,21 +90,15 @@ struct RecommendView: View {
             
             Text("뉴스레터는 매일 새롭게 업데이트 돼요")
                 .fontRangeLimited()
-                .font(.body15_semiBold)
-                .foregroundColor(.semanticColor.text_strong)
+                .font(.body13_medium)
+                .foregroundColor(.semanticColor.text_tertiary)
+                .padding(.top, 12)
             
-            HStack(spacing: 0) {
-                Text("아래 뉴스는 ")
-                    .font(.body15_medium)
-                    .foregroundColor(.semanticColor.text_secondary)
-                Text(store.state.formattedTime)
-                    .fontRangeLimited()
-                    .font(.body16_semiBold)
-                    .foregroundColor(.semanticColor.state_negative_primary)
-                Text(" 동안 볼 수 있어요")
-                    .font(.body15_medium)
-                    .foregroundColor(.semanticColor.text_secondary)
-            }
+            Text(store.state.formattedTime)
+                .fontRangeLimited()
+                .font(.body13_bold)
+                .foregroundColor(.semanticColor.state_negative_primary)
+                .padding(.top, 4)
         }
     }
     
