@@ -111,6 +111,7 @@ struct RecommendView: View {
                         job: data.topKeyword,
                         source: data.newsletterName,
                         imageURL: data.imageURL,
+                        isTrendingCard: index == 0,
                         kind: data.kind,
                         colorSet: store.cardColors[index]
                     )
