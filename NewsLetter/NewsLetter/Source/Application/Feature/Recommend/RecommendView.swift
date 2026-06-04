@@ -8,7 +8,6 @@
 import SwiftUI
 
 import ComposableArchitecture
-import FirebaseAnalytics
 
 struct RecommendView: View {
     private enum Metric {
@@ -47,8 +46,8 @@ struct RecommendView: View {
         .animation(.smooth, value: scrolledID)
         .transition(.opacity)
         .onAppear {
-            GA.pageview_main()
-            
+            GA.main_pageview()
+
             store.send(.onAppear)
             
             if UserActionHistory.isFirstAppLaunch {
@@ -131,7 +130,6 @@ struct RecommendView: View {
                                 scrolledID = index
                                 return
                             }
-                            GA.click_newsletter(title: data.title, listIndex: index)
                             selectedIndex = index
                             cardTapHandler()
                         }

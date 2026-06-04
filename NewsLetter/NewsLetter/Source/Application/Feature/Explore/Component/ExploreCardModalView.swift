@@ -8,7 +8,6 @@
 import SwiftUI
 
 import ComposableArchitecture
-import FirebaseAnalytics
 
 struct ExploreCardModalView: View {
     private enum Metric {
