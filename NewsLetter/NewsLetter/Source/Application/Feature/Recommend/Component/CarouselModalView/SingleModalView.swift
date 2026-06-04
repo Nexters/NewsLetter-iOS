@@ -8,7 +8,6 @@
 import SwiftUI
 
 import ComposableArchitecture
-import FirebaseAnalytics
 
 struct SingleModalView: View {
     private enum Metric {
@@ -31,12 +30,18 @@ struct SingleModalView: View {
                 .onTapGesture {
                     isPresented = false
                 }
-            
+
             VStack(spacing: 0) {
-                
-                CarouselCard(card: cardData, index: index, pointColor: pointColor, isShareEnabled: true)
-                    .frame(width: Metric.cardWidth, height: Metric.cardHeight)
-                
+
+                CarouselCard(
+                    card: cardData,
+                    index: index,
+                    pointColor: pointColor,
+                    isShareEnabled: true,
+                    cardType: index == 0 ? "trending" : "recommend"
+                )
+                .frame(width: Metric.cardWidth, height: Metric.cardHeight)
+
                 Button {
                     if UserActionHistory.isFirstLook == false {
                         UserActionHistory.isFirstLook = true
@@ -51,6 +56,15 @@ struct SingleModalView: View {
                 }
                 .padding(.top, 43)
             }
+        }
+        .onAppear {
+            GA.main_contents_detail_pageview(
+                cardIndex: index,
+                cardType: index == 0 ? "trending" : "recommend",
+                contentType: cardData.kind.gaContentType,
+                contentTitle: cardData.title,
+                contentId: cardData.id
+            )
         }
     }
 }

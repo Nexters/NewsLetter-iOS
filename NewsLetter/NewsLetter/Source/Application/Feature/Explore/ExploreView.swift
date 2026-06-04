@@ -49,9 +49,15 @@ struct ExploreView: View {
                             )
                             .frame(height: Metrics.cardHeight)
                             .onTapGesture {
-                                let selectedCard = (data.toCard(), colorPallete)
-                                store.send(.setSelectedCard(selectedCard))
-                                
+                                let card = data.toCard()
+                                GA.explore_contents_detail_pageview(
+                                    cardIndex: index,
+                                    contentType: card.kind.gaContentType,
+                                    contentTitle: card.title,
+                                    contentId: card.id
+                                )
+                                store.send(.setSelectedCard((card, colorPallete)))
+
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                     store.send(.delegate(.presentExploreCard))
                                 }
@@ -81,6 +87,7 @@ struct ExploreView: View {
             .ignoresSafeArea()
             .background(Color.black)
             .onAppear {
+                GA.explore_pageview()
                 UIScrollView.appearance().indicatorStyle = .white
                 UIRefreshControl.appearance().tintColor = .white
                 store.send(.onAppear)
