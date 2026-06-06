@@ -20,11 +20,11 @@ struct HomeNavigationBar: View {
     let settingButtonTapHandler: (() -> Void)
     
     private var foregroundMainColor: Color {
-        selectedSegment == .recommend ? .black : .white
+        selectedSegment == .recommend ? .black : ColorPalette.gray50
     }
     
     private var backgroundMainColor: Color {
-        selectedSegment == .recommend ? .white : .black // TODO: Figma 디자인 요구사항에 맞게 고도화 필요.
+        selectedSegment == .recommend ? ColorPalette.gray50 : .black // TODO: Figma 디자인 요구사항에 맞게 고도화 필요.
     }
     
     var body: some View {

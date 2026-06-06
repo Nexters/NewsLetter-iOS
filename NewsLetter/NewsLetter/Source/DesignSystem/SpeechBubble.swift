@@ -53,9 +53,9 @@ struct SpeechBubble: View {
     var body: some View {
         HStack(spacing: 8) {
             Text(emoji)
-                .font(.body13_semiBold)
+                .font(.body14_semiBold)
             Text(text)
-                .font(.body13_semiBold)
+                .font(.body14_semiBold)
                 .foregroundStyle(ColorPalette.gray950)
         }
         .padding(.leading, 12)

@@ -45,7 +45,7 @@ struct RecommendCardCell: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            SpeechBubble(text: "함께 읽으면 더 좋은 인기 컨텐츠")
+            SpeechBubble(text: "함께 읽으면 더 좋은 인기 콘텐츠")
                 .padding(.bottom, 12)
                 .opacity(props.isTrendingCard ? 1.0 : 0.0)
             
@@ -71,7 +71,7 @@ struct RecommendCardCell: View {
                 }
                 .padding(.top, 4)
                 .padding(.leading, Metric.commonPadding)
-                
+
                 VStack(spacing: 0) {
                     CachedAsyncImage(url: props.imageURL ?? "") {
                         placeHolder(kind: props.kind)

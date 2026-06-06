@@ -34,18 +34,19 @@ struct RecommendView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerSection
-           
+                .padding(.top, 8)
             cardCarousel
-                .padding(.top, 80)
+                .padding(.top, 16)
             indicator
-                .padding(.top, 40)
+                .padding(.top, 16)
             refreshButton
-                .padding(.top, 40)
+                .padding(.top, 36)
             Spacer()
         }
         .animation(.easeInOut, value: store.isPresentModal)
         .animation(.smooth, value: scrolledID)
         .transition(.opacity)
+        .background(ColorPalette.gray50)
         .onAppear {
             GA.pageview_main()
             
@@ -90,13 +91,13 @@ struct RecommendView: View {
             
             Text("뉴스레터는 매일 새롭게 업데이트 돼요")
                 .fontRangeLimited()
-                .font(.body13_medium)
+                .font(.body15_medium)
                 .foregroundColor(.semanticColor.text_tertiary)
                 .padding(.top, 12)
-            
+
             Text(store.state.formattedTime)
                 .fontRangeLimited()
-                .font(.body13_bold)
+                .font(.body16_bold)
                 .foregroundColor(.semanticColor.state_negative_primary)
                 .padding(.top, 4)
         }
