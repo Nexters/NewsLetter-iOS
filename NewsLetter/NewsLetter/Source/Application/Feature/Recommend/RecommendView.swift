@@ -36,7 +36,7 @@ struct RecommendView: View {
             headerSection
                 .padding(.top, 8)
             cardCarousel
-                .padding(.top, 16)
+                .padding(.top, UIDevice.isLargeScreen ? 40 : 16)
             indicator
                 .padding(.top, 16)
             refreshButton
