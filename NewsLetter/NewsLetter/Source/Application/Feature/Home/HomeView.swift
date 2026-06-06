@@ -41,7 +41,7 @@ struct HomeView: View {
                         isPresented: $store.isPresentModal,
                         index: selectedIndex,
                         cardData: store.recommendState.cardData[selectedIndex],
-                        pointColor: store.recommendState.cardColors[selectedIndex].main,
+                        pointColor: store.recommendState.cardColors[selectedIndex].sub,
                         firstLookHandler: { store.isPresentNotificationPermissionBottomSheet = true }
                     )
                     .frame(width: Device.width)
