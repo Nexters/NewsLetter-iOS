@@ -36,12 +36,12 @@ struct HomeView: View {
             }
             .ignoresSafeArea()
             .overlay {
-                if store.isPresentModal {
-                    CarouselModalView(
-                        cardData: store.recommendState.cardData,
-                        pointColors: store.recommendState.cardColors,
+                if store.isPresentModal, let selectedIndex = store.selectedIndex {
+                    SingleModalView(
                         isPresented: $store.isPresentModal,
-                        currentPage: $store.selectedIndex,
+                        index: selectedIndex,
+                        cardData: store.recommendState.cardData[selectedIndex],
+                        pointColor: store.recommendState.cardColors[selectedIndex].sub,
                         firstLookHandler: { store.isPresentNotificationPermissionBottomSheet = true }
                     )
                     .frame(width: Device.width)

@@ -41,8 +41,10 @@ struct ExploreCard: Codable {
             topKeyword: topKeyword,
             summary: summary,
             contentURL: contentURL,
+            imageURL: nil,
             newsletterName: newsletterName,
-            language: language
+            language: language,
+            kind: .blog // FIXME: 탐색카드에서 CardType 기획 필요
         )
     }
 }

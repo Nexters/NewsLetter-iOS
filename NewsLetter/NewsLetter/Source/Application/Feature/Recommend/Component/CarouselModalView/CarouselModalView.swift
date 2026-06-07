@@ -8,7 +8,6 @@
 import SwiftUI
 
 import ComposableArchitecture
-import FirebaseAnalytics
 
 struct CarouselModalView: View {
     private enum Metric {
@@ -19,8 +18,6 @@ struct CarouselModalView: View {
         static let indicatorSize: CGFloat = 8
         static let xButtonSize: CGFloat = 44
     }
-
-    @State private var loggedImpressionIndices: Set<Int> = []
 
     @State var cardData: [Card]
     @State var pointColors: [Color]
@@ -46,7 +43,8 @@ struct CarouselModalView: View {
                         ForEach(cardData.indices, id: \.self) { index in
                             let card = cardData[index]
                             let pointColor = pointColors[index]
-                            CarouselCard(card: card, index: index, pointColor: pointColor, isShareEnabled: true)
+                            let cardType = index == cardData.count - 1 ? "trending" : "recommend"
+                    CarouselCard(card: card, index: index, pointColor: pointColor, isShareEnabled: true, cardType: cardType)
                                 .frame(width: Metric.cardWidth)
                         }
                     }
@@ -66,19 +64,6 @@ struct CarouselModalView: View {
                         }
                     }
                 ))
-                .onChange(of: currentPage) { _, newPage in
-                    guard let newIndex = newPage else { return }
-
-                    if !loggedImpressionIndices.contains(newIndex) {
-                        let actualIndex = cardData.count - 1 - newIndex
-
-                        let card = cardData[actualIndex]
-                        GA.impression_newsletter_carousel(title: card.title, listIndex: actualIndex)
-
-                        loggedImpressionIndices.insert(actualIndex)
-                    }
-                }
-
                 HStack(spacing: Metric.indicatorSize) {
                     ForEach(0..<cardData.count, id: \.self) { index in
                         Circle()
@@ -104,15 +89,18 @@ struct CarouselModalView: View {
                 .padding(.top, 43)
             }
         }
-        .onAppear() {
-            if let initialIndex = currentPage, !loggedImpressionIndices.contains(initialIndex) {
-                let actualIndex = cardData.count-1-initialIndex
+        .onAppear {
+            if let initialIndex = currentPage {
+                let actualIndex = cardData.count - 1 - initialIndex
                 let card = cardData[actualIndex]
-
-                GA.pageview_newsletter_carousel(title: card.title)
-                GA.impression_newsletter_carousel(title: card.title, listIndex: actualIndex)
-
-                loggedImpressionIndices.insert(actualIndex)
+                let cardType = initialIndex == 0 ? "trending" : "recommend"
+                GA.main_contents_detail_pageview(
+                    cardIndex: initialIndex,
+                    cardType: cardType,
+                    contentType: card.kind.gaContentType,
+                    contentTitle: card.title,
+                    contentId: card.id
+                )
             }
         }
     }

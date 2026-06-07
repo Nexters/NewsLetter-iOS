@@ -96,6 +96,12 @@ struct NewsletterReportBottomSheet: View {
                 let categoryNames = categories.indices
                     .filter { selectedCategories.contains($0) }
                     .map { categories[$0].label }
+                GA.explore_report_click(
+                    name: newsletterURL,
+                    url: blogURL,
+                    jobGroup: categoryNames.joined(separator: ","),
+                    language: memo
+                )
                 let dto = NewsletterReportRequestDTO(
                     contentProviderName: newsletterURL,
                     channel: blogURL,
@@ -120,6 +126,9 @@ struct NewsletterReportBottomSheet: View {
             .padding(.bottom, 8)
         }
         .padding(.top, 4)
+        .onAppear {
+            GA.explore_report_pageview()
+        }
     }
 
     @ViewBuilder

@@ -10,7 +10,16 @@ import Foundation
 // MARK: - CardClient
 struct CardResponseDTO: Decodable {
     let publishedDate: String
+    let trendingCard: CardDTO?
     let cards: [CardDTO]
+    
+    func toDomain() -> [Card] {
+        var cardList = cards.map { $0.toDomain() }
+        if let trendingCard = trendingCard?.toDomain() {
+            cardList.insert(trendingCard, at: 0)
+        }
+        return cardList
+    }
 }
 
 // MARK: - Card
@@ -18,15 +27,56 @@ struct CardDTO: Decodable {
     let id: Int
     let title, topKeyword, summary: String
     let contentURL: String
+    let imageURL: String?
     let newsletterName: String
     let language: String
+    let cardType: CardType
 
     enum CodingKeys: String, CodingKey {
         case id
         case title, topKeyword, summary
         case contentURL = "contentUrl"
+        case imageURL = "imageUrl"
         case newsletterName
         case language
+        case cardType
+    }
+    
+    func toDomain() -> Card {
+        return Card(
+            id: id,
+            title: title,
+            topKeyword: topKeyword,
+            summary: summary,
+            contentURL: contentURL,
+            imageURL: imageURL,
+            newsletterName: newsletterName,
+            language: language,
+            kind: cardType.toDomain()
+        )
+    }
+}
+
+enum CardType: String, Codable {
+    case blog = "BLOG"
+    case newsletter = "NEWSLETTER"
+    case userProvideContent = "USER_PROVIDE_CONTENT"
+    case unknown = "UNKNOWN"
+    case book = "BOOK"
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = CardType(rawValue: raw) ?? .unknown
+    }
+    
+    func toDomain() -> Card.Kind {
+        switch self {
+        case .blog:               return .blog
+        case .book:               return .book
+        case .newsletter:         return .news
+        case .userProvideContent: return .blog // FIXME: 기획 추가 필요
+        case .unknown:            return .blog // FIXME: 기획 추가 필요
+        }
     }
 }
 

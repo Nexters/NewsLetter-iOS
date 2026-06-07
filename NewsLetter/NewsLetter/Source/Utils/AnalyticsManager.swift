@@ -11,97 +11,187 @@ import FirebaseAnalytics
 
 enum GA {
 
-    // MARK: - Newsletter Main
-
-    static func pageview_main() {
-        Analytics.logEvent("pageview_main", parameters: [
-            "category": "pageview",
-            "navigation": "main"
-        ])
+    private static var isPreview: Bool {
+        ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     }
 
-    static func click_newsletter(title: String, listIndex: Int) {
-        let dataString = ["list_index": listIndex].toJSONString()
-        Analytics.logEvent("click_newsletter", parameters: [
-            "category": "click",
+    // MARK: - Main
+
+    static func main_pageview() {
+        guard !isPreview else { return }
+        Analytics.logEvent("main_pageview", parameters: [
             "navigation": "main",
-            "object_section": "newsletter_list",
-            "object_type": "newsletter",
-            "object_id": title,
-            "data": dataString ?? ""
+            "event": "pageview"
         ])
     }
 
-    // MARK: - Newsletter Carousel
-
-    static func pageview_newsletter_carousel(title: String) {
-        Analytics.logEvent("pageview_newsletter_carousel", parameters: [
-            "category": "pageview",
-            "navigation": "newsletter_carousel",
-            "object_type": "newsletter",
-            "object_id": title
+    static func main_contents_detail_pageview(
+        cardIndex: Int,
+        cardType: String,
+        contentType: String,
+        contentTitle: String,
+        contentId: Int
+    ) {
+        guard !isPreview else { return }
+        Analytics.logEvent("main_contents_detail_pageview", parameters: [
+            "navigation": "main_contents_detail",
+            "event": "pageview",
+            "card_index": cardIndex,
+            "card_type": cardType,
+            "content_type": contentType,
+            "content_title": contentTitle,
+            "content_id": contentId
         ])
     }
 
-    static func impression_newsletter_carousel(title: String, listIndex: Int) {
-        let dataString = ["list_index": listIndex].toJSONString()
-        Analytics.logEvent("impression_newsletter_carousel", parameters: [
-            "category": "impression",
-            "navigation": "newsletter_carousel",
-            "object_section": "newsletter_card",
-            "object_type": "newsletter",
-            "object_id": title,
-            "data": dataString ?? ""
+    static func main_contents_detail_click(
+        cardType: String,
+        contentType: String,
+        contentTitle: String,
+        contentId: Int
+    ) {
+        guard !isPreview else { return }
+        Analytics.logEvent("main_contents_detail_click", parameters: [
+            "navigation": "main_contents_detail",
+            "event": "click",
+            "card_type": cardType,
+            "content_type": contentType,
+            "content_title": contentTitle,
+            "content_id": contentId
         ])
     }
 
-    static func click_newsletter_carousel(title: String, listIndex: Int) {
-        let dataString = ["list_index": listIndex].toJSONString()
-        Analytics.logEvent("click_newsletter_carousel", parameters: [
-            "category": "click",
-            "navigation": "newsletter_carousel",
-            "object_section": "newsletter_card",
-            "object_type": "button",
-            "object_id": title,
-            "data": dataString ?? ""
+    // MARK: - Explore
+
+    static func explore_pageview() {
+        guard !isPreview else { return }
+        Analytics.logEvent("explore_pageview", parameters: [
+            "navigation": "explore",
+            "event": "pageview"
+        ])
+    }
+
+    static func explore_contents_detail_pageview(
+        cardIndex: Int,
+        contentType: String,
+        contentTitle: String,
+        contentId: Int
+    ) {
+        guard !isPreview else { return }
+        Analytics.logEvent("explore_contents_detail_pageview", parameters: [
+            "navigation": "explore_contents_detail",
+            "event": "pageview",
+            "card_index": cardIndex,
+            "content_type": contentType,
+            "content_title": contentTitle,
+            "content_id": contentId
+        ])
+    }
+
+    static func explore_contents_detail_click(
+        contentType: String,
+        contentTitle: String,
+        contentId: Int
+    ) {
+        guard !isPreview else { return }
+        Analytics.logEvent("explore_contents_detail_click", parameters: [
+            "navigation": "explore_contents_detail",
+            "event": "click",
+            "content_type": contentType,
+            "content_title": contentTitle,
+            "content_id": contentId
+        ])
+    }
+
+    static func explore_click_order(orderBy: String) {
+        guard !isPreview else { return }
+        Analytics.logEvent("explore_click", parameters: [
+            "navigation": "explore",
+            "event": "click",
+            "action_type": "order",
+            "order_by": orderBy
+        ])
+    }
+
+    static func explore_click_filter(filterValue: String) {
+        guard !isPreview else { return }
+        Analytics.logEvent("explore_click", parameters: [
+            "navigation": "explore",
+            "event": "click",
+            "action_type": "filter",
+            "filter_value": filterValue
+        ])
+    }
+
+    static func explore_report_pageview() {
+        guard !isPreview else { return }
+        Analytics.logEvent("explore_report_pageview", parameters: [
+            "navigation": "explore_report",
+            "event": "pageview"
+        ])
+    }
+
+    static func explore_report_click(
+        name: String,
+        url: String,
+        jobGroup: String,
+        language: String
+    ) {
+        guard !isPreview else { return }
+        Analytics.logEvent("explore_report_click", parameters: [
+            "navigation": "explore_report",
+            "event": "click",
+            "action_type": "submit_report_form",
+            "name": name,
+            "url": url,
+            "job_group": jobGroup,
+            "language": language
         ])
     }
 
     // MARK: - Bottom Sheet
 
     static func pageview_bottom_sheet_notification() {
-        Analytics.logEvent("pageview_bottom_sheet_notification", parameters: [
-            "category": "pageview",
+        guard !isPreview else { return }
+        Analytics.logEvent("bottom_sheet_notification_pageview", parameters: [
             "navigation": "bottom_sheet_notification",
-            "object_type": "bottom_sheet"
+            "event": "pageview"
         ])
     }
 
     static func click_bottom_sheet_notification() {
-        Analytics.logEvent("click_bottom_sheet_notification", parameters: [
-            "category": "click",
+        guard !isPreview else { return }
+        Analytics.logEvent("bottom_sheet_notification_click", parameters: [
             "navigation": "bottom_sheet_notification",
-            "object_type": "button"
+            "event": "click"
         ])
     }
 
     static func pageview_bottom_sheet_custom() {
-        Analytics.logEvent("pageview_bottom_sheet_custom", parameters: [
-            "category": "pageview",
+        guard !isPreview else { return }
+        Analytics.logEvent("bottom_sheet_custom_pageview", parameters: [
             "navigation": "bottom_sheet_custom",
-            "object_type": "bottom_sheet"
+            "event": "pageview"
         ])
     }
 
     static func click_bottom_sheet_custom(userData: [String: Any]) {
+        guard !isPreview else { return }
         let dataString = userData.toJSONString()
-        Analytics.logEvent("click_bottom_sheet_custom", parameters: [
-            "category": "click",
+        Analytics.logEvent("bottom_sheet_custom_click", parameters: [
             "navigation": "bottom_sheet_custom",
-            "object_section": "bottom_sheet",
-            "object_type": "button",
+            "event": "click",
             "user_properties": dataString ?? ""
         ])
     }
 }
 
+extension Card.Kind {
+    var gaContentType: String {
+        switch self {
+        case .news: return "newsletter"
+        case .blog: return "blog"
+        case .book: return "book"
+        }
+    }
+}

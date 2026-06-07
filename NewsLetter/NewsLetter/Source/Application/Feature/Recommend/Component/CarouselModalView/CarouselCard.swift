@@ -8,8 +8,6 @@
 import SwiftUI
 import WebKit
 
-import FirebaseAnalytics
-
 struct CarouselCard: View {
     private enum Metric {
         static let height: CGFloat = 366
@@ -27,6 +25,7 @@ struct CarouselCard: View {
     let index: Int
     let pointColor: Color
     let isShareEnabled: Bool
+    var cardType: String = "recommend"
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -96,10 +95,18 @@ struct CarouselCard: View {
                 Button {
                     isWebViewPresented = true
                     if isShareEnabled {
-                        /// 여긴 CarouselModalView 영역
-                        GA.click_newsletter_carousel(title: card.title, listIndex: index)
+                        GA.main_contents_detail_click(
+                            cardType: cardType,
+                            contentType: card.kind.gaContentType,
+                            contentTitle: card.title,
+                            contentId: card.id
+                        )
                     } else {
-                        /// 여긴 ExploreCardModalView 영역
+                        GA.explore_contents_detail_click(
+                            contentType: card.kind.gaContentType,
+                            contentTitle: card.title,
+                            contentId: card.id
+                        )
                     }
                 } label: {
                     RoundedRectangle(cornerRadius: Metric.nextButtonCornerRadius)
