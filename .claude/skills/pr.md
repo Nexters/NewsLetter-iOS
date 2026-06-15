@@ -83,7 +83,7 @@ git diff {베이스브랜치}...HEAD
 
 **✍️ Description**
 - 구현 방식, 구조 변경, 주요 파일을 bullet point로 서술합니다.
-- `- close: #이슈번호`를 첫 줄에 포함합니다. 이슈 번호가 없으면 `- close: ` 빈칸으로 둡니다.
+- `closes #이슈번호`를 첫 줄에 포함합니다. 이슈 번호가 없으면 `closes #` 빈칸으로 둡니다.
 - TCA 패턴 변경(Reducer, Action, State, Delegate Action)이 있으면 언급합니다.
 
 **💡 PR Point**
@@ -119,7 +119,7 @@ git diff {베이스브랜치}...HEAD
 
 ## ✍️ Description
 <!-- PR에 대한 자세한 설명을 써주세요. -->
-- close: #{이슈번호}
+closes #{이슈번호}
 {설명 bullet points}
 
 ## 💡 PR Point
