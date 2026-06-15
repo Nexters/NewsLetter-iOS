@@ -10,4 +10,5 @@ import Foundation
 struct ExploreCardRequestDTO: Encodable {
     let lastSeenOffset: Int64
     let size: Int32
+    let sort: String
 }
