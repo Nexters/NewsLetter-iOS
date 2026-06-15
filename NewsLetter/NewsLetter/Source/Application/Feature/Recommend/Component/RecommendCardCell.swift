@@ -71,19 +71,21 @@ struct RecommendCardCell: View {
                 }
                 .padding(.top, 4)
                 .padding(.leading, Metric.commonPadding)
-
-                VStack(spacing: 0) {
-                    CachedAsyncImage(url: props.imageURL ?? "") {
-                        placeHolder(kind: props.kind)
+                
+                Color.clear
+                    .frame(height: 150)
+                    .overlay {
+                        CachedAsyncImage(url: props.imageURL ?? "") {
+                            placeHolder(kind: props.kind)
+                        }
+                        .aspectRatio(contentMode: .fill)
                     }
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity, maxHeight: 150)
-                }
-                .background(RoundedRectangle(cornerRadius: 16).foregroundStyle(ColorPalette.white.opacity(0.3)))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding(.top, 20)
-                .padding(.horizontal, Metric.commonPadding)
-                .padding(.bottom, 34)
+                    .clipped()
+                    .background(RoundedRectangle(cornerRadius: 16).foregroundStyle(ColorPalette.white.opacity(0.3)))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.top, 20)
+                    .padding(.horizontal, Metric.commonPadding)
+                    .padding(.bottom, 34)
                 
             }
             .background(RoundedRectangle(cornerRadius: 12).foregroundStyle(props.colorSet.main))
