@@ -45,21 +45,27 @@ struct CachedAsyncImage<Placeholder: View>: View {
                     .onAppear { load() }
             }
         }
+        .onChange(of: url) { _, newURL in
+            image = nil
+            isLoading = false
+            load(for: newURL)
+        }
     }
 
-    private func load() {
-        if let cached = ImageCache.shared.get(url) {
+    private func load(for targetURL: String? = nil) {
+        let urlToLoad = targetURL ?? url
+        if let cached = ImageCache.shared.get(urlToLoad) {
             image = cached
             return
         }
-        guard !isLoading, let requestURL = URL(string: url) else { return }
+        guard !isLoading, let requestURL = URL(string: urlToLoad) else { return }
         isLoading = true
 
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: requestURL)
                 if let loaded = UIImage(data: data) {
-                    ImageCache.shared.set(loaded, for: url)
+                    ImageCache.shared.set(loaded, for: urlToLoad)
                     await MainActor.run { image = loaded }
                 }
             } catch {}
