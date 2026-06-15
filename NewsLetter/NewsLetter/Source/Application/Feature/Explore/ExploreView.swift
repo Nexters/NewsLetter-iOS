@@ -26,13 +26,13 @@ struct ExploreView: View {
     
     var sortButton: some View {
         Button {
-            store.send(.setSort(store.state.sort.next()))
+            store.send(.setSortDirection(store.state.sortDirection.next()))
         } label: {
             HStack(spacing: 4) {
                 Image("order_icon")
                     .resizable()
                     .frame(width: 14, height: 14)
-                Text(store.state.sort.displayText())
+                Text(store.state.sortDirection.displayText())
                     .font(.body13_semiBold)
                     .foregroundStyle(.semanticColor.text_strongInverse)
             }
@@ -115,7 +115,7 @@ struct ExploreView: View {
                         .padding(Metrics.horizontalPadding)
                         .id("scrollTop")
                     }
-                    .onChange(of: store.state.sort) {
+                    .onChange(of: store.state.sortDirection) {
                         withAnimation {
                             proxy.scrollTo("scrollTop", anchor: .top)
                         }

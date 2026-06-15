@@ -20,7 +20,7 @@ struct ExploreReducer {
             .pointOrange300, .pointPurple300
         ]
         var data: [ExploreCard] = []
-        var sort: Sort = .registered
+        var sortDirection: SortDirection = .desc
         var selectedCard: (Card, ColorPaletteName)? = nil
         var hasMore: Bool = false
         var nextOffset: Int = 0
@@ -36,7 +36,7 @@ struct ExploreReducer {
         case fetchExploreCards(Int)
         case setResponse(ExploreCardResponse, isFirstPage: Bool, prevData: [ExploreCard])
         case setSelectedCard((Card, ColorPaletteName))
-        case setSort(Sort)
+        case setSortDirection(SortDirection)
         case setIsLoading(Bool)
         case setIsPresentToast(Bool)
         case delegate(Delegate)
@@ -67,7 +67,8 @@ struct ExploreReducer {
                         let requestDTO: ExploreCardRequestDTO = .init(
                             lastSeenOffset: Int64(lastSeenOffset),
                             size: 20,
-                            sort: state.sort.rawValue.uppercased()
+                            sort: Sort.published.rawValue.uppercased(),
+                            direction: state.sortDirection.rawValue.uppercased()
                         )
                         let response = try await cardClient.fetchExploreCards(requestDTO)
                         await send(.setResponse(response, isFirstPage: lastSeenOffset == 0, prevData: state.data))
@@ -86,8 +87,8 @@ struct ExploreReducer {
             case .setSelectedCard(let data):
                 state.selectedCard = data
                 return .none
-            case .setSort(let sort):
-                state.sort = sort
+            case .setSortDirection(let sortDirection):
+                state.sortDirection = sortDirection
                 return .send(.fetchFirstPage)
             case .setIsLoading(let bool):
                 state.isLoading = bool
