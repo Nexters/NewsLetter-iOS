@@ -29,6 +29,7 @@ struct CachedAsyncImage<Placeholder: View>: View {
 
     @State private var image: UIImage?
     @State private var isLoading = false
+    @State private var loadTask: Task<Void, Never>?
 
     init(url: String, @ViewBuilder placeholder: () -> Placeholder) {
         self.url = url
@@ -46,6 +47,8 @@ struct CachedAsyncImage<Placeholder: View>: View {
             }
         }
         .onChange(of: url) { _, newURL in
+            loadTask?.cancel()
+            loadTask = nil
             image = nil
             isLoading = false
             load(for: newURL)
@@ -61,9 +64,10 @@ struct CachedAsyncImage<Placeholder: View>: View {
         guard !isLoading, let requestURL = URL(string: urlToLoad) else { return }
         isLoading = true
 
-        Task {
+        loadTask = Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: requestURL)
+                guard !Task.isCancelled else { return }
                 if let loaded = UIImage(data: data) {
                     ImageCache.shared.set(loaded, for: urlToLoad)
                     await MainActor.run { image = loaded }
