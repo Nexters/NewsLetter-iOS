@@ -47,7 +47,7 @@ extension CardClient: DependencyKey {
                 },
                 fetchOGShareURL: { requestDTO in
                     let textColorEncoded = requestDTO.textColor?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                    let urlString = "https://fairy-band.com/api/share/og?exposureContentId=\(requestDTO.exposureContentId)&textColor=\(textColorEncoded)"
+                    let urlString = "\(AppInfo.baseURL)/share/og?exposureContentId=\(requestDTO.exposureContentId)&textColor=\(textColorEncoded)"
                     return urlString
                 }
             )
@@ -79,7 +79,7 @@ extension CardClient: DependencyKey {
                 ]
             },
             fetchOGShareURL: { _ in
-                return "https://fairy-band.com/api/share/og?exposureContentId=2&textColor=%23DCFF64"
+                return "\(AppInfo.baseURL)/share/og?exposureContentId=2&textColor=%23DCFF64"
             }
         )
     }()

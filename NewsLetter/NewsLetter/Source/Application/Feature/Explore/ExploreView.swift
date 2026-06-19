@@ -24,52 +24,102 @@ struct ExploreView: View {
         GridItem(.flexible(), spacing: Metrics.gridSpacing)
     ]
     
+    var sortButton: some View {
+        Button {
+            store.send(.setSortDirection(store.state.sortDirection.next()))
+        } label: {
+            HStack(spacing: 4) {
+                Image("order_icon")
+                    .resizable()
+                    .frame(width: 14, height: 14)
+                Text(store.state.sortDirection.displayText())
+                    .font(.body13_semiBold)
+                    .foregroundStyle(.semanticColor.text_strongInverse)
+            }
+        }
+    }
+    
+    var reportButton: some View {
+        Button {
+            store.send(.delegate(.reportNewsletterButtonTapped))
+        } label: {
+            HStack(spacing: 6) {
+                Image("pencil")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
+                Text("뉴스레터 제보")
+                    .font(.body14_semiBold)
+                    .foregroundStyle(.semanticColor.text_secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.white)
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 0)
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, 16)
+        .padding(.bottom, Device.safeAreaInsets.bottom + 16)
+    }
+    
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 HStack {
                     Text("전체 (\(store.state.totalCount))")
                         .font(.body14_bold)
                         .foregroundStyle(.semanticColor.text_strongInverse)
                     Spacer()
+                    sortButton
                 }
-                .padding(Metrics.horizontalPadding)
+                .padding(.horizontal, Metrics.horizontalPadding)
+                .padding(.top, 12)
+                .padding(.bottom, 10)
                 
-                ScrollView(showsIndicators: true) {
-                    LazyVGrid(columns: columns, spacing: Metrics.gridSpacing) {
-                        ForEach(store.state.data.indices, id: \.self) { index in
-                            let colorIndex = index % store.state.colorList.count
-                            let data = store.state.data[index]
-                            let colorPallete = store.state.colorList[colorIndex]
-                            let isLastItem = index == store.state.data.count - 1
-                            
-                            ExploreCardCell(
-                                data: data,
-                                color: colorPallete.color
-                            )
-                            .frame(height: Metrics.cardHeight)
-                            .onTapGesture {
-                                let card = data.toCard()
-                                GA.explore_contents_detail_pageview(
-                                    cardIndex: index,
-                                    contentType: card.kind.gaContentType,
-                                    contentTitle: card.title,
-                                    contentId: card.id
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: true) {
+                        LazyVGrid(columns: columns, spacing: Metrics.gridSpacing) {
+                            ForEach(store.state.data.indices, id: \.self) { index in
+                                let colorIndex = index % store.state.colorList.count
+                                let data = store.state.data[index]
+                                let colorPallete = store.state.colorList[colorIndex]
+                                let isLastItem = index == store.state.data.count - 1
+                                
+                                ExploreCardCell(
+                                    data: data,
+                                    color: colorPallete.color
                                 )
-                                store.send(.setSelectedCard((card, colorPallete)))
+                                .frame(height: Metrics.cardHeight)
+                                .onTapGesture {
+                                    let card = data.toCard()
+                                    GA.explore_contents_detail_pageview(
+                                        cardIndex: index,
+                                        contentType: card.kind.gaContentType,
+                                        contentTitle: card.title,
+                                        contentId: card.id
+                                    )
+                                    store.send(.setSelectedCard((card, colorPallete)))
 
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    store.send(.delegate(.presentExploreCard))
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        store.send(.delegate(.presentExploreCard))
+                                    }
                                 }
-                            }
-                            .onAppear {
-                                if isLastItem {
-                                    store.send(.fetchNextPage)
+                                .onAppear {
+                                    if isLastItem {
+                                        store.send(.fetchNextPage)
+                                    }
                                 }
                             }
                         }
+                        .padding(Metrics.horizontalPadding)
+                        .id("scrollTop")
                     }
-                    .padding(Metrics.horizontalPadding)
+                    .onChange(of: store.state.sortDirection) {
+                        withAnimation {
+                            proxy.scrollTo("scrollTop", anchor: .top)
+                        }
+                    }
                 }
                 .refreshable {
                     try? await Task.sleep(nanoseconds: 1000_000_000)
@@ -84,8 +134,7 @@ struct ExploreView: View {
                     bottomPadding: Device.safeAreaInsets.bottom
                 )
             }
-            .ignoresSafeArea()
-            .background(Color.black)
+            .background(Color.black.ignoresSafeArea())
             .onAppear {
                 GA.explore_pageview()
                 UIScrollView.appearance().indicatorStyle = .white
@@ -93,27 +142,7 @@ struct ExploreView: View {
                 store.send(.onAppear)
             }
             
-            Button {
-                store.send(.delegate(.reportNewsletterButtonTapped))
-            } label: {
-                HStack(spacing: 6) {
-                    Image("pencil")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16)
-                    Text("뉴스레터 제보")
-                        .font(.body14_semiBold)
-                        .foregroundStyle(.semanticColor.text_secondary)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color.white)
-                .clipShape(Capsule())
-                .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 0)
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, 16)
-            .padding(.bottom, Device.safeAreaInsets.bottom + 16)
+            reportButton
         }
     }
 }
