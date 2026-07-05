@@ -11,6 +11,7 @@ import ComposableArchitecture
 
 struct RecommendView: View {
     private enum Metric {
+        static let cardCount: Int = 7
         static let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.8
         static let scrollHorizontalMargin: CGFloat = (UIScreen.main.bounds.width - cardWidth) / 2
         static let indicatorSize: CGFloat = 8
@@ -105,35 +106,44 @@ struct RecommendView: View {
     private var cardCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: -80) {
-                ForEach(Array(store.cardData.enumerated()), id: \.offset) { index, data in
-                    let props = RecommendCardCellProps(
-                        title: data.title,
-                        job: data.topKeyword,
-                        source: data.newsletterName,
-                        imageURL: data.imageURL,
-                        isTrendingCard: index == 0,
-                        kind: data.kind,
-                        colorSet: store.cardColors[index]
-                    )
-                    RecommendCardCell(props: props)
-                        .frame(width: Metric.cardWidth)
-                        .scaleEffect(scrolledID == index ? 1 : 0.7)
-                        .blur(radius: scrolledID == index ? 0 : 2)
-                        .rotation3DEffect(
-                            .degrees(cardRotationDegree(for: index)),
-                            axis: (x: 0, y: 1, z: 0),
-                            perspective: 0.5
-                        )
-                        .zIndex(index == scrolledID ? 2 : 1)
-                        .id(index)
-                        .onTapGesture {
-                            guard scrolledID == index else {
-                                scrolledID = index
-                                return
-                            }
-                            selectedIndex = index
-                            cardTapHandler()
+                ForEach(0..<max(store.cardData.count, Metric.cardCount), id: \.self) { index in
+                    Group {
+                        // 실제 카드 데이터와 컬러가 모두 준비된 경우에만 카드 렌더링, 그 외엔 스켈레톤
+                        if index < store.cardData.count, index < store.cardColors.count {
+                            let data = store.cardData[index]
+                            RecommendCardCell(props: RecommendCardCellProps(
+                                title: data.title,
+                                job: data.topKeyword,
+                                source: data.newsletterName,
+                                imageURL: data.imageURL,
+                                isTrendingCard: index == 0,
+                                kind: data.kind,
+                                colorSet: store.cardColors[index]
+                            ))
+                        } else {
+                            RecommendSkeletonCardCell()
                         }
+                    }
+                    .frame(width: Metric.cardWidth)
+                    .scaleEffect(scrolledID == index ? 1 : 0.7)
+                    .blur(radius: scrolledID == index ? 0 : 2)
+                    .rotation3DEffect(
+                        .degrees(cardRotationDegree(for: index)),
+                        axis: (x: 0, y: 1, z: 0),
+                        perspective: 0.5
+                    )
+                    .zIndex(index == scrolledID ? 2 : 1)
+                    .id(index)
+                    .onTapGesture {
+                        guard scrolledID == index else {
+                            scrolledID = index
+                            return
+                        }
+                        // 스켈레톤 카드는 모달을 열지 않음
+                        guard index < store.cardData.count else { return }
+                        selectedIndex = index
+                        cardTapHandler()
+                    }
                 }
             }
             .scrollTargetLayout()
@@ -150,7 +160,7 @@ struct RecommendView: View {
     
     private var indicator: some View {
         HStack(spacing: Metric.indicatorSize) {
-            ForEach(0..<store.cardData.count, id: \.self) { index in
+            ForEach(0..<max(store.cardData.count, Metric.cardCount), id: \.self) { index in
                 let isFocused = index == scrolledID
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isFocused ? Color.black : Color.gray.opacity(0.5))
