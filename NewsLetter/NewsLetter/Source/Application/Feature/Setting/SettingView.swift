@@ -19,7 +19,7 @@ struct SettingView: View {
             
             VStack(alignment: .leading, spacing: 24) {
                 sectionTitle(title: "내정보")
-                navigationRow(title: "맞춤 설정") { store.send(.setIsPresentJobDetailBottomSheet(true)) }
+                navigationRow(title: "맞춤 설정") { store.send(.jobDetailSettingTapped) }
                 navigationRow(title: "알림") { store.send(.setIsPresentNotificationPermissionBottomSheet(true)) }
                 
                 Divider()
@@ -50,7 +50,10 @@ struct SettingView: View {
             isShow: $store.isPresentJobDetailBottomSheet,
             dismissHandler: { UserActionHistory.deniedDateWhenInputJobDetail = Date() }
         ) {
-            JobDetailBottomSheet { selectedJobCategory, selectedCareer in
+            JobDetailBottomSheet(
+                initialSelectedJobCategory: Set(store.selectedPreferences.compactMap { Preference.allCases.firstIndex(of: $0) }),
+                initialSelectedCareer: store.selectedWorkingExperience.flatMap { WorkingExperience.allCases.firstIndex(of: $0) }
+            ) { selectedJobCategory, selectedCareer in
                 jobDetailBottomSheetConfirmHandler(
                     selectedJobCategory: selectedJobCategory,
                     selectedCareer: selectedCareer
