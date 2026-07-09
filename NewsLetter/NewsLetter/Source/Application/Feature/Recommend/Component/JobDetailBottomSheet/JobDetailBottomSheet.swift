@@ -10,7 +10,7 @@ import SwiftUI
 import FirebaseAnalytics
 
 struct JobDetailBottomSheet: View {
-    @State private var selectedJobCategory: Set<Int> = []
+    @State private var selectedJobCategory: Set<Int>
     @State private var selectedCareer: Int?
 
     private var isEnabledButton: Bool {
@@ -18,6 +18,16 @@ struct JobDetailBottomSheet: View {
     }
 
     let confirmHandler: (Set<Int>, Int) -> Void
+
+    init(
+        initialSelectedJobCategory: Set<Int> = [],
+        initialSelectedCareer: Int? = nil,
+        confirmHandler: @escaping (Set<Int>, Int) -> Void
+    ) {
+        _selectedJobCategory = State(initialValue: initialSelectedJobCategory)
+        _selectedCareer = State(initialValue: initialSelectedCareer)
+        self.confirmHandler = confirmHandler
+    }
 
     var body: some View {
         VStack(spacing: 0) {

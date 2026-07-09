@@ -23,6 +23,8 @@ struct SettingReducer {
     struct State {
         var path = StackState<Path.State>()
         var isPresentJobDetailBottomSheet = false
+        var selectedPreferences: [Preference] = []
+        var selectedWorkingExperience: WorkingExperience?
         var isPresentNotificationPermissionBottomSheet = false
         var isPresentToastMessage = false
         var isPresentNotiToastMessage = false
@@ -40,6 +42,8 @@ struct SettingReducer {
         case onAppear
         case onDisappear
         case updateUser(UserUpdateRequestDTO)
+        case jobDetailSettingTapped
+        case fetchUserInfoResponse(UserResponseDTO)
         case setIsPresentJobDetailBottomSheet(Bool)
         case setIsPresentNotificationPermissionBottomSheet(Bool)
         case setIsPresentToastMessage(Bool)
@@ -76,6 +80,22 @@ struct SettingReducer {
                         print(error.localizedDescription)
                     }
                 }
+            case .jobDetailSettingTapped:
+                return .run { send in
+                    do {
+                        guard let userId = UserInfo.userId else { return }
+                        let response = try await userClient.fetchUser(userId)
+                        await send(.fetchUserInfoResponse(response))
+                    } catch {
+                        // TODO: 에러 핸들링
+                        print(error.localizedDescription)
+                    }
+                }
+            case .fetchUserInfoResponse(let response):
+                state.selectedPreferences = response.preferences
+                state.selectedWorkingExperience = response.workingExperience
+                state.isPresentJobDetailBottomSheet = true
+                return .none
             case .setIsPresentJobDetailBottomSheet(let bool):
                 state.isPresentJobDetailBottomSheet = bool
                 return .none

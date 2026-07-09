@@ -17,6 +17,7 @@ struct UserClient {
     var login: (UserLoginRequestDTO) async throws -> Int
     var register: (UserRegisterRequestDTO) async throws -> Int
     var update: (Int, UserUpdateRequestDTO) async throws -> Void
+    var fetchUser: (Int) async throws -> UserResponseDTO
 }
 
 extension DependencyValues {
@@ -41,15 +42,22 @@ extension UserClient: DependencyKey {
         },
         update: { userId, requestDTO in
             let _ = try await apiClient.request(UserAPI.update(userId: userId, requestDTO: requestDTO))
+        },
+        fetchUser: { userId in
+            let response = try await apiClient.request(UserAPI.fetchUser(userId: userId))
+            return try response.map(UserResponseDTO.self)
         }
        )
     }()
-    
+
     static var previewValue: UserClient = {
         return UserClient(
             login: { _ in return 0 },
             register: { _ in return 0 },
-            update: { _, _ in return }
+            update: { _, _ in return },
+            fetchUser: { _ in
+                UserResponseDTO(id: 0, preferences: [.frontend], workingExperience: .student)
+            }
         )
     }()
     
