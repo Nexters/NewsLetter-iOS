@@ -12,9 +12,12 @@ import SwiftUI
 struct RecommendSkeletonCardCell: View {
     private enum Metric {
         static let commonPadding: CGFloat = 24
-        static let blockColor = ColorPalette.gray200
-        static let cardColor = ColorPalette.gray100
+        // 카드 본연의 색상은 유지하고, 내부 콘텐츠 자리만 반투명 블록으로 표현합니다.
+        static let blockColor = ColorPalette.white.opacity(0.4)
     }
+
+    /// 실 카드와 동일한 배경색을 유지하기 위한 컬러셋입니다.
+    let colorSet: ColorSet
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,7 +48,7 @@ struct RecommendSkeletonCardCell: View {
                     .padding(.horizontal, Metric.commonPadding)
                     .padding(.bottom, 34)
             }
-            .background(RoundedRectangle(cornerRadius: 12).fill(Metric.cardColor))
+            .background(RoundedRectangle(cornerRadius: 12).fill(colorSet.main))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shimmering()
         }
@@ -60,6 +63,6 @@ struct RecommendSkeletonCardCell: View {
 }
 
 #Preview {
-    RecommendSkeletonCardCell()
+    RecommendSkeletonCardCell(colorSet: defaultColorSet.first!)
         .frame(width: UIScreen.main.bounds.width * 0.8)
 }

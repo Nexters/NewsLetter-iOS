@@ -30,7 +30,6 @@ let defaultColorSet: [ColorSet] = [
 
 extension [Card] {
     var colorSet: [ColorSet] {
-        let dropCount = Swift.max(defaultColorSet.count - self.count, 0)
-        return defaultColorSet.suffix(from: dropCount).map { $0 }
+        defaultColorSet
     }
 }
