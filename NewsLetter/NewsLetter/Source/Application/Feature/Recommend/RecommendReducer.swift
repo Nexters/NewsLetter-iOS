@@ -119,7 +119,9 @@ struct RecommendReducer {
                 state.timerIsRunning = false
                 return .cancel(id: CancelID.timer)
             case .refreshButtonPressed:
-                return .run { send in
+                // 새로고침 로딩 동안에도 스켈레톤 카드를 노출합니다.
+                state.isCardLoading = true
+                return .run { [oldCards = state.cardData] send in
                     do {
                         await send(.setIsRefreshLoading(true))
                         let userId = String(UserInfo.userId ?? 3)
@@ -128,10 +130,12 @@ struct RecommendReducer {
                         await send(.setIsRefreshLoading(false))
                         UserActionHistory.useRefreshDate = Date()
                     } catch let error {
+                        // 실패 시 기존 카드를 복원하고 스켈레톤 로딩을 해제합니다.
+                        await send(.setCards(oldCards))
                         await send(.setIsRefreshLoading(false))
                         print(error.localizedDescription)
                         guard let error = error as? MoyaError else { return }
-                        
+
                         if error.response?.statusCode == 400 {
                             UserActionHistory.useRefreshDate = Date()
                         }

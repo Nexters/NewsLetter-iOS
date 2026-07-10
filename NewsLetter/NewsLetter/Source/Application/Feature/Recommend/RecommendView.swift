@@ -123,8 +123,8 @@ struct RecommendView: View {
             HStack(spacing: -80) {
                 ForEach(0..<displayCardCount, id: \.self) { index in
                     Group {
-                        // 실제 카드 데이터와 컬러가 모두 준비된 경우에만 카드 렌더링, 그 외엔 스켈레톤
-                        if index < store.cardData.count, index < store.cardColors.count {
+                        // 로딩 중(최초/새로고침)이거나 데이터·컬러가 아직 준비되지 않았으면 스켈레톤을 노출합니다.
+                        if !store.isCardLoading, index < store.cardData.count, index < store.cardColors.count {
                             let data = store.cardData[index]
                             RecommendCardCell(props: RecommendCardCellProps(
                                 title: data.title,
@@ -157,8 +157,8 @@ struct RecommendView: View {
                             scrolledID = index
                             return
                         }
-                        // 스켈레톤 카드는 모달을 열지 않음
-                        guard index < store.cardData.count else { return }
+                        // 스켈레톤 카드(로딩 중 포함)는 모달을 열지 않음
+                        guard !store.isCardLoading, index < store.cardData.count else { return }
                         selectedIndex = index
                         cardTapHandler()
                     }
