@@ -30,17 +30,32 @@ struct RecommendView: View {
         guard let refreshDate = UserActionHistory.useRefreshDate else { return true }
         return DateCalculator.isToday(date: refreshDate) == false
     }
+
+    /// 로딩 중에는 스켈레톤을 `cardCount`개 채우고, 로딩이 끝나면 실제 카드 개수만 노출합니다.
+    private var displayCardCount: Int {
+        store.isCardLoading ? Metric.cardCount : store.cardData.count
+    }
+
+    /// 로딩이 끝났는데 표시할 카드가 하나도 없으면 에러/빈 상태로 간주합니다.
+    private var showEmptyError: Bool {
+        !store.isCardLoading && store.cardData.isEmpty
+    }
     
     var body: some View {
         VStack(spacing: 0) {
             headerSection
                 .padding(.top, 8)
-            cardCarousel
-                .padding(.top, UIDevice.isLargeScreen ? 40 : 16)
-            indicator
-                .padding(.top, 16)
-            refreshButton
-                .padding(.top, 36)
+            if showEmptyError {
+                emptyErrorSection
+                    .padding(.top, UIDevice.isLargeScreen ? 40 : 16)
+            } else {
+                cardCarousel
+                    .padding(.top, UIDevice.isLargeScreen ? 40 : 16)
+                indicator
+                    .padding(.top, 16)
+                refreshButton
+                    .padding(.top, 36)
+            }
             Spacer()
         }
         .animation(.easeInOut, value: store.isPresentModal)
@@ -106,7 +121,7 @@ struct RecommendView: View {
     private var cardCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: -80) {
-                ForEach(0..<max(store.cardData.count, Metric.cardCount), id: \.self) { index in
+                ForEach(0..<displayCardCount, id: \.self) { index in
                     Group {
                         // 실제 카드 데이터와 컬러가 모두 준비된 경우에만 카드 렌더링, 그 외엔 스켈레톤
                         if index < store.cardData.count, index < store.cardColors.count {
@@ -121,7 +136,10 @@ struct RecommendView: View {
                                 colorSet: store.cardColors[index]
                             ))
                         } else {
-                            RecommendSkeletonCardCell()
+                            // 실 카드가 로드되면 갖게 될 색상을 미리 적용해 자연스럽게 이어지도록 합니다.
+                            RecommendSkeletonCardCell(
+                                colorSet: defaultColorSet[index % defaultColorSet.count]
+                            )
                         }
                     }
                     .frame(width: Metric.cardWidth)
@@ -160,7 +178,7 @@ struct RecommendView: View {
     
     private var indicator: some View {
         HStack(spacing: Metric.indicatorSize) {
-            ForEach(0..<max(store.cardData.count, Metric.cardCount), id: \.self) { index in
+            ForEach(0..<displayCardCount, id: \.self) { index in
                 let isFocused = index == scrolledID
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isFocused ? Color.black : Color.gray.opacity(0.5))
@@ -176,6 +194,43 @@ struct RecommendView: View {
         }
     }
     
+    /// 카드를 불러오지 못했을 때(빈 응답/네트워크 에러) 안내 문구와 재시도 버튼을 보여줍니다.
+    private var emptyErrorSection: some View {
+        VStack(spacing: 8) {
+            Text("카드를 불러오지 못했어요")
+                .font(.body16_bold)
+                .foregroundColor(.semanticColor.text_secondary)
+
+            Text("잠시 후 다시 시도해 주세요")
+                .font(.body14_medium)
+                .foregroundColor(.semanticColor.text_tertiary)
+
+            Button {
+                store.send(.retryFetchCards)
+            } label: {
+                HStack(spacing: 4) {
+                    Image("icon-sync-mono")
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 16, height: 16)
+                        .foregroundStyle(.semanticColor.text_secondary)
+                    Text("다시 시도")
+                        .font(.body14_semiBold)
+                        .foregroundColor(.semanticColor.text_secondary)
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .foregroundColor(.semanticColor.fill_primary)
+                )
+            }
+            .padding(.top, 16)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+
     var refreshButton: some View {
         Button {
             store.send(.refreshButtonPressed)

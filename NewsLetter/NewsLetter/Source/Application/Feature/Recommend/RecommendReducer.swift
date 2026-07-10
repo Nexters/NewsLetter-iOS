@@ -30,6 +30,8 @@ struct RecommendReducer {
         var cardColors: [ColorSet] = []
         var isPresentModal: Bool = false
         var isRefreshLoading: Bool = false
+        // 카드 최초 로딩 여부. true일 때만 스켈레톤을 노출합니다.
+        var isCardLoading: Bool = false
     }
     
     enum Action: BindableAction {
@@ -37,6 +39,7 @@ struct RecommendReducer {
         case onAppear
         case onDisappear
         case refreshButtonPressed
+        case retryFetchCards
         case tick
         case startTimer
         case setColorPalette([ColorSet])
@@ -83,16 +86,18 @@ struct RecommendReducer {
                 if todayString == lastVisitString ,
                    let cachedCards = UserInfo.cachedDailyCards,
                    !cachedCards.isEmpty {
-                    
+
                     if UserActionHistory.isChangedCareer == true {
+                        state.isCardLoading = true
                         effects.append(.send(.fetchCards))
                         UserActionHistory.isChangedCareer = false
                     } else {
                         state.cardData = cachedCards
                         state.cardColors = cachedCards.colorSet
                     }
-                    
+
                 } else {
+                    state.isCardLoading = true
                     effects.append(.send(.fetchCards))
                 }
                 
@@ -132,6 +137,9 @@ struct RecommendReducer {
                         }
                     }
                 }
+            case .retryFetchCards:
+                state.isCardLoading = true
+                return .send(.fetchCards)
             case .startTimer:
                 state.timerIsRunning = true
                 state.remainingSeconds = DateCalculator.secondsUntilMidnight(from: self.now)
@@ -162,7 +170,7 @@ struct RecommendReducer {
                         // TODO: 고정으로 들어가는 userId 값 변경 필요
                         let userId = String(UserInfo.userId ?? 3)
                         let publishedDate: String? = nil
-                        
+
                         let cards = try await cardClient.fetchCards(FetchCardsRequestDTO(userId: userId, publishedDate: publishedDate))
                         await send(.setCards(cards))
                     } catch {
@@ -209,6 +217,7 @@ struct RecommendReducer {
                     }
                 }
             case .setCards(let cards):
+                state.isCardLoading = false
                 state.cardData = cards
                 UserInfo.cachedDailyCards = cards
                 
