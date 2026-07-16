@@ -13,6 +13,7 @@ enum UserAPI {
     case login(UserLoginRequestDTO)
     case register(UserRegisterRequestDTO)
     case update(userId: Int, requestDTO: UserUpdateRequestDTO)
+    case fetchUser(userId: Int)
 }
 
 extension UserAPI: TargetType {
@@ -26,20 +27,22 @@ extension UserAPI: TargetType {
     
     var path: String {
         switch self {
-        case .login:                 return "/users/login"
-        case .register:              return "/users/register"
-        case .update(let userId, _): return "/users/\(userId)"
+        case .login:                  return "/users/login"
+        case .register:               return "/users/register"
+        case .update(let userId, _):  return "/users/\(userId)"
+        case .fetchUser(let userId):  return "/users/\(userId)"
         }
     }
-    
+
     var method: Moya.Method {
         switch self {
-        case .login:    return .get
-        case .register: return .post
-        case .update:   return .put
+        case .login:      return .get
+        case .register:   return .post
+        case .update:     return .put
+        case .fetchUser:  return .get
         }
     }
-    
+
     var task: Task {
         switch self {
         case .login(let dto):
@@ -66,6 +69,8 @@ extension UserAPI: TargetType {
                 parameters: parameters,
                 encoding: JSONEncoding.default
             )
+        case .fetchUser:
+            return .requestPlain
         }
     }
 }
