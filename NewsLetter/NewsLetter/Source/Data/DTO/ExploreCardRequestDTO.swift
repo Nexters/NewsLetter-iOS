@@ -12,4 +12,5 @@ struct ExploreCardRequestDTO: Encodable {
     let size: Int32
     let sort: String
     let direction: String
+    let categoryIds: [String]?
 }
