@@ -66,6 +66,11 @@ struct ExploreView: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             VStack(spacing: 0) {
+                ExploreCategoryFilterView(
+                    selectedCategories: store.state.selectedCategories,
+                    tapHandler: { store.send(.toggleCategory($0)) }
+                )
+
                 HStack {
                     Text("전체 (\(store.state.totalCount))")
                         .font(.body14_bold)

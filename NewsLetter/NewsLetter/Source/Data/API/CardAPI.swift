@@ -55,7 +55,7 @@ extension CardAPI: TargetType {
             }
             return .requestParameters(
                 parameters: parameters,
-                encoding: URLEncoding.queryString
+                encoding: URLEncoding(destination: .queryString, arrayEncoding: .noBrackets)
             )
         case .fetchOGShareURL(let dto):
             guard let parameters = dto.toDictionary() else {
