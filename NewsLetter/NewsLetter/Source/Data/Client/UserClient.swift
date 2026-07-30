@@ -56,7 +56,7 @@ extension UserClient: DependencyKey {
             register: { _ in return 0 },
             update: { _, _ in return },
             fetchUser: { _ in
-                UserResponseDTO(id: 0, preferences: [.frontend], workingExperience: .student)
+                UserResponseDTO(id: 0, preferences: [.frontend], workingExperience: .student, isOnboarded: false, isCategoryChanged: false, categoryChangeCount: 0)
             }
         )
     }()
