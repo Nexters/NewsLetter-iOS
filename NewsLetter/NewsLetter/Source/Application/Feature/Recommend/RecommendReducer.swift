@@ -32,6 +32,7 @@ struct RecommendReducer {
         var isRefreshLoading: Bool = false
         // 카드 최초 로딩 여부. true일 때만 스켈레톤을 노출합니다.
         var isCardLoading: Bool = false
+        var isCategoryChanged: Bool = false
     }
     
     enum Action: BindableAction {
@@ -43,7 +44,11 @@ struct RecommendReducer {
         case tick
         case startTimer
         case setColorPalette([ColorSet])
+        case resolveCardFetch
         case fetchCards
+        case fetchOnboardingStatus
+        case onboardingStatusResponse(Result<UserResponseDTO, Error>)
+        case onboardingJobDetailConfirmed(preferences: [Preference]?, workingExperience: WorkingExperience?)
         case loginUser
         case registerUser
         case updateUser(UserUpdateRequestDTO)
@@ -51,12 +56,12 @@ struct RecommendReducer {
         case delegate(Delegate)
         case setIsPresentModal(Bool)
         case setIsRefreshLoading(Bool)
-        
+
         @CasePathable
         enum Delegate {
             case presentModal(Bool)
             case presentNotificationPermissionBottomSheet(Bool)
-            case presentJobDetailBottomSheet(Bool)
+            case presentOnboardingJobBottomSheet(Bool)
         }
     }
     
@@ -75,21 +80,41 @@ struct RecommendReducer {
             case .binding(_):
                 return .none
             case .onAppear:
-                var effects: [Effect<Action>] = []
                 state.todayDate = DateCalculator.formattedDateStringForTitle()
-                
+                DateCalculator.checkAndIncrementVisitStreak()
+
+                let timerEffect = Effect<Action>.send(.startTimer)
+                let loginEffect = Effect<Action>.send(.loginUser)
+                let delayEffect = Effect<Action>.run { _ in
+                    try await clock.sleep(for: .seconds(0.5))
+                }
+
+                // 온보딩 둘째날(streakCount >= 2)이면서 아직 온보딩 플로우가 끝나지 않았다면
+                // 컨텐츠 조회보다 먼저 온보딩 상태(isOnboarded)를 확인합니다.
+                let cardEffect: Effect<Action>
+                if UserActionHistory.isOnboardingFlowFinished == false && UserActionHistory.streakCount >= 2 {
+                    cardEffect = .send(.fetchOnboardingStatus)
+                } else {
+                    cardEffect = .send(.resolveCardFetch)
+                }
+
+                return .concatenate(timerEffect, loginEffect, delayEffect, cardEffect)
+
+            case .resolveCardFetch:
                 let todayString = DateCalculator.formattedDateString()
                 let lastVisitString = UserInfo.lastCardFetchDate.map {
                     DateCalculator.formattedDateString(from: $0)
                 } ?? ""
-                
-                if todayString == lastVisitString ,
+
+                var effect: Effect<Action> = .none
+
+                if todayString == lastVisitString,
                    let cachedCards = UserInfo.cachedDailyCards,
                    !cachedCards.isEmpty {
 
                     if UserActionHistory.isChangedCareer == true {
                         state.isCardLoading = true
-                        effects.append(.send(.fetchCards))
+                        effect = .send(.fetchCards)
                         UserActionHistory.isChangedCareer = false
                     } else {
                         state.cardData = cachedCards
@@ -98,19 +123,53 @@ struct RecommendReducer {
 
                 } else {
                     state.isCardLoading = true
-                    effects.append(.send(.fetchCards))
+                    effect = .send(.fetchCards)
                 }
-                
+
                 UserInfo.lastCardFetchDate = Date()
-                
-                let timerEffect = Effect<Action>.send(.startTimer)
-                let loginEffect = Effect<Action>.send(.loginUser)
-                let delayEffect = Effect<Action>.run { _ in
-                    try await clock.sleep(for: .seconds(0.5))
+                return effect
+
+            case .fetchOnboardingStatus:
+                return .run { send in
+                    guard let userId = UserInfo.userId else {
+                        await send(.resolveCardFetch)
+                        return
+                    }
+                    do {
+                        let response = try await userClient.fetchUser(userId)
+                        await send(.onboardingStatusResponse(.success(response)))
+                    } catch {
+                        await send(.onboardingStatusResponse(.failure(error)))
+                    }
                 }
-                let restEffect = Effect<Action>.merge(effects)
-                return .concatenate(timerEffect, loginEffect, delayEffect, restEffect)
-                
+
+            case let .onboardingStatusResponse(.success(response)):
+                state.isCategoryChanged = response.isCategoryChanged
+                if response.isOnboarded {
+                    // 둘째날 + 온보딩 진행 중: 바텀시트를 먼저 노출하고, 컨텐츠 조회는 선택/미선택 이후로 미룹니다.
+                    return .send(.delegate(.presentOnboardingJobBottomSheet(true)))
+                } else {
+                    UserActionHistory.isOnboardingFlowFinished = true
+                    return .send(.resolveCardFetch)
+                }
+
+            case .onboardingStatusResponse(.failure):
+                // 온보딩 상태 확인에 실패하면 기존처럼 컨텐츠 조회로 진행합니다.
+                return .send(.resolveCardFetch)
+
+            case let .onboardingJobDetailConfirmed(preferences, workingExperience):
+                UserActionHistory.isOnboardingFlowFinished = true
+                state.isCardLoading = true
+
+                if let preferences, let workingExperience {
+                    // 선택 완료: 직군 정보를 갱신한 뒤 그 정보를 반영한 컨텐츠를 조회합니다.
+                    let dto = UserUpdateRequestDTO(preferences: preferences, workingExperience: workingExperience)
+                    return .concatenate(.send(.updateUser(dto)), .send(.fetchCards))
+                } else {
+                    // 미선택: 랜덤 컨텐츠 조회로 온보딩을 종료합니다.
+                    return .send(.fetchCards)
+                }
+
             case let .setColorPalette(colors):
                 state.cardColors = colors
                 return .none
