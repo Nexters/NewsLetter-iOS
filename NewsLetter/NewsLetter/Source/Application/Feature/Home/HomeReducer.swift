@@ -26,9 +26,10 @@ struct HomeReducer {
         var isPresentModal: Bool = false
         var isPresentExploreCard: Bool = false
         var isPresentNotificationPermissionBottomSheet: Bool = false
-        var isPresentJobDetailBottomSheet: Bool = false
+        var isPresentOnboardingJobBottomSheet: Bool = false
         var isPresentNewsletterReportBottomSheet: Bool = false
         var isPresentToastMessage: Bool = false
+        var isPresentJobChangeToastMessage: Bool = false
         var isPresentReportSuccessToast: Bool = false
         var selectedIndex: Int?
     }
@@ -70,8 +71,8 @@ struct HomeReducer {
             case .recommend(.delegate(.presentNotificationPermissionBottomSheet)):
                 state.isPresentNotificationPermissionBottomSheet = true
                 return .none
-            case .recommend(.delegate(.presentJobDetailBottomSheet)):
-                state.isPresentJobDetailBottomSheet = true
+            case .recommend(.delegate(.presentOnboardingJobBottomSheet)):
+                state.isPresentOnboardingJobBottomSheet = true
                 return .none
             // ExploreReducer의 delegate 액션 처리
             case .explore(.delegate(.presentExploreCard)):
@@ -83,6 +84,10 @@ struct HomeReducer {
             case .settingPressed:
                 state.path.append(.setting(SettingReducer.State()))
                 return .none
+            // 설정 화면에서 직군/경력 정보가 갱신되면 추천 컨텐츠를 새로 불러옵니다.
+            case .path(.element(id: _, action: .setting(.delegate(.categoryUpdated)))):
+                state.recommendState.isCardLoading = true
+                return .send(.recommend(.fetchCards))
             case .submitNewsletterReport(let dto):
                 return .run { send in
                     do {

@@ -12,7 +12,10 @@ import ComposableArchitecture
 
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeReducer>
-    
+
+    @State private var isPresentJobChangeConfirmAlert = false
+    @State private var pendingJobChangeCommit: (() -> Void)?
+
     var body: some View {
         NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
             VStack(spacing: 0) {
@@ -62,11 +65,16 @@ struct HomeView: View {
                 }
             }
             .draggableBottomSheet(
-                isShow: $store.isPresentJobDetailBottomSheet,
-                dismissHandler: { UserActionHistory.deniedDateWhenInputJobDetail = Date() }
+                isShow: $store.isPresentOnboardingJobBottomSheet,
+                dismissHandler: {
+                    store.send(.recommend(.onboardingJobDetailConfirmed(preferences: nil, workingExperience: nil)))
+                }
             ) {
-                JobDetailBottomSheet { selectedJobCategory, selectedCareer in
-                    jobDetailBottomSheetConfirmHandler(
+                JobDetailBottomSheet(
+                    isCategoryChanged: store.recommendState.isCategoryChanged,
+                    requestChangeConfirmation: requestJobChangeConfirmation
+                ) { selectedJobCategory, selectedCareer in
+                    onboardingJobDetailBottomSheetConfirmHandler(
                         selectedJobCategory: selectedJobCategory,
                         selectedCareer: selectedCareer
                     )
@@ -107,6 +115,20 @@ struct HomeView: View {
                 isPresented: $store.isPresentReportSuccessToast,
                 topPadding: (UIDevice.isSmallScreen ? 24 : 50) + (UIDevice.isSmallScreen ? 36 : 48) + 8
             )
+            .toastMessage(
+                isPresented: $store.isPresentJobChangeToastMessage,
+                text: "변경이 완료되었어요",
+                bottomPadding: 0
+            )
+            .confirmAlertDialog(
+                isPresented: $isPresentJobChangeConfirmAlert,
+                message: JobDetailBottomSheet.changeConfirmationMessage,
+                confirmTitle: "변경하기",
+                confirmHandler: {
+                    pendingJobChangeCommit?()
+                    pendingJobChangeCommit = nil
+                }
+            )
             .animation(.easeInOut, value: store.isPresentModal)
             .animation(.easeInOut, value: store.isPresentExploreCard)
         } destination: { store in
@@ -117,19 +139,23 @@ struct HomeView: View {
         }
     }
     
-    private func jobDetailBottomSheetConfirmHandler(
+    private func requestJobChangeConfirmation(commit: @escaping () -> Void) {
+        pendingJobChangeCommit = commit
+        isPresentJobChangeConfirmAlert = true
+    }
+
+    private func onboardingJobDetailBottomSheetConfirmHandler(
         selectedJobCategory: Set<Int>,
         selectedCareer: Int
     ) {
         let preferences = selectedJobCategory.map { Preference.allCases[$0] }
         let workingExperience = WorkingExperience.allCases[selectedCareer]
-        let requestDTO = UserUpdateRequestDTO(
+        store.send(.recommend(.onboardingJobDetailConfirmed(
             preferences: preferences,
             workingExperience: workingExperience
-        )
-        store.send(.recommend(.updateUser(requestDTO)))
-        store.send(.recommend(.onAppear))
-        store.isPresentJobDetailBottomSheet = false
+        )))
+        store.isPresentOnboardingJobBottomSheet = false
+        store.isPresentJobChangeToastMessage = true
     }
 }
 

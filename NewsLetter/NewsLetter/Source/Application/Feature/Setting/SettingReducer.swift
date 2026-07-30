@@ -25,6 +25,7 @@ struct SettingReducer {
         var isPresentJobDetailBottomSheet = false
         var selectedPreferences: [Preference] = []
         var selectedWorkingExperience: WorkingExperience?
+        var isCategoryChanged: Bool = false
         var isPresentNotificationPermissionBottomSheet = false
         var isPresentToastMessage = false
         var isPresentNotiToastMessage = false
@@ -53,6 +54,12 @@ struct SettingReducer {
         case setNavigateToTermsOfService(Bool)
         case versionRowTapped
         case didReceiveInstallationToken(String?)
+        case delegate(Delegate)
+
+        @CasePathable
+        enum Delegate {
+            case categoryUpdated
+        }
     }
     
     @Dependency(\.userClient) var userClient
@@ -75,6 +82,7 @@ struct SettingReducer {
                     do {
                         guard let userId = UserInfo.userId else { return }
                         try await userClient.update(userId, dto)
+                        await send(.delegate(.categoryUpdated))
                     } catch {
                         // TODO: 에러 핸들링
                         print(error.localizedDescription)
@@ -83,17 +91,36 @@ struct SettingReducer {
             case .jobDetailSettingTapped:
                 return .run { send in
                     do {
-                        guard let userId = UserInfo.userId else { return }
+                        let userId: Int
+                        if let existingUserId = UserInfo.userId {
+                            userId = existingUserId
+                        } else {
+                            // 아직 로그인/등록이 끝나지 않은 상태(홈 진입 직후 등)라면 여기서 먼저 확보합니다.
+                            guard let deviceToken = KeychainManager.shared.retrieveString(forKey: "deviceToken") else {
+                                print("[SettingReducer] deviceToken이 없어 맞춤 설정을 열 수 없습니다.")
+                                return
+                            }
+                            let fetchedUserId: Int
+                            do {
+                                fetchedUserId = try await userClient.login(UserLoginRequestDTO(deviceToken: deviceToken))
+                            } catch {
+                                fetchedUserId = try await userClient.register(UserRegisterRequestDTO(deviceToken: deviceToken))
+                            }
+                            UserInfo.userId = fetchedUserId
+                            userId = fetchedUserId
+                        }
+
                         let response = try await userClient.fetchUser(userId)
                         await send(.fetchUserInfoResponse(response))
                     } catch {
                         // TODO: 에러 핸들링
-                        print(error.localizedDescription)
+                        print("[SettingReducer] 맞춤 설정 조회 실패: \(error.localizedDescription)")
                     }
                 }
             case .fetchUserInfoResponse(let response):
                 state.selectedPreferences = response.preferences
                 state.selectedWorkingExperience = response.workingExperience
+                state.isCategoryChanged = response.isCategoryChanged
                 state.isPresentJobDetailBottomSheet = true
                 return .none
             case .setIsPresentJobDetailBottomSheet(let bool):
@@ -143,6 +170,8 @@ struct SettingReducer {
                     state.isTokenCopyable = false
                 }
                 state.isPresentTokenToast = true
+                return .none
+            case .delegate:
                 return .none
             }
         }
