@@ -10,22 +10,38 @@ import SwiftUI
 import FirebaseAnalytics
 
 struct JobDetailBottomSheet: View {
+    static let changeConfirmationMessage = "관심 직군 변경은 **계정당 한 번만 가능**합니다. 변경 후에는 다른 직군으로 수정할 수 없습니다."
+
     @State private var selectedJobCategory: Set<Int>
     @State private var selectedCareer: Int?
 
+    /// 서버에서 내려준, 계정당 1회 허용되는 직군 변경을 이미 사용했는지 여부. true면 이미 변경 이력이 있어 더 이상 변경할 수 없습니다.
+    let isCategoryChanged: Bool
+    /// 진입 시점에 이미 등록된 직군 정보가 있었는지 여부. 최초 등록(정보가 없던 상태)에서는 확인 다이얼로그 없이 바로 반영하고,
+    /// 기존 정보를 수정하는 경우에만 확인 다이얼로그를 거칩니다.
+    private let hasExistingSelection: Bool
+
     private var isEnabledButton: Bool {
-        selectedCareer != nil && selectedJobCategory.isEmpty == false
+        selectedCareer != nil && selectedJobCategory.isEmpty == false && isCategoryChanged == false
     }
 
     let confirmHandler: (Set<Int>, Int) -> Void
+    /// 바텀시트 영역에 갇히지 않고 화면 전체 기준으로 확인 다이얼로그를 띄울 수 있도록,
+    /// 다이얼로그 노출 자체는 상위 화면(호출부)에 위임합니다. 사용자가 다이얼로그에서 확정하면 전달받은 `commit`을 호출해주세요.
+    let requestChangeConfirmation: (_ commit: @escaping () -> Void) -> Void
 
     init(
         initialSelectedJobCategory: Set<Int> = [],
         initialSelectedCareer: Int? = nil,
+        isCategoryChanged: Bool = false,
+        requestChangeConfirmation: @escaping (_ commit: @escaping () -> Void) -> Void = { commit in commit() },
         confirmHandler: @escaping (Set<Int>, Int) -> Void
     ) {
         _selectedJobCategory = State(initialValue: initialSelectedJobCategory)
         _selectedCareer = State(initialValue: initialSelectedCareer)
+        self.isCategoryChanged = isCategoryChanged
+        self.hasExistingSelection = initialSelectedJobCategory.isEmpty == false || initialSelectedCareer != nil
+        self.requestChangeConfirmation = requestChangeConfirmation
         self.confirmHandler = confirmHandler
     }
 
@@ -35,6 +51,11 @@ struct JobDetailBottomSheet: View {
                 .font(.head22_bold)
                 .multilineTextAlignment(.center)
                 .padding(.top, 20)
+
+            Text("* 계정당 한 번의 직군 변경만 허용하고 있어요.")
+                .font(.body13_medium)
+                .foregroundStyle(.semanticColor.text_tertiary)
+                .padding(.top, 4)
                 .padding(.bottom, 12)
 
             VStack(alignment: .leading, spacing: 0) {
@@ -95,27 +116,11 @@ struct JobDetailBottomSheet: View {
             .padding(.bottom, 24)
 
             Button {
-                UserActionHistory.isAlreadyInputJobDetail = true
-                confirmHandler(selectedJobCategory, selectedCareer ?? 0)
-
-                let preferences = selectedJobCategory.map { Preference.allCases[$0].rawValue }
-
-                guard let selectedCareer = selectedCareer else {
-                    print("❌ 경력 정보가 선택되지 않았습니다.")
-                    return
+                if hasExistingSelection {
+                    requestChangeConfirmation { performConfirm() }
+                } else {
+                    performConfirm()
                 }
-                let workingExperience = WorkingExperience.allCases[selectedCareer].rawValue
-
-                if UserActionHistory.selectedCareer != [preferences, [workingExperience]] {
-                    UserActionHistory.isChangedCareer = true
-                    UserActionHistory.selectedCareer = [preferences, [workingExperience]]
-                }
-
-                let dataDictionary: [String: Any] = [
-                    "job_group": preferences,
-                    "career_level": workingExperience
-                ]
-                GA.click_bottom_sheet_custom(userData: dataDictionary)
             } label: {
                 RoundedRectangle(cornerRadius: 100)
                     .frame(height: 56)
@@ -133,6 +138,30 @@ struct JobDetailBottomSheet: View {
         .onAppear() {
             GA.pageview_bottom_sheet_custom()
         }
+    }
+
+    private func performConfirm() {
+        UserActionHistory.isAlreadyInputJobDetail = true
+        confirmHandler(selectedJobCategory, selectedCareer ?? 0)
+
+        let preferences = selectedJobCategory.map { Preference.allCases[$0].rawValue }
+
+        guard let selectedCareer = selectedCareer else {
+            print("❌ 경력 정보가 선택되지 않았습니다.")
+            return
+        }
+        let workingExperience = WorkingExperience.allCases[selectedCareer].rawValue
+
+        if UserActionHistory.selectedCareer != [preferences, [workingExperience]] {
+            UserActionHistory.isChangedCareer = true
+            UserActionHistory.selectedCareer = [preferences, [workingExperience]]
+        }
+
+        let dataDictionary: [String: Any] = [
+            "job_group": preferences,
+            "career_level": workingExperience
+        ]
+        GA.click_bottom_sheet_custom(userData: dataDictionary)
     }
 }
 
