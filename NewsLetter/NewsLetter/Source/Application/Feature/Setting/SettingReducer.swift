@@ -78,11 +78,15 @@ struct SettingReducer {
             case .onDisappear:
                 return .none
             case .updateUser(let dto):
+                // 경력만 바뀌고 관심 직군(preferences)이 그대로면 추천 컨텐츠에 영향이 없으므로 홈 새로고침을 생략합니다.
+                let didPreferencesChange = Set(dto.preferences.map(\.rawValue)) != Set(state.selectedPreferences.map(\.rawValue))
                 return .run { send in
                     do {
                         guard let userId = UserInfo.userId else { return }
                         try await userClient.update(userId, dto)
-                        await send(.delegate(.categoryUpdated))
+                        if didPreferencesChange {
+                            await send(.delegate(.categoryUpdated))
+                        }
                     } catch {
                         // TODO: 에러 핸들링
                         print(error.localizedDescription)

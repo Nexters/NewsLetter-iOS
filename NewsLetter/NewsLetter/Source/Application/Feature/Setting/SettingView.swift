@@ -67,10 +67,13 @@ struct SettingView: View {
             }
         }
         .ignoresSafeArea(edges: .bottom)
-        .toastMessage(
+        .reportSuccessToast(
             isPresented: $store.isPresentToastMessage,
             text: "변경이 완료되었어요",
-            bottomPadding: 0
+            edge: .bottom,
+            padding: 75,
+            backgroundColor: Color(hex: 0x3F4247),
+            textColor: .white
         )
         .draggableBottomSheet(
             isShow: $store.isPresentNotificationPermissionBottomSheet,

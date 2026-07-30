@@ -113,12 +113,15 @@ struct HomeView: View {
             )
             .reportSuccessToast(
                 isPresented: $store.isPresentReportSuccessToast,
-                topPadding: (UIDevice.isSmallScreen ? 24 : 50) + (UIDevice.isSmallScreen ? 36 : 48) + 8
+                padding: (UIDevice.isSmallScreen ? 24 : 50) + (UIDevice.isSmallScreen ? 36 : 48) + 8
             )
-            .toastMessage(
+            .reportSuccessToast(
                 isPresented: $store.isPresentJobChangeToastMessage,
                 text: "변경이 완료되었어요",
-                bottomPadding: 0
+                edge: .bottom,
+                padding: 75,
+                backgroundColor: Color(hex: 0x3F4247),
+                textColor: .white
             )
             .confirmAlertDialog(
                 isPresented: $isPresentJobChangeConfirmAlert,
