@@ -34,8 +34,8 @@ extension View {
         )
     }
     
-    func reportSuccessToast(isPresented: Binding<Bool>, topPadding: CGFloat) -> some View {
-        self.modifier(ReportSuccessToastMessage(isPresented: isPresented, topPadding: topPadding))
+    func reportSuccessToast(isPresented: Binding<Bool>, text: String = "제보가 완료되었어요", topPadding: CGFloat) -> some View {
+        self.modifier(ReportSuccessToastMessage(isPresented: isPresented, text: text, topPadding: topPadding))
     }
 
     func fontRangeLimited() -> some View {
@@ -99,6 +99,7 @@ struct ToastMessage: ViewModifier {
 
 struct ReportSuccessToastMessage: ViewModifier {
     @Binding var isPresented: Bool
+    let text: String
     let topPadding: CGFloat
 
     func body(content: Content) -> some View {
@@ -111,7 +112,7 @@ struct ReportSuccessToastMessage: ViewModifier {
                     .scaledToFit()
                     .frame(width: 24, height: 24)
 
-                Text("제보가 완료되었어요")
+                Text(text)
                     .font(.body15_regular)
                     .foregroundColor(.semanticColor.text_primary)
             }
