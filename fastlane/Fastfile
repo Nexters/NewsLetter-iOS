@@ -61,11 +61,23 @@ platform :ios do
     )
   end
 
+  desc "마케팅 버전 설정"
+  desc "Usage: bundle exec fastlane set_marketing_version version:1.2.0"
+  lane :set_marketing_version do |options|
+    version = options[:version].to_s
+    UI.user_error!("version 파라미터가 필요합니다.") if version.empty?
+    # App Store 마케팅 버전은 x.y.z 정수 형식만 허용됩니다.
+    UI.user_error!("버전 형식이 올바르지 않습니다: #{version}") unless version.match?(/\A\d+\.\d+\.\d+\z/)
+
+    increment_version_number(version_number: version, xcodeproj: PROJECT)
+    UI.success "마케팅 버전: #{version}"
+  end
+
   desc "빌드 번호 증가 (현재 마케팅 버전 기준 TestFlight 최신 빌드 + 1)"
   lane :bump_version do
     version = get_version_number(xcodeproj: PROJECT, target: TARGET)
     UI.message "현재 마케팅 버전: #{version}"
-    
+
     # rescue를 사용하여 해당 버전의 빌드가 없는 경우 0으로 초기화
     begin
       latest = latest_testflight_build_number(
@@ -81,10 +93,32 @@ platform :ios do
     next_build = latest + 1
     increment_build_number(build_number: next_build, xcodeproj: PROJECT)
     UI.success "빌드 번호: #{version}(#{next_build})"
+
+    # CI 후속 step이 build/* 태그를 만들 수 있도록 값을 내보냅니다.
+    if is_ci && ENV["GITHUB_OUTPUT"]
+      File.open(ENV["GITHUB_OUTPUT"], "a") do |f|
+        f.puts("build_tag=build/#{version}-#{next_build}")
+      end
+    end
+  end
+
+  # TestFlight changelog 문구를 생성합니다. (어느 브랜치/커밋의 빌드인지 구분용)
+  private_lane :testflight_changelog do
+    branch = ENV["SOURCE_BRANCH"].to_s
+    branch = git_branch if branch.empty?
+    commit = last_git_commit
+
+    "[#{branch}] #{commit[:abbreviated_commit_hash]}\n#{commit[:message]}"
   end
 
   desc "Release IPA 빌드 (업로드 없음)"
-  lane :build_app do
+  desc "Usage: bundle exec fastlane build_ipa"
+  desc "       bundle exec fastlane build_ipa internal_only:true"
+  lane :build_ipa do |options|
+    # CLI로 넘기면 문자열 "true"가 오므로 명시적으로 변환합니다.
+    internal_only = options[:internal_only].to_s == "true"
+    UI.message "TestFlight Internal Only: #{internal_only}"
+
     setup_ci
     match(
       type:           "appstore",
@@ -95,7 +129,6 @@ platform :ios do
       scheme:            SCHEME,
       project:           PROJECT,
       configuration:     "Release",
-      export_method:     "app-store",
       clean:             false,
       xcargs:            "-skipPackagePluginValidation -disablePackageRepositoryCache -skipMacroValidation DEVELOPMENT_TEAM=SWPBG3YXG5",
       output_directory:  "./build",
@@ -107,9 +140,11 @@ platform :ios do
       # pbxproj의 Release 설정에 'match Development' 프로파일이 지정되어 있으므로
       # export 시점에 AppStore 프로파일로 오버라이드
       export_options: {
-        method:               "app-store",
-        signingStyle:         "manual",
-        teamID:               "SWPBG3YXG5",
+        method:                        "app-store-connect",
+        signingStyle:                  "manual",
+        teamID:                        "SWPBG3YXG5",
+        # true면 외부 TestFlight/App Store 배포가 불가능한 내부 전용 빌드가 됩니다.
+        testFlightInternalTestingOnly: internal_only,
         provisioningProfiles: {
           BUNDLE_ID => "match AppStore #{BUNDLE_ID}"
         }
@@ -117,27 +152,30 @@ platform :ios do
     )
   end
 
-  desc "TestFlight 업로드 (release 브랜치 머지 시 자동 실행)"
+  desc "TestFlight 내부 전용 업로드 (develop / release/* push 시 자동 실행)"
+  desc "이 빌드는 App Store 심사에 제출할 수 없습니다."
   lane :beta do
     write_xcconfig if is_ci
     write_google_service_plist if is_ci
     bump_version
-    build_app
+    build_ipa(internal_only: true)
     upload_to_testflight(
       api_key:                           $api_key,
       app_identifier:                    BUNDLE_ID,
-      skip_waiting_for_build_processing: true,
-      changelog:                         last_git_commit[:message]
+      # changelog를 반영하려면 processing 완료를 기다려야 합니다.
+      skip_waiting_for_build_processing: false,
+      distribute_external:               false,
+      changelog:                         testflight_changelog
     )
     clean_build_artifacts
   end
 
-  desc "App Store 제출 (GitHub Actions workflow_dispatch로 수동 실행)"
+  desc "App Store 제출용 빌드 업로드 (main의 vX.Y.Z 태그 push 시 자동 실행)"
   lane :release do
     write_xcconfig if is_ci
     write_google_service_plist if is_ci
     bump_version
-    build_app
+    build_ipa
     upload_to_app_store(
       api_key:            $api_key,
       app_identifier:     BUNDLE_ID,
