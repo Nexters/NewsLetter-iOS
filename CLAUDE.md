@@ -265,9 +265,12 @@ type/#issue-number
 | `feature` | 새 기능 |
 | `fix` | 버그 수정 |
 | `hotfix` | 긴급 수정 |
+| `release` | QA 브랜치 (`release/v1.1.2`) — 릴리스마다 develop에서 분기, 출시 후 삭제 |
 | `test` | 테스트용 |
 
-예시: `feature/#111`, `fix/#72`, `hotfix/explore-tab`
+예시: `feature/#111`, `fix/#72`, `hotfix/explore-tab`, `release/v1.1.2`
+
+**장수 브랜치**: `main`(출시), `develop`(통합)
 
 ---
 
@@ -287,5 +290,14 @@ type/#issue-number
 
 - **Xcode 프로젝트**: Xcode 16의 `PBXFileSystemSynchronizedRootGroup` 사용 — 폴더 안 파일이 자동으로 타겟에 포함됩니다. 새 Swift 파일을 올바른 폴더에 추가하면 별도 작업 없이 빌드에 포함됩니다.
 - **패키지 매니저**: SPM (Xcode에서 직접 관리, `Package.resolved` 참고)
-- **CI/CD**: GitHub Actions + Fastlane (`release` 브랜치 push 시 자동 배포)
+- **CI/CD**: GitHub Actions + Fastlane
+- **배포 트리거**:
+  - `develop` push → TestFlight 내부 전용 빌드 (QA용) + `build/X.Y.Z-N` 태그 자동 생성
+  - `release/**` push → TestFlight 내부 전용 빌드 (QA 수정사항 재검증용)
+  - `main`에 `vX.Y.Z` 태그 push → App Store Connect에 심사용 빌드 업로드
+  - `main` 브랜치 push 자체는 빌드를 트리거하지 않음 (태그가 트리거)
+- **내부 전용 빌드**: `beta` lane은 `testFlightInternalTestingOnly: true`로 빌드하므로 심사 제출이 **불가능**함. 심사용 빌드는 반드시 `main`의 태그를 통해 생성된다.
+- **릴리스 브랜치 생성**: 수동으로 만들지 말고 Actions의 **"릴리스 브랜치 생성"** 워크플로를 실행한다. 브랜치 생성과 develop 버전 상향이 함께 처리되며, 버전 증가 단위(minor/patch/major)를 실행 시 선택한다.
+- **QA 기간 버전 분리**: `release/vX.Y.Z` 분기와 동시에 develop의 마케팅 버전을 다음으로 올린다. TestFlight가 버전 단위로 빌드를 묶으므로 QA 빌드와 develop 빌드가 섞이지 않는다.
+- **Merge 전략**: feature → develop은 Squash, release/* → main·develop은 Merge commit. release/* 머지에 squash를 쓰면 두 브랜치에 다른 해시가 생겨 이후 머지 충돌이 반복된다.
 - **Firebase Remote Config**: 버전 체크, 피처 플래그 — `AppReducer.swift`의 `onAppear`에서 fetch

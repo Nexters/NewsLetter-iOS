@@ -3,9 +3,12 @@ name: Deploy to TestFlight
 on:
   push:
     branches:
-      - release  # release 브랜치 PR 머지 시 자동 트리거
+      - develop         # develop 머지 시 QA용 TestFlight 배포 (내부 전용 빌드)
+      - 'release/**'    # QA 브랜치 수정사항 재검증용 TestFlight 배포 (내부 전용 빌드)
+    tags:
+      - 'v*.*.*'        # main의 릴리스 태그 push 시 심사용 빌드 배포
 
-  # App Store 제출 또는 수동 배포용
+  # 수동 배포 또는 재시도용
   workflow_dispatch:
     inputs:
       lane:
@@ -17,10 +20,15 @@ on:
           - beta
           - release
 
-# 동일 브랜치에서 여러 워크플로우가 동시에 실행되지 않도록
+# build/* 태그를 push하기 위해 필요합니다.
+permissions:
+  contents: write
+
+# 빌드 번호 레이스를 방지하기 위해 업로드를 직렬화합니다.
+# bump_version이 latest_testflight_build_number + 1 방식이라 동시 실행에 안전하지 않습니다.
 concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  group: testflight-upload
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -59,6 +67,7 @@ jobs:
             -disablePackageRepositoryCache
 
       - name: Fastlane 실행
+        id: fastlane
         env:
           # match 인증서 암호화 패스프레이즈
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
@@ -73,6 +82,24 @@ jobs:
           # Firebase 설정 (gitignore된 GoogleService-Info.plist 재생성에 사용)
           # 로컬에서 생성: base64 -i GoogleService-Info.plist | pbcopy
           GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+          # TestFlight changelog에 표시할 빌드 출처 정보
+          SOURCE_BRANCH: ${{ github.ref_name }}
         run: |
-          LANE="${{ github.event.inputs.lane || 'beta' }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            LANE="${{ github.event.inputs.lane }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            LANE="release"
+          else
+            LANE="beta"
+          fi
+          echo "Selected lane: $LANE"
           bundle exec fastlane $LANE
+
+      # develop 빌드에만 태그를 답니다. release/* 는 수명이 짧고
+      # 최종적으로 main에 v태그가 붙으므로 별도 추적이 불필요합니다.
+      - name: 빌드 태그 생성
+        if: github.ref_name == 'develop' && steps.fastlane.outputs.build_tag != ''
+        run: |
+          TAG="${{ steps.fastlane.outputs.build_tag }}"
+          git tag "$TAG"
+          git push origin "$TAG"
