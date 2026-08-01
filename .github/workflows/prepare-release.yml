@@ -1,0 +1,108 @@
+name: 릴리스 브랜치 생성
+
+# release/vX.Y.Z 브랜치 생성과 develop 마케팅 버전 상향을 한 번에 처리합니다.
+# 두 작업을 묶은 이유: develop 버전을 올리지 않으면 TestFlight에서
+# QA 빌드와 develop 빌드가 같은 버전으로 섞여 QA 담당자가 오인하게 됩니다.
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "릴리스할 버전 (예: 1.1.2) — release/v* 브랜치가 됩니다"
+        required: true
+        type: string
+      next_bump:
+        description: "develop을 올릴 단위"
+        required: true
+        default: "minor"
+        type: choice
+        options:
+          - minor      # 1.1.2 → 1.2.0  (다음이 기능 릴리스)
+          - patch      # 1.1.2 → 1.1.3  (다음이 버그 수정 릴리스)
+          - major      # 1.1.2 → 2.0.0
+          - custom     # next_version_custom 값을 그대로 사용
+      next_version_custom:
+        description: "custom 선택 시 develop 버전 (예: 2.0.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    # 빌드는 하지 않지만 agvtool(= fastlane increment_version_number)이 필요해 macOS를 사용합니다.
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Ruby 설정
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: 입력값 검증 및 다음 버전 계산
+        id: plan
+        run: |
+          REL="${{ inputs.release_version }}"
+          BUMP="${{ inputs.next_bump }}"
+          CUSTOM="${{ inputs.next_version_custom }}"
+
+          if [[ ! "$REL" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::릴리스 버전 형식 오류: '$REL' (x.y.z 형식이어야 합니다)"
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --heads origin "release/v$REL" >/dev/null 2>&1; then
+            echo "::error::release/v$REL 브랜치가 이미 존재합니다."
+            exit 1
+          fi
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$REL"
+          case "$BUMP" in
+            major)  NEXT="$((MAJOR + 1)).0.0" ;;
+            minor)  NEXT="$MAJOR.$((MINOR + 1)).0" ;;
+            patch)  NEXT="$MAJOR.$MINOR.$((PATCH + 1))" ;;
+            custom) NEXT="$CUSTOM" ;;
+          esac
+
+          # App Store 마케팅 버전은 x.y.z 정수 형식만 허용됩니다 (1.2.0-beta 등 불가).
+          if [[ ! "$NEXT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::다음 develop 버전 형식 오류: '$NEXT'"
+            exit 1
+          fi
+
+          echo "next_version=$NEXT" >> $GITHUB_OUTPUT
+          echo "릴리스 브랜치: release/v$REL / develop 다음 버전: $NEXT"
+
+      - name: Git 사용자 설정
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: release 브랜치 생성
+        run: |
+          REL="${{ inputs.release_version }}"
+          git switch -c "release/v$REL"
+          bundle exec fastlane set_marketing_version version:"$REL"
+          # 이미 해당 버전이면 커밋할 변경이 없습니다.
+          if git diff --quiet; then
+            echo "마케팅 버전이 이미 $REL 입니다. 커밋을 건너뜁니다."
+          else
+            git commit -am "release: v$REL 버전 업데이트"
+          fi
+          git push -u origin "release/v$REL"
+
+      - name: develop 마케팅 버전 상향
+        run: |
+          NEXT="${{ steps.plan.outputs.next_version }}"
+          git switch develop
+          bundle exec fastlane set_marketing_version version:"$NEXT"
+          git commit -am "chore: develop 마케팅 버전 $NEXT 으로 상향"
+          git push origin develop
