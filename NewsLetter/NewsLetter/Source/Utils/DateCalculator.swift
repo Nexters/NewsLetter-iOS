@@ -37,14 +37,6 @@ struct DateCalculator {
         return calculatePassDays(from: eventDate) >= 3
     }
     
-    static func isCanShowJobDetailBottomSheet() -> Bool {
-        guard let eventDate = UserActionHistory.deniedDateWhenInputJobDetail else {
-            return true
-        }
-
-        return calculatePassDays(from: eventDate) >= 7
-    }
-    
     static func calculatePassDays(from date: Date) -> Int {
         let today = Date()
         let calendar = Calendar.current

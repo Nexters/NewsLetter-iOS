@@ -11,7 +11,10 @@ import ComposableArchitecture
 
 struct SettingView: View {
     @Bindable var store: StoreOf<SettingReducer>
-    
+
+    @State private var isPresentJobChangeConfirmAlert = false
+    @State private var pendingJobChangeCommit: (() -> Void)?
+
     var body: some View {
         VStack(spacing: 0) {
             CustomNavigationBar()
@@ -48,11 +51,13 @@ struct SettingView: View {
         }
         .draggableBottomSheet(
             isShow: $store.isPresentJobDetailBottomSheet,
-            dismissHandler: { UserActionHistory.deniedDateWhenInputJobDetail = Date() }
+            dismissHandler: {}
         ) {
             JobDetailBottomSheet(
                 initialSelectedJobCategory: Set(store.selectedPreferences.compactMap { Preference.allCases.firstIndex(of: $0) }),
-                initialSelectedCareer: store.selectedWorkingExperience.flatMap { WorkingExperience.allCases.firstIndex(of: $0) }
+                initialSelectedCareer: store.selectedWorkingExperience.flatMap { WorkingExperience.allCases.firstIndex(of: $0) },
+                isCategoryChanged: store.isCategoryChanged,
+                requestChangeConfirmation: requestJobChangeConfirmation
             ) { selectedJobCategory, selectedCareer in
                 jobDetailBottomSheetConfirmHandler(
                     selectedJobCategory: selectedJobCategory,
@@ -62,10 +67,13 @@ struct SettingView: View {
             }
         }
         .ignoresSafeArea(edges: .bottom)
-        .toastMessage(
+        .reportSuccessToast(
             isPresented: $store.isPresentToastMessage,
-            text: "직군정보 등록이 완료되었어요.",
-            bottomPadding: 0
+            text: "변경이 완료되었어요",
+            edge: .bottom,
+            padding: 75,
+            backgroundColor: Color(hex: 0x3F4247),
+            textColor: .white
         )
         .draggableBottomSheet(
             isShow: $store.isPresentNotificationPermissionBottomSheet,
@@ -101,8 +109,22 @@ struct SettingView: View {
         .navigationDestination(isPresented: $store.navigateToTermsOfService) {
             TermsOfServiceView()
         }
+        .confirmAlertDialog(
+            isPresented: $isPresentJobChangeConfirmAlert,
+            message: JobDetailBottomSheet.changeConfirmationMessage,
+            confirmTitle: "변경하기",
+            confirmHandler: {
+                pendingJobChangeCommit?()
+                pendingJobChangeCommit = nil
+            }
+        )
     }
-    
+
+    private func requestJobChangeConfirmation(commit: @escaping () -> Void) {
+        pendingJobChangeCommit = commit
+        isPresentJobChangeConfirmAlert = true
+    }
+
     private func jobDetailBottomSheetConfirmHandler(
         selectedJobCategory: Set<Int>,
         selectedCareer: Int
@@ -115,6 +137,7 @@ struct SettingView: View {
         )
         store.send(.updateUser(requestDTO))
         store.send(.setIsPresentJobDetailBottomSheet(false))
+        store.isPresentToastMessage = true
     }
     
     @ViewBuilder

@@ -23,7 +23,6 @@ struct RecommendView: View {
     
     @Binding var selectedIndex: Int?
     
-    @State private var cardTapCount: Int = 0
     @State private var scrolledID: Int?
     
     var showRefreshButton: Bool {
@@ -66,17 +65,7 @@ struct RecommendView: View {
             GA.main_pageview()
 
             store.send(.onAppear)
-            
-            if UserActionHistory.isFirstAppLaunch {
-                UserActionHistory.isFirstAppLaunch = false
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    store.send(.delegate(.presentJobDetailBottomSheet(true)))
-                }
-            }
-            
-            DateCalculator.checkAndIncrementVisitStreak()
-            
+
             guard UserActionHistory.streakCount >= 2 &&
                     UserActionHistory.isAlreadySetNotification == false &&
                     DateCalculator.isCanShowNotificationPermissionBottomSheet()
@@ -264,24 +253,10 @@ struct RecommendView: View {
     }
     
     private func cardTapHandler() {
-        if cardTapCount >= 3 {
-            guard UserActionHistory.isAlreadyInputJobDetail == false &&
-                    DateCalculator.isCanShowJobDetailBottomSheet()
-            else {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    store.isPresentModal = true
-                    store.send(.delegate(.presentModal(true)))
-                }
-                return
-            }
-            store.send(.delegate(.presentJobDetailBottomSheet(true)))
-        } else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                store.isPresentModal = true
-                store.send(.delegate(.presentModal(true)))
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            store.isPresentModal = true
+            store.send(.delegate(.presentModal(true)))
         }
-        cardTapCount += 1
     }
     
     private func cardRotationDegree(for position: Int) -> Double {
