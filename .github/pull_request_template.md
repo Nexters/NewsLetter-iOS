@@ -5,7 +5,7 @@
 
 ## ✍️ Description
 <!-- PR에 대한 자세한 설명을 써주세요. -->
-- close: 
+closes #
 
 ## 💡 PR Point
 <!-- 코드를 작성할 때 고민했던 부분을 적어주세요 -->
