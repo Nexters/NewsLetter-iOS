@@ -6,7 +6,8 @@
 //
 
 import SwiftUI
-import WebKit
+
+import ComposableArchitecture
 
 struct CarouselCard: View {
     private enum Metric {
@@ -20,7 +21,9 @@ struct CarouselCard: View {
     }
 
     @StateObject private var kakaoShareManager = KakaoShareManager()
-    @State private var isWebViewPresented: Bool = false
+    @State private var isMarkdownPresented: Bool = false
+    @State private var markdownState: MarkdownDetailView.LoadState = .loading
+    @Dependency(\.markdownClient) var markdownClient
     let card: Card
     let index: Int
     let pointColor: Color
@@ -93,7 +96,7 @@ struct CarouselCard: View {
                 }
 
                 Button {
-                    isWebViewPresented = true
+                    isMarkdownPresented = true
                     if isShareEnabled {
                         GA.main_contents_detail_click(
                             cardType: cardType,
@@ -127,11 +130,26 @@ struct CarouselCard: View {
         .frame(height: Metric.height)
         .background(ColorPalette.white)
         .cornerRadius(Metric.cornerRadius)
-        .fullScreenCover(isPresented: $isWebViewPresented) {
-            WebViewFullScreen(
-                url: URL(string: card.contentURL)!,
-                isPresented: $isWebViewPresented
+        .fullScreenCover(isPresented: $isMarkdownPresented) {
+            MarkdownDetailView(
+                title: card.newsletterName,
+                sourceName: card.newsletterName,
+                sourceURL: card.contentURL,
+                pointColor: pointColor,
+                state: markdownState,
+                isPresented: $isMarkdownPresented
             )
+            .task { await loadMarkdown() }
+        }
+    }
+
+    private func loadMarkdown() async {
+        markdownState = .loading
+        do {
+            markdownState = .loaded(try await markdownClient.fetchMarkdown(card.id))
+        } catch {
+            print("❌ 마크다운 조회 실패 - exposureContentId: \(card.id), error: \(error)")
+            markdownState = .failed
         }
     }
 }
