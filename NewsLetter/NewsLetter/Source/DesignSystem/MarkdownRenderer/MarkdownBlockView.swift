@@ -1,30 +1,5 @@
 import SwiftUI
 
-// MARK: - Top-level Renderer
-
-struct MarkdownView: View {
-    let markdown: String
-    let pointColor: Color
-    let isDarkTheme: Bool
-    private let nodes: [MarkdownNode]
-
-    init(_ markdown: String, pointColor: Color = SemanticColor().text_strong, isDarkTheme: Bool = false) {
-        self.markdown = markdown
-        self.pointColor = pointColor
-        self.isDarkTheme = isDarkTheme
-        self.nodes = MarkdownParser().parse(markdown)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ForEach(Array(nodes.enumerated()), id: \.offset) { _, node in
-                BlockNodeView(node: node, pointColor: pointColor, isDarkTheme: isDarkTheme)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
 // MARK: - Block Node View
 
 struct BlockNodeView: View {
@@ -48,9 +23,6 @@ struct BlockNodeView: View {
 
         case .blockquote(let children):
             BlockquoteView(children: children)
-
-        case .callout(let type, let children):
-            CalloutView(type: type, children: children)
 
         case .bulletList(let items):
             BulletListView(items: items, pointColor: pointColor, isDarkTheme: isDarkTheme)
@@ -109,73 +81,6 @@ private struct HeadingView: View {
         case 1: return 4
         case 3: return 20
         default: return 0
-        }
-    }
-}
-
-// MARK: - Callout
-
-struct CalloutView: View {
-    let type: CalloutType
-    let children: [MarkdownNode]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // 헤더: 아이콘 + 레이블 (CarouselCard 태그 스타일)
-            HStack(spacing: 5) {
-                Image(systemName: type.icon)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(accentColor)
-
-                Text(type.label)
-                    .font(.caption12_semiBold)
-                    .foregroundStyle(accentColor)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(accentColor.opacity(0.12))
-            )
-
-            // 본문
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(Array(children.enumerated()), id: \.offset) { _, child in
-                    BlockNodeView(node: child)
-                        .font(.body13_regular)
-                        .foregroundStyle(.semanticColor.text_secondary)
-                }
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(backgroundColor)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(accentColor.opacity(0.2), lineWidth: 1)
-        )
-    }
-
-    private var backgroundColor: Color {
-        switch type {
-        case .tip:       return ColorPalette.pointGreen50
-        case .info:      return ColorPalette.pointBlue100
-        case .warning:   return ColorPalette.pointOrange50
-        case .danger:    return ColorPalette.red50
-        case .note:      return ColorPalette.gray50
-        case .important: return ColorPalette.pointPurple100
-        }
-    }
-
-    private var accentColor: Color {
-        switch type {
-        case .tip:       return ColorPalette.pointGreen600
-        case .info:      return ColorPalette.pointBlue600
-        case .warning:   return ColorPalette.pointOrange500
-        case .danger:    return ColorPalette.red500
-        case .note:      return ColorPalette.gray500
-        case .important: return ColorPalette.pointPurple600
         }
     }
 }
@@ -289,7 +194,7 @@ private struct BulletListView: View {
 }
 
 private struct OrderedListView: View {
-    let items: [[MarkdownNode]]
+    let items: [OrderedListItem]
     let pointColor: Color
     var isDarkTheme: Bool = false
 
@@ -297,19 +202,21 @@ private struct OrderedListView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 HStack(alignment: .top, spacing: 10) {
-                    Text("\(index + 1)")
+                    // 두 자리 번호도 잘리지 않도록 캡슐 배경을 쓴다
+                    Text("\(item.number)")
                         .font(.caption12_semiBold)
                         .foregroundStyle(pointColor)
+                        .padding(.horizontal, 5)
                         .frame(minWidth: 18, minHeight: 18)
                         .background(
-                            Circle()
+                            Capsule()
                                 .fill(pointColor.opacity(0.12))
                         )
                         .padding(.top, 1)
 
-                    InlineText(children: item, pointColor: boldColor)
+                    InlineText(children: item.children, pointColor: boldColor)
                         .font(.body15_regular)
                         .foregroundStyle(isDarkTheme ? ColorPalette.gray200 : .semanticColor.text_secondary)
                         .lineSpacing(6)
@@ -384,12 +291,13 @@ private struct TableView: View {
 
 // MARK: - Inline Text
 
-struct InlineText: View {
+private struct InlineText: View {
     let children: [MarkdownNode]
     var pointColor: Color = SemanticColor().text_strong
 
     var body: some View {
         Text(attributedString)
+            .tint(pointColor)   // 링크에는 SwiftUI의 tint가 적용된다
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -426,6 +334,13 @@ private extension MarkdownNode {
             var result = AttributedString(str)
             result.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
             result.backgroundColor = UIColor(ColorPalette.gray100)
+            return result
+
+        case .link(let children, let url):
+            var result = children.reduce(AttributedString()) { $0 + $1.attributedString(pointColor: pointColor) }
+            if let linkURL = URL(string: url) { result.link = linkURL }
+            result.foregroundColor = UIColor(pointColor)
+            result.underlineStyle = .single
             return result
 
         case .lineBreak:

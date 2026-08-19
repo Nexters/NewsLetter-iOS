@@ -13,23 +13,12 @@ struct MarkdownParser {
     }
 
     // MARK: - Preprocessing
-    // Callout 문법을 내부 마커로 변환: "> [!tip]" → "%%CALLOUT:tip%%"
-    private func preprocess(_ text: String) -> String {
-        var result = text
-        let calloutPattern = #"^>\s*\[!(tip|info|warning|danger|note|important)\]\s*\n?"#
-        let regex = try? NSRegularExpression(pattern: calloutPattern,
-                                             options: [.anchorsMatchLines, .caseInsensitive])
-        let range = NSRange(result.startIndex..., in: result)
-        guard let matches = regex?.matches(in: result, range: range) else { return result }
 
-        // 뒤에서부터 치환 (인덱스 밀림 방지)
-        for match in matches.reversed() {
-            guard let swiftRange = Range(match.range, in: result),
-                  let typeRange = Range(match.range(at: 1), in: result) else { continue }
-            let type = String(result[typeRange]).lowercased()
-            result.replaceSubrange(swiftRange, with: "%%CALLOUT:\(type)%%\n")
-        }
-        return result
+    /// 서버 응답에 이스케이프된 채로 내려오는 개행 문자("\n" 두 글자)를 실제 개행으로 되돌린다
+    private func preprocess(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: "\\r\\n", with: "\n")
+            .replacingOccurrences(of: "\\n", with: "\n")
     }
 
     // MARK: - Block Parsing
@@ -91,31 +80,6 @@ struct MarkdownParser {
                 continue
             }
 
-            // Callout 마커
-            if trimmed.hasPrefix("%%CALLOUT:") {
-                let typeStr = trimmed
-                    .replacingOccurrences(of: "%%CALLOUT:", with: "")
-                    .replacingOccurrences(of: "%%", with: "")
-                    .lowercased()
-                let calloutType = CalloutType(rawValue: typeStr) ?? .note
-                var bodyLines: [String] = []
-                i += 1
-                while i < lines.count {
-                    let next = lines[i]
-                    if next.hasPrefix(">") {
-                        bodyLines.append(String(next.dropFirst()).trimmingCharacters(in: .whitespaces))
-                        i += 1
-                    } else if next.trimmingCharacters(in: .whitespaces).isEmpty {
-                        break
-                    } else {
-                        break
-                    }
-                }
-                let children = parseBlocks(lines: bodyLines)
-                nodes.append(.callout(type: calloutType, children: children))
-                continue
-            }
-
             // Blockquote
             if trimmed.hasPrefix(">") {
                 var quoteLines: [String] = []
@@ -147,21 +111,39 @@ struct MarkdownParser {
             }
 
             // Ordered list
-            if let rest = parseOrderedItem(trimmed) {
-                var items: [[MarkdownNode]] = []
-                var j = i
-                while j < lines.count {
-                    let t = lines[j].trimmingCharacters(in: .whitespaces)
-                    if let r = parseOrderedItem(t) {
-                        items.append(parseInline(r))
-                        j += 1
+            if let first = parseOrderedItem(trimmed) {
+                var items: [OrderedListItem] = []
+                var itemNumber = first.number
+                var itemLines: [String] = [first.content]
+                i += 1
+
+                while i < lines.count {
+                    let t = lines[i].trimmingCharacters(in: .whitespaces)
+
+                    if let item = parseOrderedItem(t) {
+                        items.append(OrderedListItem(number: itemNumber, children: inlineLines(itemLines)))
+                        itemNumber = item.number
+                        itemLines = [item.content]
+                        i += 1
                     } else if t.isEmpty {
+                        // 빈 줄 뒤에 다음 번호가 이어지면 같은 목록으로 본다
+                        var j = i
+                        while j < lines.count && lines[j].trimmingCharacters(in: .whitespaces).isEmpty {
+                            j += 1
+                        }
+                        guard j < lines.count,
+                              parseOrderedItem(lines[j].trimmingCharacters(in: .whitespaces)) != nil else { break }
+                        i = j
+                    } else if isBlockBoundary(t) {
                         break
                     } else {
-                        break
+                        // 번호 없이 이어지는 줄은 현재 항목의 본문으로 붙인다
+                        itemLines.append(lines[i])
+                        i += 1
                     }
                 }
-                i = j
+
+                items.append(OrderedListItem(number: itemNumber, children: inlineLines(itemLines)))
                 nodes.append(.orderedList(items: items))
                 continue
             }
@@ -171,14 +153,12 @@ struct MarkdownParser {
             while i < lines.count {
                 let t = lines[i].trimmingCharacters(in: .whitespaces)
                 if t.isEmpty { break }
-                if t.hasPrefix("#") || t.hasPrefix("```") || t.hasPrefix("|") { break }
-                if t == "---" || t == "***" { break }
+                if isBlockBoundary(t) { break }
                 paraLines.append(lines[i])
                 i += 1
             }
             if !paraLines.isEmpty {
-                let combined = paraLines.joined(separator: " ")
-                nodes.append(.paragraph(children: parseInline(combined)))
+                nodes.append(.paragraph(children: inlineLines(paraLines)))
             }
         }
 
@@ -187,58 +167,94 @@ struct MarkdownParser {
 
     // MARK: - Inline Parsing
 
-    func parseInline(_ text: String) -> [MarkdownNode] {
+    private func parseInline(_ text: String) -> [MarkdownNode] {
         var nodes: [MarkdownNode] = []
-        var remaining = text[text.startIndex...]
+        var remaining = text
 
         while !remaining.isEmpty {
-            // Bold+Italic: ***text***
-            if let range = remaining.range(of: "***"),
-               let endRange = remaining[range.upperBound...].range(of: "***") {
-                let before = String(remaining[remaining.startIndex..<range.lowerBound])
-                if !before.isEmpty { nodes.append(.text(before)) }
-                let inner = String(remaining[range.upperBound..<endRange.lowerBound])
-                nodes.append(.boldItalic(children: parseInline(inner)))
-                remaining = remaining[endRange.upperBound...]
-                continue
+            guard let match = firstInlineMatch(in: remaining) else {
+                nodes.append(.text(remaining))
+                break
             }
-            // Bold: **text**
-            if let range = remaining.range(of: "**"),
-               let endRange = remaining[range.upperBound...].range(of: "**") {
-                let before = String(remaining[remaining.startIndex..<range.lowerBound])
-                if !before.isEmpty { nodes.append(.text(before)) }
-                let inner = String(remaining[range.upperBound..<endRange.lowerBound])
-                nodes.append(.bold(children: parseInline(inner)))
-                remaining = remaining[endRange.upperBound...]
-                continue
-            }
-            // Italic: *text*
-            if let range = remaining.range(of: "*"),
-               let endRange = remaining[range.upperBound...].range(of: "*") {
-                let before = String(remaining[remaining.startIndex..<range.lowerBound])
-                if !before.isEmpty { nodes.append(.text(before)) }
-                let inner = String(remaining[range.upperBound..<endRange.lowerBound])
-                nodes.append(.italic(children: parseInline(inner)))
-                remaining = remaining[endRange.upperBound...]
-                continue
-            }
-            // Inline code: `code`
-            if let range = remaining.range(of: "`"),
-               let endRange = remaining[range.upperBound...].range(of: "`") {
-                let before = String(remaining[remaining.startIndex..<range.lowerBound])
-                if !before.isEmpty { nodes.append(.text(before)) }
-                let inner = String(remaining[range.upperBound..<endRange.lowerBound])
-                nodes.append(.code(inner))
-                remaining = remaining[endRange.upperBound...]
-                continue
-            }
-            // 남은 텍스트 전체
-            nodes.append(.text(String(remaining)))
-            break
+            let before = String(remaining[remaining.startIndex..<match.range.lowerBound])
+            if !before.isEmpty { nodes.append(.text(before)) }
+            nodes.append(match.node)
+            remaining = String(remaining[match.range.upperBound...])
         }
 
         return nodes
     }
+
+    /// 가장 앞에 등장하는 인라인 문법 하나를 찾는다 (같은 위치면 선언 순서가 우선)
+    private func firstInlineMatch(in text: String) -> InlineMatch? {
+        let candidates: [() -> InlineMatch?] = [
+            { self.delimitedMatch(in: text, marker: "***") { .boldItalic(children: self.parseInline($0)) } },
+            { self.delimitedMatch(in: text, marker: "**") { .bold(children: self.parseInline($0)) } },
+            { self.delimitedMatch(in: text, marker: "*") { .italic(children: self.parseInline($0)) } },
+            { self.delimitedMatch(in: text, marker: "`") { .code($0) } },
+            { self.linkMatch(in: text) },
+            { self.autoLinkMatch(in: text) }
+        ]
+
+        var best: InlineMatch?
+        for candidate in candidates {
+            guard let match = candidate() else { continue }
+            if best == nil || match.range.lowerBound < best!.range.lowerBound {
+                best = match
+            }
+        }
+        return best
+    }
+
+    private func delimitedMatch(in text: String,
+                                marker: String,
+                                make: (String) -> MarkdownNode) -> InlineMatch? {
+        guard let open = text.range(of: marker),
+              let close = text[open.upperBound...].range(of: marker) else { return nil }
+        let inner = String(text[open.upperBound..<close.lowerBound])
+        return InlineMatch(range: open.lowerBound..<close.upperBound, node: make(inner))
+    }
+
+    /// [표시 문구](https://...)
+    private func linkMatch(in text: String) -> InlineMatch? {
+        guard let match = Self.linkRegex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let full = Range(match.range, in: text),
+              let labelRange = Range(match.range(at: 1), in: text),
+              let urlRange = Range(match.range(at: 2), in: text) else { return nil }
+        let label = String(text[labelRange])
+        let url = String(text[urlRange])
+        return InlineMatch(range: full,
+                           node: .link(children: label.isEmpty ? [.text(url)] : parseInline(label), url: url))
+    }
+
+    /// 마크다운 링크 문법 없이 노출된 URL
+    private func autoLinkMatch(in text: String) -> InlineMatch? {
+        guard let match = Self.autoLinkRegex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              var range = Range(match.range, in: text) else { return nil }
+
+        // 문장 끝 구두점은 링크에서 제외한다
+        while let last = text[range].last, ".,)]}>\"'".contains(last) {
+            range = range.lowerBound..<text.index(before: range.upperBound)
+        }
+        guard !text[range].isEmpty else { return nil }
+
+        let url = String(text[range])
+        return InlineMatch(range: range, node: .link(children: [.text(Self.linkLabel(for: url))], url: url))
+    }
+
+    /// 긴 URL을 그대로 노출하지 않도록 도메인만 보여준다
+    private static func linkLabel(for url: String) -> String {
+        guard let host = URL(string: url)?.host, !host.isEmpty else { return url }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+    }
+
+    private struct InlineMatch {
+        let range: Range<String.Index>
+        let node: MarkdownNode
+    }
+
+    private static let linkRegex = try! NSRegularExpression(pattern: #"\[([^\]]*)\]\(([^)\s]+)\)"#)
+    private static let autoLinkRegex = try! NSRegularExpression(pattern: #"https?://[^\s<>\[\]()]+"#)
 
     // MARK: - Helpers
 
@@ -258,12 +274,30 @@ struct MarkdownParser {
         line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("+ ")
     }
 
-    private func parseOrderedItem(_ line: String) -> String? {
-        guard let dotRange = line.range(of: ". "),
-              let numStr = line.range(of: ".")
-                .map({ String(line[line.startIndex..<$0.lowerBound]) }),
-              Int(numStr) != nil else { return nil }
-        return String(line[dotRange.upperBound...])
+    private func parseOrderedItem(_ line: String) -> (number: Int, content: String)? {
+        guard let dotIndex = line.firstIndex(of: "."), dotIndex != line.startIndex,
+              let number = Int(line[line.startIndex..<dotIndex]) else { return nil }
+        let afterDot = line.index(after: dotIndex)
+        guard afterDot < line.endIndex, line[afterDot] == " " else { return nil }
+        return (number, String(line[line.index(after: afterDot)...]))
+    }
+
+    /// 다른 블록 문법이 시작되는 줄인지 판단한다 (문단 / 목록 항목이 여기서 끊긴다)
+    private func isBlockBoundary(_ trimmed: String) -> Bool {
+        if trimmed.hasPrefix("#") || trimmed.hasPrefix("```") || trimmed.hasPrefix("|") { return true }
+        if trimmed.hasPrefix(">") { return true }
+        if trimmed == "---" || trimmed == "***" || trimmed == "___" { return true }
+        return isBulletItem(trimmed)
+    }
+
+    /// 여러 줄을 하나의 인라인 묶음으로 만든다. 줄 사이 개행은 그대로 유지한다.
+    private func inlineLines(_ lines: [String]) -> [MarkdownNode] {
+        var nodes: [MarkdownNode] = []
+        for (index, line) in lines.enumerated() {
+            if index > 0 { nodes.append(.lineBreak) }
+            nodes.append(contentsOf: parseInline(line.trimmingCharacters(in: .whitespaces)))
+        }
+        return nodes
     }
 
     private func parseTable(_ lines: [String]) -> MarkdownNode? {
