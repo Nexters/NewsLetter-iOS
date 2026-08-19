@@ -8,27 +8,36 @@
 import SwiftUI
 import UIKit
 
-struct MarkdownDetailView: View {
-    /// 마크다운 본문 로드 상태
-    enum LoadState: Equatable {
-        case loading
-        case loaded(String)
-        case failed
-    }
+import ComposableArchitecture
 
-    let title: String
-    /// 본문 상단에 표기할 출처 이름 (뉴스레터명)
-    let sourceName: String
-    /// 복사 버튼으로 제공할 원문 아티클 링크
-    let sourceURL: String
+struct MarkdownDetailView: View {
+    // 이 화면을 띄우는 모달 체인(CarouselModalView → CarouselCard)이 store 없이 동작하므로,
+    // 상세 화면이 자신의 store를 직접 소유한다. 본문 로드는 전부 Reducer가 담당한다.
+    @State private var store: StoreOf<MarkdownDetailReducer>
+
     let pointColor: Color
-    let state: LoadState
     @Binding var isPresented: Bool
 
-    @State private var isCopied: Bool = false
+    @State private var isLinkCopiedToastPresented: Bool = false
+
+    init(exposureContentId: Int, pointColor: Color, isPresented: Binding<Bool>) {
+        self.init(
+            store: Store(initialState: MarkdownDetailReducer.State(exposureContentId: exposureContentId)) {
+                MarkdownDetailReducer()
+            },
+            pointColor: pointColor,
+            isPresented: isPresented
+        )
+    }
+
+    init(store: StoreOf<MarkdownDetailReducer>, pointColor: Color, isPresented: Binding<Bool>) {
+        self._store = State(initialValue: store)
+        self.pointColor = pointColor
+        self._isPresented = isPresented
+    }
 
     private var nodes: [MarkdownNode] {
-        guard case .loaded(let markdown) = state else { return [] }
+        guard case .loaded(let markdown) = store.loadState else { return [] }
         return MarkdownParser().parse(markdown)
     }
 
@@ -135,11 +144,6 @@ struct MarkdownDetailView: View {
                         .foregroundStyle(navTitleColor)
                 }
 
-                Text(title)
-                    .font(.body16_semiBold)
-                    .foregroundStyle(navTitleColor)
-                    .lineLimit(1)
-
                 Spacer()
             }
             .padding(.horizontal, 20)
@@ -149,7 +153,7 @@ struct MarkdownDetailView: View {
             Divider()
                 .background(dividerColor)
 
-            switch state {
+            switch store.loadState {
             case .loading:
                 Spacer()
                 ProgressView()
@@ -158,18 +162,8 @@ struct MarkdownDetailView: View {
             case .loaded:
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        // 출처는 본문 첫 제목 바로 아래에 붙인다
-                        if let firstHeading = nodes.first, case .heading = firstHeading {
-                            BlockNodeView(node: firstHeading, pointColor: displayPointColor, isDarkTheme: isDarkTheme)
-                            sourceRow
-                            ForEach(Array(nodes.dropFirst().enumerated()), id: \.offset) { _, node in
-                                BlockNodeView(node: node, pointColor: displayPointColor, isDarkTheme: isDarkTheme)
-                            }
-                        } else {
-                            sourceRow
-                            ForEach(Array(nodes.enumerated()), id: \.offset) { _, node in
-                                BlockNodeView(node: node, pointColor: displayPointColor, isDarkTheme: isDarkTheme)
-                            }
+                        ForEach(Array(nodes.enumerated()), id: \.offset) { _, node in
+                            nodeView(node)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -186,30 +180,112 @@ struct MarkdownDetailView: View {
             }
         }
         .background(backgroundColor)
+        .onAppear { store.send(.onAppear) }
+        // 본문 링크는 열지 않고 복사한다
+        .environment(\.openURL, OpenURLAction { url in
+            copyLink(url.absoluteString)
+            return .handled
+        })
+        .toastMessage(isPresented: $isLinkCopiedToastPresented,
+                      text: "링크가 복사되었어요",
+                      bottomPadding: 40)
     }
 
-    private var sourceRow: some View {
-        HStack(spacing: 6) {
-            Text("출처: \(sourceName)")
-                .font(.caption11_regular)
-                .foregroundStyle(sourceTextColor)
+    private func copyLink(_ url: String) {
+        UIPasteboard.general.string = url
+        isLinkCopiedToastPresented = true
+    }
 
-            Button {
-                UIPasteboard.general.string = sourceURL
-                isCopied = true
-                Task {
-                    try? await Task.sleep(for: .seconds(1.5))
-                    isCopied = false
-                }
-            } label: {
-                HStack(spacing: 2) {
-                    Image(systemName: isCopied ? "checkmark" : "link")
-                        .font(.system(size: 10, weight: .semibold))
-                    Text(isCopied ? "복사됨" : "원문 링크 복사")
-                        .font(.caption11_semiBold)
-                }
-                .foregroundStyle(bodyTextColor)
+    @ViewBuilder
+    private func nodeView(_ node: MarkdownNode) -> some View {
+        // 본문에 포함된 출처 줄은 기존 UI와 같은 캡션 스타일 + 링크 복사 버튼으로 표시한다
+        if case .paragraph(let children) = node, isSourceLine(children) {
+            SourceLineView(
+                text: Self.plainText(children),
+                link: Self.firstLink(in: children),
+                textColor: sourceTextColor,
+                linkColor: bodyTextColor,
+                onCopy: copyLink
+            )
+        } else {
+            BlockNodeView(node: node, pointColor: displayPointColor, isDarkTheme: isDarkTheme)
+        }
+    }
+
+    private func isSourceLine(_ children: [MarkdownNode]) -> Bool {
+        guard case .text(let first)? = children.first else { return false }
+        return first.trimmingCharacters(in: .whitespaces).hasPrefix("출처:")
+    }
+
+    /// 링크를 제외한 나머지 텍스트만 이어붙인다
+    private static func plainText(_ nodes: [MarkdownNode]) -> String {
+        let joined = nodes.reduce(into: "") { result, node in
+            switch node {
+            case .text(let value), .code(let value):
+                result += value
+            case .bold(let children), .italic(let children), .boldItalic(let children):
+                result += plainText(children)
+            case .lineBreak:
+                result += " "
+            default:
+                break
             }
+        }
+        return joined.trimmingCharacters(in: .whitespaces)
+    }
+
+    private static func firstLink(in nodes: [MarkdownNode]) -> (label: String, url: String)? {
+        for node in nodes {
+            guard case .link(let children, let url) = node else { continue }
+            let label = plainText(children)
+            return (label.isEmpty ? "원문 링크" : label, url)
+        }
+        return nil
+    }
+}
+
+// MARK: - Source Line
+
+/// "출처: OO | 원본 아티클: [원문 읽기](...)" 줄. 링크는 복사 버튼으로 노출한다.
+private struct SourceLineView: View {
+    let text: String
+    let link: (label: String, url: String)?
+    let textColor: Color
+    let linkColor: Color
+    let onCopy: (String) -> Void
+
+    @State private var isCopied: Bool = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if !text.isEmpty {
+                Text(text)
+                    .font(.caption11_regular)
+                    .foregroundStyle(textColor)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let link {
+                Button {
+                    onCopy(link.url)
+                    isCopied = true
+                    Task {
+                        try? await Task.sleep(for: .seconds(1.5))
+                        isCopied = false
+                    }
+                } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: isCopied ? "checkmark" : "link")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text(isCopied ? "복사됨" : link.label)
+                            .font(.caption11_semiBold)
+                    }
+                    .foregroundStyle(linkColor)
+                }
+                .fixedSize()
+            }
+
+            Spacer(minLength: 0)
         }
     }
 }
@@ -218,56 +294,52 @@ private extension Color {
     static var semanticColor: SemanticColor { SemanticColor() }
 }
 
-private let previewMarkdown = """
-## 프리뷰 제목
+private let previewMarkdown = #"""
+# 프리뷰 제목
 
-프리뷰 본문입니다.
+출처: 프리뷰 뉴스레터 | 원본 아티클: [원문 읽기](https://example.com)
 
-### 중간 제목
+주요 키워드: Android
 
-* **볼드 항목:** 본문 설명
-"""
+---\n\n## 📌 에디터 요약\n\n프리뷰 본문입니다.\n\n---\n\n## 📖 아티클 본문\n\n1. 첫 번째 항목
+첫 번째 항목 설명
+Link: https://example.com/1
+
+2. 두 번째 항목
+Link: https://example.com/2
+
+10. 열 번째 항목
+Link: https://example.com/10
+"""#
 
 #Preview("오렌지 포인트") {
     MarkdownDetailView(
-        title: "안드로이드 위클리",
-        sourceName: "안드로이드 위클리",
-        sourceURL: "https://example.com",
+        store: Store(initialState: .init(exposureContentId: 0, loadState: .loaded(previewMarkdown))) { },
         pointColor: ColorPalette.pointOrange500,
-        state: .loaded(previewMarkdown),
         isPresented: .constant(true)
     )
 }
 
 #Preview("노란 포인트") {
     MarkdownDetailView(
-        title: "레몬 뉴스레터",
-        sourceName: "레몬 뉴스레터",
-        sourceURL: "https://example.com",
+        store: Store(initialState: .init(exposureContentId: 0, loadState: .loaded(previewMarkdown))) { },
         pointColor: ColorPalette.pointLemonYellow700,
-        state: .loaded(previewMarkdown),
         isPresented: .constant(true)
     )
 }
 
 #Preview("로딩") {
     MarkdownDetailView(
-        title: "퍼플 뉴스레터",
-        sourceName: "퍼플 뉴스레터",
-        sourceURL: "https://example.com",
+        store: Store(initialState: .init(exposureContentId: 0, loadState: .loading)) { },
         pointColor: ColorPalette.pointPurple600,
-        state: .loading,
         isPresented: .constant(true)
     )
 }
 
 #Preview("실패") {
     MarkdownDetailView(
-        title: "퍼플 뉴스레터",
-        sourceName: "퍼플 뉴스레터",
-        sourceURL: "https://example.com",
+        store: Store(initialState: .init(exposureContentId: 0, loadState: .failed)) { },
         pointColor: ColorPalette.pointPurple600,
-        state: .failed,
         isPresented: .constant(true)
     )
 }

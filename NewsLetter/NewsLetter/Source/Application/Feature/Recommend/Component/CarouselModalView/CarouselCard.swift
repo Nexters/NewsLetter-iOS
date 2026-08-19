@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import ComposableArchitecture
-
 struct CarouselCard: View {
     private enum Metric {
         static let height: CGFloat = 366
@@ -22,8 +20,6 @@ struct CarouselCard: View {
 
     @StateObject private var kakaoShareManager = KakaoShareManager()
     @State private var isMarkdownPresented: Bool = false
-    @State private var markdownState: MarkdownDetailView.LoadState = .loading
-    @Dependency(\.markdownClient) var markdownClient
     let card: Card
     let index: Int
     let pointColor: Color
@@ -117,7 +113,7 @@ struct CarouselCard: View {
                         .background(ColorPalette.white)
                         .frame(height: Metric.nextButtonHeight)
                         .overlay {
-                            Text("원문 보기")
+                            Text("자세히 보기")
                                 .fontRangeLimited()
                                 .font(.body14_semiBold)
                                 .foregroundStyle(.semanticColor.text_primary)
@@ -132,24 +128,10 @@ struct CarouselCard: View {
         .cornerRadius(Metric.cornerRadius)
         .fullScreenCover(isPresented: $isMarkdownPresented) {
             MarkdownDetailView(
-                title: card.newsletterName,
-                sourceName: card.newsletterName,
-                sourceURL: card.contentURL,
+                exposureContentId: card.id,
                 pointColor: pointColor,
-                state: markdownState,
                 isPresented: $isMarkdownPresented
             )
-            .task { await loadMarkdown() }
-        }
-    }
-
-    private func loadMarkdown() async {
-        markdownState = .loading
-        do {
-            markdownState = .loaded(try await markdownClient.fetchMarkdown(card.id))
-        } catch {
-            print("❌ 마크다운 조회 실패 - exposureContentId: \(card.id), error: \(error)")
-            markdownState = .failed
         }
     }
 }
