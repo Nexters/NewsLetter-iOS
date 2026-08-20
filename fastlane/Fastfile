@@ -16,7 +16,10 @@ PLIST_PATH    = File.join(PROJECT_ROOT, "NewsLetter/NewsLetter/Resource/GoogleSe
 
 platform :ios do
   # 모든 레인 실행 전 API Key 생성
-  before_all do
+  before_all do |lane|
+    # set_marketing_version은 pbxproj의 MARKETING_VERSION만 수정하는 로컬 작업이라
+    # App Store Connect 인증이 불필요합니다. (릴리스 브랜치 생성 워크플로에는 ASC 시크릿이 없음)
+    next if lane == :set_marketing_version
     $api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], 
       issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
