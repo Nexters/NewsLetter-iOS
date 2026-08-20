@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import WebKit
 
 struct CarouselCard: View {
     private enum Metric {
@@ -20,7 +19,7 @@ struct CarouselCard: View {
     }
 
     @StateObject private var kakaoShareManager = KakaoShareManager()
-    @State private var isWebViewPresented: Bool = false
+    @State private var isMarkdownPresented: Bool = false
     let card: Card
     let index: Int
     let pointColor: Color
@@ -93,7 +92,7 @@ struct CarouselCard: View {
                 }
 
                 Button {
-                    isWebViewPresented = true
+                    isMarkdownPresented = true
                     if isShareEnabled {
                         GA.main_contents_detail_click(
                             cardType: cardType,
@@ -114,7 +113,7 @@ struct CarouselCard: View {
                         .background(ColorPalette.white)
                         .frame(height: Metric.nextButtonHeight)
                         .overlay {
-                            Text("원문 보기")
+                            Text("자세히 보기")
                                 .fontRangeLimited()
                                 .font(.body14_semiBold)
                                 .foregroundStyle(.semanticColor.text_primary)
@@ -127,10 +126,11 @@ struct CarouselCard: View {
         .frame(height: Metric.height)
         .background(ColorPalette.white)
         .cornerRadius(Metric.cornerRadius)
-        .fullScreenCover(isPresented: $isWebViewPresented) {
-            WebViewFullScreen(
-                url: URL(string: card.contentURL)!,
-                isPresented: $isWebViewPresented
+        .fullScreenCover(isPresented: $isMarkdownPresented) {
+            MarkdownDetailView(
+                exposureContentId: card.id,
+                pointColor: pointColor,
+                isPresented: $isMarkdownPresented
             )
         }
     }
