@@ -129,6 +129,7 @@ struct CarouselCard: View {
         .fullScreenCover(isPresented: $isMarkdownPresented) {
             MarkdownDetailView(
                 exposureContentId: card.id,
+                contentURL: card.contentURL,
                 pointColor: pointColor,
                 isPresented: $isMarkdownPresented
             )
