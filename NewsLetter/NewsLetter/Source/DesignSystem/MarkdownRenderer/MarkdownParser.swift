@@ -149,7 +149,13 @@ struct MarkdownParser {
             }
 
             // Paragraph: 연속된 비-공백 줄 묶기
-            var paraLines: [String] = []
+            //
+            // 첫 줄은 무조건 소비한다. 앞선 어떤 블록 분기도 처리하지 못했지만
+            // isBlockBoundary는 true인 줄("#800 — ..."처럼 heading이 아닌 # 시작 줄,
+            // 닫는 파이프가 없는 표 줄 등)이 여기 도달하는데,
+            // 경계로 보고 바로 끊으면 i가 전진하지 않아 무한 루프에 빠진다.
+            var paraLines: [String] = [lines[i]]
+            i += 1
             while i < lines.count {
                 let t = lines[i].trimmingCharacters(in: .whitespaces)
                 if t.isEmpty { break }
@@ -157,9 +163,7 @@ struct MarkdownParser {
                 paraLines.append(lines[i])
                 i += 1
             }
-            if !paraLines.isEmpty {
-                nodes.append(.paragraph(children: inlineLines(paraLines)))
-            }
+            nodes.append(.paragraph(children: inlineLines(paraLines)))
         }
 
         return nodes
