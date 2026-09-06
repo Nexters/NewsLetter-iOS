@@ -45,6 +45,13 @@ struct MarkdownParser {
                     codeLines.append(lines[i])
                     i += 1
                 }
+                // 펜스 안쪽의 앞뒤 빈 줄은 렌더링 시 여백만 늘리므로 제거한다
+                while let first = codeLines.first, first.trimmingCharacters(in: .whitespaces).isEmpty {
+                    codeLines.removeFirst()
+                }
+                while let last = codeLines.last, last.trimmingCharacters(in: .whitespaces).isEmpty {
+                    codeLines.removeLast()
+                }
                 nodes.append(.codeBlock(language: lang.isEmpty ? nil : lang,
                                         code: codeLines.joined(separator: "\n")))
                 i += 1
