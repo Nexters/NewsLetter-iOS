@@ -345,7 +345,7 @@ jobs:
 
 ### 주의
 
-- **`runs-on: macos-latest`인 이유:** fastlane의 `increment_version_number`는 내부적으로 `agvtool`(Xcode 도구)을 사용하므로 Linux 러너에서 동작하지 않는다. 빌드가 없어 소요는 짧고, public 레포라 비용도 없다.
+- **`runs-on: macos-latest`인 이유:** 초기 설계에서는 `agvtool` 의존 때문이었으나, `set_marketing_version`이 pbxproj를 직접 수정하는 방식으로 바뀌어 이 제약은 사라졌다. 다만 `bundle install`이 다른 macOS 전용 gem에 걸릴 여지가 있어 우선 macOS를 유지한다. 빌드가 없어 소요는 짧고, public 레포라 비용도 없다. (추후 `ubuntu-latest`로 전환 가능)
 - **develop 브랜치 보호 규칙이 있다면** `github-actions[bot]`의 push를 허용하도록 예외를 추가해야 한다.
 - 이 워크플로는 `deploy.yml`과 별개 파일이며, `deploy.yml`의 트리거에는 영향을 주지 않는다.
 
@@ -415,10 +415,27 @@ jobs:
     # App Store 마케팅 버전은 x.y.z 정수 형식만 허용됩니다.
     UI.user_error!("버전 형식이 올바르지 않습니다: #{version}") unless version.match?(/\A\d+\.\d+\.\d+\z/)
 
-    increment_version_number(version_number: version, xcodeproj: PROJECT)
-    UI.success "마케팅 버전: #{version}"
+    # 이 프로젝트는 GENERATE_INFOPLIST_FILE = YES 방식이라 버전의 실제 소스가
+    # pbxproj의 MARKETING_VERSION입니다. agvtool 기반인 increment_version_number는
+    # Info.plist를 찾지 못해 동작하지 않으므로 pbxproj를 직접 수정합니다.
+    pbxproj_path = File.join(PROJECT_ROOT, PROJECT, "project.pbxproj")
+    content = File.read(pbxproj_path)
+    updated = content.gsub(/MARKETING_VERSION = [^;]+;/, "MARKETING_VERSION = #{version};")
+
+    if content == updated
+      UI.important "마케팅 버전이 이미 #{version} 입니다. 변경 사항이 없습니다."
+    else
+      File.write(pbxproj_path, updated)
+      UI.success "마케팅 버전: #{version}"
+    end
   end
 ```
+
+> **`increment_version_number`를 쓰지 않는 이유 (실제 검증됨):** 이 프로젝트는 `GENERATE_INFOPLIST_FILE = YES`로 Info.plist를 자동 생성하며, 버전의 실제 소스는 `pbxproj`의 `MARKETING_VERSION`(346, 388줄)이다. fastlane의 `increment_version_number`와 그 기반인 `agvtool`은 Info.plist를 찾으려 하다가 실패한다.
+>
+> 로컬에서 `xcrun agvtool new-marketing-version 1.1.2`를 실행하면 성공 메시지가 나오지만 **실제로는 아무 파일도 변경되지 않는다** (`Cannot find "NewsLetter.xcodeproj/../YES"` — `GENERATE_INFOPLIST_FILE = YES`의 `YES`를 경로로 오인). 조용히 실패하므로 특히 주의해야 한다.
+>
+> 읽기(`get_version_number`)는 xcodeproj gem을 사용하므로 정상 동작한다.
 
 기존 `bump_version`(빌드 번호 증가)과는 별개 lane이다. 이름이 비슷하므로 혼동하지 말 것 — `bump_version`은 **빌드 번호**, `set_marketing_version`은 **마케팅 버전**을 다룬다.
 

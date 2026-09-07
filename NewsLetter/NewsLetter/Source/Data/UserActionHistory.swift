@@ -8,10 +8,6 @@
 import Foundation
 
 struct UserActionHistory {
-    /// 유저가 처음 앱을 실행했는지 여부
-    @UserDefaultWrapper(key: "isFirstAppLaunch", defaultValue: true)
-    static var isFirstAppLaunch: Bool
-    
     /// 유저가 첫 카드를 열고 닫았는지 여부
     @UserDefaultWrapper(key: "isFirstLook", defaultValue: false)
     static var isFirstLook: Bool
@@ -32,10 +28,6 @@ struct UserActionHistory {
     @UserDefaultWrapper(key: "isAlreadySetNotification", defaultValue: false)
     static var isAlreadySetNotification: Bool
     
-    /// 유저가 정보 등록을 거부한 날짜
-    @UserDefaultWrapper(key: "deniedDateWhenInputJobDetail", defaultValue: nil)
-    static var deniedDateWhenInputJobDetail: Date?
-    
     /// 유저가 알림 받기를 거부한 날짜
     @UserDefaultWrapper(key: "deniedDateWhenSetNotification", defaultValue: nil)
     static var deniedDateWhenSetNotification: Date?
@@ -51,4 +43,8 @@ struct UserActionHistory {
     /// 유저의 새로고침 사용 날짜
     @UserDefaultWrapper(key: "useRefreshDate", defaultValue: nil)
     static var useRefreshDate: Date?
+
+    /// 온보딩 둘째날 직군 변경 바텀시트 플로우가 종료되었는지 여부. true가 되면 서버에 온보딩 상태를 다시 확인하지 않습니다.
+    @UserDefaultWrapper(key: "isOnboardingFlowFinished", defaultValue: false)
+    static var isOnboardingFlowFinished: Bool
 }

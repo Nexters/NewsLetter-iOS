@@ -16,7 +16,10 @@ PLIST_PATH    = File.join(PROJECT_ROOT, "NewsLetter/NewsLetter/Resource/GoogleSe
 
 platform :ios do
   # 모든 레인 실행 전 API Key 생성
-  before_all do
+  before_all do |lane|
+    # set_marketing_version은 pbxproj의 MARKETING_VERSION만 수정하는 로컬 작업이라
+    # App Store Connect 인증이 불필요합니다. (릴리스 브랜치 생성 워크플로에는 ASC 시크릿이 없음)
+    next if lane == :set_marketing_version
     $api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], 
       issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
@@ -69,8 +72,19 @@ platform :ios do
     # App Store 마케팅 버전은 x.y.z 정수 형식만 허용됩니다.
     UI.user_error!("버전 형식이 올바르지 않습니다: #{version}") unless version.match?(/\A\d+\.\d+\.\d+\z/)
 
-    increment_version_number(version_number: version, xcodeproj: PROJECT)
-    UI.success "마케팅 버전: #{version}"
+    # 이 프로젝트는 GENERATE_INFOPLIST_FILE = YES 방식이라 버전의 실제 소스가
+    # pbxproj의 MARKETING_VERSION입니다. agvtool 기반인 increment_version_number는
+    # Info.plist를 찾지 못해 동작하지 않으므로 pbxproj를 직접 수정합니다.
+    pbxproj_path = File.join(PROJECT_ROOT, PROJECT, "project.pbxproj")
+    content = File.read(pbxproj_path)
+    updated = content.gsub(/MARKETING_VERSION = [^;]+;/, "MARKETING_VERSION = #{version};")
+
+    if content == updated
+      UI.important "마케팅 버전이 이미 #{version} 입니다. 변경 사항이 없습니다."
+    else
+      File.write(pbxproj_path, updated)
+      UI.success "마케팅 버전: #{version}"
+    end
   end
 
   desc "빌드 번호 증가 (현재 마케팅 버전 기준 TestFlight 최신 빌드 + 1)"

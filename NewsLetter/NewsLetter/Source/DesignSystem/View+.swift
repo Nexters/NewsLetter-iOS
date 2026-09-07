@@ -34,8 +34,24 @@ extension View {
         )
     }
     
-    func reportSuccessToast(isPresented: Binding<Bool>, topPadding: CGFloat) -> some View {
-        self.modifier(ReportSuccessToastMessage(isPresented: isPresented, topPadding: topPadding))
+    func reportSuccessToast(
+        isPresented: Binding<Bool>,
+        text: String = "제보가 완료되었어요",
+        edge: VerticalEdge = .top,
+        padding: CGFloat,
+        backgroundColor: Color = .white,
+        textColor: Color = .semanticColor.text_primary
+    ) -> some View {
+        self.modifier(
+            ReportSuccessToastMessage(
+                isPresented: isPresented,
+                text: text,
+                edge: edge,
+                padding: padding,
+                backgroundColor: backgroundColor,
+                textColor: textColor
+            )
+        )
     }
 
     func fontRangeLimited() -> some View {
@@ -99,10 +115,14 @@ struct ToastMessage: ViewModifier {
 
 struct ReportSuccessToastMessage: ViewModifier {
     @Binding var isPresented: Bool
-    let topPadding: CGFloat
+    let text: String
+    let edge: VerticalEdge
+    let padding: CGFloat
+    let backgroundColor: Color
+    let textColor: Color
 
     func body(content: Content) -> some View {
-        ZStack(alignment: .top) {
+        ZStack(alignment: edge == .top ? .top : .bottom) {
             content
 
             HStack(spacing: 8) {
@@ -111,22 +131,22 @@ struct ReportSuccessToastMessage: ViewModifier {
                     .scaledToFit()
                     .frame(width: 24, height: 24)
 
-                Text("제보가 완료되었어요")
+                Text(text)
                     .font(.body15_regular)
-                    .foregroundColor(.semanticColor.text_primary)
+                    .foregroundColor(textColor)
             }
             .padding(.leading, 12)
             .padding(.trailing, 16)
             .padding(.vertical, 12)
             .background(
                 Capsule()
-                    .fill(Color.white)
+                    .fill(backgroundColor)
                     .shadow(color: Color(red: 34/255, green: 62/255, blue: 119/255).opacity(0.12), radius: 8, x: 0, y: 0)
             )
             .opacity(isPresented ? 1 : 0)
-            .offset(y: isPresented ? 0 : -20)
+            .offset(y: isPresented ? 0 : (edge == .top ? -20 : 20))
             .animation(.bouncy, value: isPresented)
-            .padding(.top, topPadding)
+            .padding(edge == .top ? .top : .bottom, padding)
         }
         .onChange(of: isPresented) { _, newValue in
             if newValue == true {

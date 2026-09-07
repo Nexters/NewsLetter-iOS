@@ -14,6 +14,7 @@ enum Z {
     static let cardElevated: Double = 10
     static let carouselModal: Double = 20
     static let bottomSheet: Double = 50
+    static let alertDialog: Double = 60
 }
 
 typealias ColorSet = (main: Color, sub: Color)

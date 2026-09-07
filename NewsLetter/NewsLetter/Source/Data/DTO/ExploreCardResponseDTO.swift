@@ -45,7 +45,7 @@ struct ExploreCardDTO: Decodable {
     
     func toDomain() -> ExploreCard {
         .init(
-            id: contentId,
+            id: id,
             title: provocativeHeadline,
             topKeyword: provocativeKeyword,
             summary: summaryContent,
