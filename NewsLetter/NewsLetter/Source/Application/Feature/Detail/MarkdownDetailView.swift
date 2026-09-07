@@ -15,23 +15,32 @@ struct MarkdownDetailView: View {
     // 상세 화면이 자신의 store를 직접 소유한다. 본문 로드는 전부 Reducer가 담당한다.
     @State private var store: StoreOf<MarkdownDetailReducer>
 
+    /// 마크다운을 못 받았을 때 대신 띄울 원문 URL
+    let contentURL: String
     let pointColor: Color
     @Binding var isPresented: Bool
 
     @State private var isLinkCopiedToastPresented: Bool = false
 
-    init(exposureContentId: Int, pointColor: Color, isPresented: Binding<Bool>) {
+    init(exposureContentId: Int, contentURL: String, pointColor: Color, isPresented: Binding<Bool>) {
         self.init(
             store: Store(initialState: MarkdownDetailReducer.State(exposureContentId: exposureContentId)) {
                 MarkdownDetailReducer()
             },
+            contentURL: contentURL,
             pointColor: pointColor,
             isPresented: isPresented
         )
     }
 
-    init(store: StoreOf<MarkdownDetailReducer>, pointColor: Color, isPresented: Binding<Bool>) {
+    init(
+        store: StoreOf<MarkdownDetailReducer>,
+        contentURL: String,
+        pointColor: Color,
+        isPresented: Binding<Bool>
+    ) {
         self._store = State(initialValue: store)
+        self.contentURL = contentURL
         self.pointColor = pointColor
         self._isPresented = isPresented
     }
@@ -135,6 +144,16 @@ struct MarkdownDetailView: View {
     }
 
     var body: some View {
+        // 마크다운 본문을 못 받으면 마크다운 도입 이전 방식대로 원문 WebView를 띄운다.
+        // WebViewFullScreen이 자체 상단바를 가지므로 markdownBody 안이 아니라 화면 전체를 교체한다.
+        if store.loadState == .failed, let url = URL(string: contentURL) {
+            WebViewFullScreen(url: url, isPresented: $isPresented)
+        } else {
+            markdownBody
+        }
+    }
+
+    private var markdownBody: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 Button {
@@ -315,6 +334,7 @@ Link: https://example.com/10
 #Preview("오렌지 포인트") {
     MarkdownDetailView(
         store: Store(initialState: .init(exposureContentId: 0, loadState: .loaded(previewMarkdown))) { },
+        contentURL: "https://example.com",
         pointColor: ColorPalette.pointOrange500,
         isPresented: .constant(true)
     )
@@ -323,6 +343,7 @@ Link: https://example.com/10
 #Preview("노란 포인트") {
     MarkdownDetailView(
         store: Store(initialState: .init(exposureContentId: 0, loadState: .loaded(previewMarkdown))) { },
+        contentURL: "https://example.com",
         pointColor: ColorPalette.pointLemonYellow700,
         isPresented: .constant(true)
     )
@@ -331,6 +352,7 @@ Link: https://example.com/10
 #Preview("로딩") {
     MarkdownDetailView(
         store: Store(initialState: .init(exposureContentId: 0, loadState: .loading)) { },
+        contentURL: "https://example.com",
         pointColor: ColorPalette.pointPurple600,
         isPresented: .constant(true)
     )
@@ -339,6 +361,7 @@ Link: https://example.com/10
 #Preview("실패") {
     MarkdownDetailView(
         store: Store(initialState: .init(exposureContentId: 0, loadState: .failed)) { },
+        contentURL: "https://example.com",
         pointColor: ColorPalette.pointPurple600,
         isPresented: .constant(true)
     )

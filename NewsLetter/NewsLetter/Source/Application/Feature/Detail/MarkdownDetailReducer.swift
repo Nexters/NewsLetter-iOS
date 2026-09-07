@@ -55,7 +55,10 @@ struct MarkdownDetailReducer {
                 }
 
             case .markdownLoaded(let markdown):
-                state.loadState = .loaded(markdown)
+                // 본문이 비어 있으면 백지가 되므로 실패로 간주해 원문 WebView로 폴백한다
+                state.loadState = markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? .failed
+                    : .loaded(markdown)
                 return .none
 
             case .markdownLoadFailed:
